@@ -1,4 +1,4 @@
-# This is the list of PRODIS authors for copyright purposes.
+# This is the list of REBUS authors for copyright purposes.
 
 Sergio Casale
 Piergiorgio Chiriotti
