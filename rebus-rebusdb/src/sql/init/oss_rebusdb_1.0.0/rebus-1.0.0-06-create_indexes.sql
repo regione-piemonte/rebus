@@ -1,0 +1,1 @@
+CREATE INDEX ie_t_variaz_autobus_01 ON rebus_t_storia_variaz_autobus USING BTREE (data_aggiornamento_storia);
