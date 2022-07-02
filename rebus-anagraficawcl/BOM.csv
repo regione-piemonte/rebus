@@ -1,4 +1,4 @@
-﻿module name;license;repository
+﻿module name,license,repository
 @angular-devkit/architect@0.13.9,MIT,https://github.com/angular/angular-cli
 @angular-devkit/build-angular@0.13.9,MIT,https://github.com/angular/angular-cli
 @angular-devkit/build-optimizer@0.13.9,MIT,https://github.com/angular/angular-cli
