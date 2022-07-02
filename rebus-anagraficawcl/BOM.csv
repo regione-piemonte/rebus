@@ -636,7 +636,7 @@ jsesc@2.5.2,MIT,https://github.com/mathiasbynens/jsesc
 json-parse-better-errors@1.0.2,MIT,https://github.com/zkat/json-parse-better-errors
 json-schema-traverse@0.3.1,MIT,https://github.com/epoberezkin/json-schema-traverse
 json-schema-traverse@0.4.1,MIT,https://github.com/epoberezkin/json-schema-traverse
-json-schema@0.2.3,AFLv2.1,BSD,https://github.com/kriszyp/json-schema
+json-schema@0.2.3,(AFLv2.1 OR BSD),https://github.com/kriszyp/json-schema
 json-stringify-safe@5.0.1,ISC,https://github.com/isaacs/json-stringify-safe
 json3@3.3.3,MIT,https://github.com/bestiejs/json3
 json5@0.5.1,MIT,https://github.com/aseemk/json5
