@@ -636,7 +636,7 @@ jsesc@2.5.2,MIT,https://github.com/mathiasbynens/jsesc
 json-parse-better-errors@1.0.2,MIT,https://github.com/zkat/json-parse-better-errors
 json-schema-traverse@0.3.1,MIT,https://github.com/epoberezkin/json-schema-traverse
 json-schema-traverse@0.4.1,MIT,https://github.com/epoberezkin/json-schema-traverse
-json-schema@0.2.3;AFLv2.1,BSD;https://github.com/kriszyp/json-schema
+json-schema@0.2.3,AFLv2.1,BSD,https://github.com/kriszyp/json-schema
 json-stringify-safe@5.0.1,ISC,https://github.com/isaacs/json-stringify-safe
 json3@3.3.3,MIT,https://github.com/bestiejs/json3
 json5@0.5.1,MIT,https://github.com/aseemk/json5
@@ -921,7 +921,7 @@ range-parser@1.2.1,MIT,https://github.com/jshttp/range-parser
 raw-body@2.4.0,MIT,https://github.com/stream-utils/raw-body
 raw-loader@0.5.1,MIT,https://github.com/webpack/raw-loader
 raw-loader@1.0.0,MIT,https://github.com/webpack-contrib/raw-loader
-rc@1.2.8;(BSD-2-Clause OR MIT OR Apache-2.0);https://github.com/dominictarr/rc
+rc@1.2.8,(BSD-2-Clause OR MIT OR Apache-2.0),https://github.com/dominictarr/rc
 read-cache@1.0.0,MIT,https://github.com/TrySound/read-cache
 read-pkg-up@1.0.1,MIT,https://github.com/sindresorhus/read-pkg-up
 read-pkg-up@2.0.0,MIT,https://github.com/sindresorhus/read-pkg-up
@@ -1034,7 +1034,7 @@ source-map-support@0.4.18,MIT,https://github.com/evanw/node-source-map-support
 source-map-support@0.5.10,MIT,https://github.com/evanw/node-source-map-support
 source-map-support@0.5.16,MIT,https://github.com/evanw/node-source-map-support
 source-map-url@0.4.0,MIT,https://github.com/lydell/source-map-url
-source-map@0.1.43;BSD;https://github.com/mozilla/source-map
+source-map@0.1.43,BSD,https://github.com/mozilla/source-map
 source-map@0.4.4,BSD-3-Clause,https://github.com/mozilla/source-map
 source-map@0.5.0,BSD-3-Clause,https://github.com/mozilla/source-map
 source-map@0.5.6,BSD-3-Clause,https://github.com/mozilla/source-map
