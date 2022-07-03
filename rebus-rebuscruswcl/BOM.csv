@@ -874,7 +874,7 @@ ng2-file-upload@1.4.0,MIT,https://github.com/valor-software/ng2-file-upload
 ngx-file-drop@2.0.5,MIT,https://github.com/georgipeltekov/ngx-file-drop
 no-case@2.3.2,MIT,https://github.com/blakeembrey/no-case
 node-fetch-npm@2.0.2,MIT,https://github.com/npm/node-fetch-npm
-node-forge@0.7.5;(BSD-3-Clause OR GPL-2.0);https://github.com/digitalbazaar/forge
+node-forge@0.7.5,(BSD-3-Clause OR GPL-2.0),https://github.com/digitalbazaar/forge
 node-gyp@3.6.2,MIT,https://github.com/nodejs/node-gyp
 node-gyp@3.8.0,MIT,https://github.com/nodejs/node-gyp
 node-gyp@7.1.2,MIT,https://github.com/nodejs/node-gyp
