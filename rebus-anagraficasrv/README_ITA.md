@@ -6,6 +6,7 @@ REBUS componente ANAGRAFICASRV
 Questa componente è una web application che segue il paradigma "Single Page Application (SPA)", espone servizi REST alla componente ANAGRAFICAWCL (Angular7) e si connette al DB (REBUSDB) per le operazioni CRUD.
 Si collega al servizio di profilazione utenti trasversale (IRIDE).
 Questa componente si connette al DB (DBMS POSTGRESQL) utilizzando il DataSource definito a livello del suo "container" (JBoss).
+Dal punto di vista funzionale, questa componente implementa le funzioni di consultazione e gestione dell'Anagrafe dei Soggetti del TPL regionale.\
 
 # Configurazioni iniziali
 Il prodotto è stato sviluppato con il JDK 1.8.0_201 .
@@ -13,7 +14,7 @@ Da un punto di vista generale, nella fase iniziale occorre adattare i file di pr
 Una delle cose principali da configurare è il datasource con i riferimenti del DB che si intende utilizzare (JNDI name). Questa configurazione deve essere coerente a livello di "container" e di codice.\
 Per quanto riguarda le configurazioni, le principali sono definite in:
 - anagraficasrv/src/java/it/csi/rebus/anagraficasrv/integration/generator/generatorConfig.xml
-- anagraficasrv/src/java/it/csi/rebus/anagraficasrv/common/YserMock.java
+- anagraficasrv/src/java/it/csi/rebus/anagraficasrv/common/UserMock.java
 - anagraficasrv/conf/ear/application.xml
 - anagraficasrv/conf/tar/anagraficasrv-ds.xml
 - anagraficasrv/conf/web/rebus/rest/WEB-INF/applicationContext.xml
