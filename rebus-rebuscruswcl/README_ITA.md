@@ -10,10 +10,9 @@ Il progetto è stato generato con [Angular CLI](https://github.com/angular/angul
 
 # Configurazioni iniziali
 
-Per avere un ambiente di sviluppo eseguire `npm start` su un server di sviluppo.
-La URL di default è `http://localhost:4200/`.
-
-La "web application" effettuerà il reload automatico per qualsiasi modifica dei sorgenti.
+Per configurare il prorpio ambiente di sviluppo eseguire `npm start`.
+La URL di default dell'ambiente di sviluppo è `http://localhost:4200/`.
+In tale ambiente, la "web application" effettuerà il reload automatico per qualsiasi modifica dei sorgenti.
 
 Nel caso di voglia generare una nuova componente tramite `ng generate component component-name` (vedi documentazione Angular) occorre aggiungere @angular-devkit/core.
 

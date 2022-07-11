@@ -10,32 +10,36 @@ Il progetto è stato generato con [Angular CLI](https://github.com/angular/angul
 
 # Configurazioni iniziali
 
-Per avere un ambiente di sviluppo eseguire `npm start` su un server di sviluppo.
-La URL di default è `http://localhost:4200/`.
+Per configurare il prorpio ambiente di sviluppo eseguire `npm start`.
+La URL di default dell'ambiente di sviluppo è `http://localhost:4200/`.
+In tale ambiente, la "web application" effettuerà il reload automatico per qualsiasi modifica dei sorgenti.
 
-La "web application" effettuerà il reload automatico per qualsiasi modifica dei sorgenti.
+Tutte le configurazioni devono essere impostate nel file `buildfiles/<env>.properties.json` :
 
-Tutte le configurazioni devono essere impostate nel file `buildfiles/environment.<env>.ts` dove saranno sostituite a "compile time" con `src/environments/environment.ts`.\
-Per ogni nuovo "ambiente" che si crea, deve essere aggiunta una corrispondente "entry" nel file `angular.json`, per referenziare il nuovo ambiente.
+- buildfiles/<env>.properties.json : contiene i parametri in base all’ambiente selezionato;
+
+- buildfiles/webpack.<env>.js : contiene la configurazione in base all’ambiente selezionato.
+
+Per ogni nuovo "ambiente" che si crea, deve essere aggiunta una corrispondente "entry" nel file `angular-cli.json`, per referenziare il nuovo ambiente.
 
 Queste sono le impostazioni da configurare:
 - production = indica se la configurazione ed il file corrispondente è relativa ad un ambiente di produzione o di pre-produzione
 - ambiente = il nome del environment
 - publicPath = la URL a cui risponde l'applicazione
-- beServerPrefix = il prefisso usato per comporre il "BackEnd service URL" (nel caso sia utile tenerlo separato)
+- backendServer = il prefisso usato per comporre il "BackEnd service URL" (nel caso sia utile tenerlo separato)
 - beService = la "Base URL" del servizio di BackEnd
 - shibbolethSSOLogoutURL = la URL di logout dal SSO (Single Sign On)
+- parcoBusPath = path che permette lo switch tra i moduli Anagrafiche e ParcoBus.
 
 # Getting Started
-Una volta prelevata e portata in locale dal repository la componente ("git clone"), procedere con la modifica dei file di configurazione in base al proprio ambiente di deploy e quindi eseguire "npm install" prima di eseguire la "build".
-
+Una volta prelevata e portata in locale dal repository la componente ("git clone"), procedere con la modifica dei file di configurazione in base al proprio ambiente di deploy.
+Primi di effettuare il build occorre eseguire il comando "npm install".
 Per il build usare il comando `npm build`.
 Gli "artefatti" risultanti si troveranno in `dist/`.
 
 Per la versione di esercizio usare il flag `--prod`.
 
 il progetto usa gli script standard di "Angular CLI" (non è necessario installare la "CLI" su tutti gli ambienti, in quanto viene referenziata come una "development dependency").
-
 
 Per semplificare il "lifecycle" della applicazione sono disponibili alcuni "goal":\
 - package-* = scripts that execute the Angular CLI build with a predefied configuration;
