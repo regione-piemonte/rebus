@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.ContribuzioneDAO">
+
+
+	<select id="getAllAttoAssegnazione"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.FonteFinanziamentoVO">
+		select *
+		from rebusc_t_atto_assegnazione
+		where
+		trunc(CURRENT_DATE) between
+		trunc(data_inizio_validita) and
+		coalesce(trunc(data_fine_validita), trunc(CURRENT_DATE))
+	</select>
+	
+	<select id="getAllVociCosto"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.VoceDiCostoContribuzioneVO">
+		select *
+		from rebusc_d_voce_costo
+		where
+		trunc(CURRENT_DATE) between
+		trunc(data_inizio_validita) and
+		coalesce(trunc(data_fine_validita), trunc(CURRENT_DATE))
+		order by 1
+	</select>
+
+	<!-- SELECT UTILIZZATA PER OTTENERE LE FONTI DI FINANZIAMNETO COMPRESE TRA 
+		DATA INIZIO E E DATA FINE -->
+	<select id="selectByIdAttoAssegnazione"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.FonteFinanziamentoVO">
+
+		select id_fonte_finanziamento, id_atto_assegnazione,
+		desc_breve, desc_estesa
+		from rebusc_t_fonte_finanziamento
+		where
+		id_atto_assegnazione =
+		#{idAttoAssegnazione,jdbcType=NUMERIC}
+		and
+		trunc(CURRENT_DATE) between
+		trunc(data_inizio_validita) and
+		coalesce(trunc(data_fine_validita), trunc(CURRENT_DATE))
+	</select>
+	<select id="getElencoContribuzione"
+		parameterType="it.csi.rebus.rebuscrus.vo.FiltroContribuzioneVO"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.VExportRicercaContribuzioneDTO">
+		SELECT v_export.*
+		FROM v_export_ricerca_contribuzione as v_export
+		WHERE
+		1=1
+		<if test="primoTelaio != null"> and (UPPER(v_export.primo_telaio) LIKE
+			UPPER(#{primoTelaio}))
+		</if>
+		<if test="idFonteFinanziamento != null">
+			and v_export.id_fonte_finanziamento =
+			#{idFonteFinanziamento,jdbcType=NUMERIC}
+		</if>
+		<if test="idTipoAlimentazione != null">
+			and v_export.id_tipo_alimentazione =
+			#{idTipoAlimentazione,jdbcType=NUMERIC}
+		</if>
+		<if test="azienda != null"> and (UPPER(v_export.azienda_ricerca) LIKE
+			UPPER(#{azienda}))
+		</if>
+		<if
+			test='flgRendicontazione != null and "S".equals(flgRendicontazione)'>
+			and v_export.rendicontazione_completa = true
+		</if>
+		<if test="idAzienda != null">
+			and v_export.id_azienda = #{idAzienda,jdbcType=NUMERIC}
+		</if>
+	</select>
+
+	<select id="selectDocContribuzioneForInfo"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.DocContribuzioneVO">
+
+		select id_doc_contribuzione, id_tipo_documento, nome_file,
+		data_caricamento, id_utente_aggiornamento
+		from
+		rebusc_r_doc_contribuzione
+		where id_doc_contribuzione =
+		#{idDocContribuzione,jdbcType=NUMERIC}
+	</select>
+
+	<select id="getIdProcedimento" parameterType="java.util.Map"
+		resultType="java.lang.Long">
+		select p.id_procedimento
+		FROM rebus_t_variaz_autobus va
+		JOIN
+		rebus_t_autobus a ON va.primo_telaio = a.primo_telaio
+		LEFT JOIN
+		rebusp_r_proc_veicolo pv ON a.primo_telaio = pv.primo_telaio
+		LEFT JOIN
+		rebusp_t_procedimento p ON pv.id_procedimento =
+		p.id_procedimento
+		WHERE
+		va.primo_telaio = #{primoTelaio} and
+		va.flg_contribuzione = true AND
+		(p.id_tipo_procedimento =
+		#{idTipoProcedimento,jdbcType=NUMERIC} OR
+		p.id_tipo_procedimento IS
+		NULL)
+	</select>
+
+	<select id="getDestinatarioMessaggioContribuzione"
+		parameterType="java.lang.Long" resultType="java.lang.Long">
+		select u.id_utente from
+		rebusp_t_iter_procedimento as p
+		join sirtpl_r_utente_sog_giurid as u on
+		u.id_utente_sog_giurid =
+		p.id_utente_sog_giurid
+		where p.id_stato_iter =
+		10 and id_procedimento =
+		#{idProcedimento,jdbcType=NUMERIC}
+	</select>
+
+	<select id="getTelaio" parameterType="java.lang.Long"
+		resultType="java.lang.String">
+		SELECT v.primo_telaio
+		FROM rebusp_t_iter_procedimento AS p
+		JOIN sirtpl_r_utente_sog_giurid AS u ON u.id_utente_sog_giurid =
+		p.id_utente_sog_giurid
+		JOIN rebusp_t_procedimento as proc on
+		p.id_procedimento=
+		proc.id_procedimento
+		JOIN rebusp_r_proc_veicolo as v
+		on proc.id_procedimento= v.id_procedimento
+		WHERE p.id_stato_iter = 10
+		AND p.id_procedimento = #{idProcedimento,jdbcType=NUMERIC}
+	</select>
+
+	<select id="finalStateIter" parameterType="java.lang.Long"
+		resultType="java.lang.Long">
+		select distinct 1
+		FROM rebus.rebusp_d_transizione_automa
+		where id_stato_iter_da=#{idStato,jdbcType=NUMERIC} and id_stato_iter_a
+		isnull
+	</select>
+
+	<select id="getDatoBonficoByIdDatoFattura"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.DatoBonificoVO">
+		SELECT df.id_dato_bonifico, df.data_bonifico,
+		df.importo_bonifico, df.cro from rebusc_t_dato_bonifico as df
+		INNER
+		JOIN rebusc_r_fattura_bonifico as fb
+		ON fb.id_dato_bonifico =
+		df.id_dato_bonifico
+		where fb.id_dato_fattura =
+		#{idDatoFattura,jdbcType=NUMERIC}
+	</select>
+
+	<select id="getTelaiVeicoloDaSostituire"
+		parameterType="java.lang.Long" resultType="java.lang.String">
+		select va.primo_telaio
+		from
+		rebus_t_variaz_autobus va, rebus_r_azienda_autobus aa
+		where
+		va.primo_telaio = aa.primo_telaio
+		and aa.fk_azienda =
+		#{idAzienda,jdbcType=NUMERIC}
+		and aa.data_alienazione is null
+		and
+		FLG_VERIFICATO_AZIENDA = 'S' and FLG_CONTEGGIATO_MIV = 'S'
+		and not
+		exists (select 1 from rebusc_t_dato_messa_servizio dms where
+		dms.primo_telaio_sost = va.primo_telaio)
+		order by 1 asc
+	</select>
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

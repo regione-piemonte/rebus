@@ -1,0 +1,1108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.ProcedimentoDAO">
+	<select id="getProcedimenti"
+		parameterType="it.csi.rebus.rebuscrus.vo.FiltroProcedimentiVO"
+		resultType="it.csi.rebus.rebuscrus.vo.ProcedimentoVO">
+		SELECT Distinct procedimento.id_procedimento as idProcedimento,
+		EXTRACT(YEAR FROM
+		iter2.data_inizio_validita)||'/'||tipo.cod_tipo_procedimento||'/'||procedimento.num_procedimento
+		AS progressivoRichiesta, tipo.id_tipo_procedimento AS idTipologia,
+		tipo.desc_tipo_procedimento AS tipologia,
+		soggetto_giuridico.denominazione_breve AS richiedente,
+		stato.id_stato_iter AS idStato, stato.desc_stato_iter AS stato,
+		iter.data_inizio_validita AS dataStipulaDa
+		<if
+			test="idEnte != null or isAMP != null or isRegionePiemonte != null or isServizio != null">
+
+			,
+			CASE
+			WHEN gestore_cotratto_table.denominazione_breve =
+			soggetto_giuridico.denominazione_breve THEN '-'
+			WHEN
+			gestore_cotratto_table.denominazione_breve IS NOT NULL THEN
+			gestore_cotratto_table.denominazione_breve
+
+			ELSE '-'
+			END AS
+			gestoreContratto
+		</if>
+		FROM REBUSP_T_PROCEDIMENTO procedimento
+		<if test="targa != null ">
+
+			JOIN V_VEICOLI_PROCEDIMENTI proc ON
+			procedimento.id_procedimento=proc.id_proc
+			JOIN REBUS_T_VARIAZ_AUTOBUS
+			autobus ON proc.id_va =
+			autobus.id_variaz_autobus
+		</if>
+
+		INNER JOIN REBUSP_D_TIPO_PROCEDIMENTO tipo
+		ON
+		procedimento.id_tipo_procedimento = tipo.id_tipo_procedimento
+		AND
+		tipo.id_tipo_procedimento <![CDATA[ <> ]]>
+		7
+		INNER
+		JOIN rebusp_t_iter_procedimento iter
+		ON
+		procedimento.id_procedimento =
+		iter.id_procedimento
+		INNER JOIN
+		REBUSP_D_STATO_ITER stato
+		ON
+		iter.id_stato_iter = stato.id_stato_iter
+		INNER JOIN
+		rebusp_t_iter_procedimento iter2
+		ON
+		procedimento.id_procedimento =
+		iter2.id_procedimento
+		AND
+		iter2.id_stato_iter = 10
+		INNER JOIN
+		sirtpl_trasv.sirtpl_r_utente_sog_giurid utente_sogg
+		ON
+		iter2.id_utente_sog_giurid=utente_sogg.id_utente_sog_giurid
+		INNER JOIN
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico soggetto_giuridico
+		ON
+		utente_sogg.id_soggetto_giuridico =
+		soggetto_giuridico.id_soggetto_giuridico
+		LEFT JOIN (SELECT DISTINCT
+		procedimento.id_procedimento,
+		c.id_contratto
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		LEFT JOIN
+		rebus.rebusp_t_sub_procedimento sub ON
+		sub.id_procedimento =
+		procedimento.id_procedimento
+		INNER JOIN
+		rebus.rebusp_r_proc_contratto
+		c
+		ON (procedimento.id_tipo_procedimento =
+		2
+		AND (c.id_procedimento =
+		sub.id_sub_procedimento_1
+		OR c.id_procedimento
+		=
+		sub.id_sub_procedimento_2))
+		OR (procedimento.id_tipo_procedimento != 2
+		AND procedimento.id_procedimento = c.id_procedimento)) AS
+		proc_contratto
+		ON procedimento.id_procedimento =
+		proc_contratto.id_procedimento
+		LEFT JOIN sirtplc_t_contratto contratto
+		ON contratto.id_contratto =
+		proc_contratto.id_contratto
+		LEFT JOIN
+		sirtplc_r_sost_sog_contr sostContratto on
+		sostContratto.id_contratto =
+		contratto.id_contratto
+		LEFT JOIN (SELECT
+		sogg_giuridico.denominazione_breve AS
+		denominazione_breve,
+		id_procedimento_gestore,
+		id_procedimento_gestore_sostituzione,
+		id_soggetto_giuridico
+		FROM
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico
+		sogg_giuridico
+		INNER JOIN
+		(SELECT DISTINCT (CASE WHEN EXISTS (SELECT 1
+		FROM
+		sirtplc_t_contratto
+		c INNER JOIN sirtplc_r_sost_sog_contr
+		sost_contr
+		ON
+		sost_contr.id_contratto = c.id_contratto AND
+		sost_contr.id_tipo_sostituzione = 1 INNER JOIN
+		rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto LEFT JOIN
+		rebus.rebusp_t_sub_procedimento sub ON
+		(sub.id_sub_procedimento_1 =
+		contratto.id_procedimento OR
+		sub.id_sub_procedimento_2 =
+		contratto.id_procedimento) WHERE
+		sost_contr.id_sog_giurid_esecutore IS
+		NOT NULL) THEN
+		c.id_sog_giurid_esecutore WHEN EXISTS (SELECT 1 FROM
+		sirtplc_t_contratto c INNER JOIN sirtplc_r_sost_sog_contr sost_contr
+		ON sost_contr.id_contratto = c.id_contratto AND
+		sost_contr.id_tipo_sostituzione = 1 INNER JOIN
+		rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto LEFT JOIN
+		rebus.rebusp_t_sub_procedimento sub ON
+		(sub.id_sub_procedimento_1 =
+		contratto.id_procedimento OR
+		sub.id_sub_procedimento_2 =
+		contratto.id_procedimento) WHERE
+		sost_contr.id_sog_giurid_committente
+		IS NOT NULL) THEN
+		c.id_sog_giurid_committente WHEN EXISTS (SELECT 1
+		FROM
+		sirtplc_t_contratto c INNER JOIN sirtplc_r_contratto_raggrupp ragg
+		ON
+		ragg.id_contratto = c.id_contratto AND ragg.capofila IS TRUE INNER
+		JOIN sirtplc_r_sost_sog_contr_raggr sost_raggr ON
+		sost_raggr.id_contratto_raggrupp = ragg.id_contratto_raggrupp AND
+		sost_raggr.id_tipo_sostituzione = 2 INNER JOIN
+		rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto LEFT JOIN
+		rebus.rebusp_t_sub_procedimento sub ON
+		(sub.id_sub_procedimento_1 =
+		contratto.id_procedimento OR
+		sub.id_sub_procedimento_2 =
+		contratto.id_procedimento)) THEN
+		sost_raggr.id_soggetto_giuridico WHEN
+		EXISTS (SELECT 1 FROM
+		sirtplc_t_contratto c INNER JOIN
+		sirtplc_r_contratto_raggrupp ragg ON
+		ragg.id_contratto = c.id_contratto
+		AND ragg.capofila IS TRUE INNER
+		JOIN rebusp_r_proc_contratto contratto
+		ON contratto.id_contratto =
+		c.id_contratto LEFT JOIN
+		rebus.rebusp_t_sub_procedimento sub ON
+		(sub.id_sub_procedimento_1 =
+		contratto.id_procedimento OR
+		sub.id_sub_procedimento_2 =
+		contratto.id_procedimento)) THEN
+		ragg.id_soggetto_giuridico ELSE null
+		END) AS soggetto,
+		contratto.id_procedimento AS id_procedimento_gestore,
+		sub.id_procedimento AS id_procedimento_gestore_sostituzione
+		FROM
+		sirtplc_t_contratto c
+		LEFT JOIN sirtplc_r_contratto_raggrupp ragg
+		ON
+		ragg.id_contratto = c.id_contratto
+		AND ragg.capofila IS TRUE
+		LEFT JOIN
+		sirtplc_r_sost_sog_contr_raggr sost_raggr
+		ON
+		sost_raggr.id_contratto_raggrupp = ragg.id_contratto_raggrupp
+		AND
+		sost_raggr.id_tipo_sostituzione = 2
+		LEFT JOIN sirtplc_r_sost_sog_contr
+		sost_contr
+		ON sost_contr.id_contratto = c.id_contratto
+		AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto
+		ON ( (contratto.id_contratto = ragg.id_contratto
+		AND
+		ragg.capofila IS TRUE)
+		OR contratto.id_contratto = c.id_contratto)
+		LEFT
+		JOIN rebus.rebusp_t_sub_procedimento sub
+		ON
+		(sub.id_sub_procedimento_1 =
+		contratto.id_procedimento
+		OR
+		sub.id_sub_procedimento_2 =
+		contratto.id_procedimento)) AS
+		gestore_contratto ON
+		gestore_contratto.soggetto =
+		sogg_giuridico.id_soggetto_giuridico
+		WHERE
+		sogg_giuridico.data_cessazione IS NULL) AS gestore_cotratto_table
+		ON
+		gestore_cotratto_table.id_procedimento_gestore =
+		procedimento.id_procedimento
+		OR
+		gestore_cotratto_table.id_procedimento_gestore_sostituzione =
+		procedimento.id_procedimento
+		<where>
+			1=1
+			<if test="idAzienda != null">
+
+
+				AND ((soggetto_giuridico.id_soggetto_giuridico =
+				#{idAzienda}) OR
+				(gestore_cotratto_table.id_soggetto_giuridico =
+				#{idAzienda}))
+				AND
+				NOW
+				() BETWEEN utente_sogg.data_inizio_validita
+				AND
+				COALESCE
+				(utente_sogg.data_fine_validita,NOW ())
+			</if>
+			<if test="idEnte != null">
+				and ((contratto.id_sog_giurid_committente = #{idEnte}) OR
+				sostContratto.id_sog_giurid_committente = #{idEnte}))
+				and
+				iter.id_stato_iter <![CDATA[  >= ]]>
+				40
+				AND iter.data_fine_validita IS NULL
+			</if>
+			<if test="isAMP != null or isRegionePiemonte != null">
+				and iter.id_stato_iter <![CDATA[  >= ]]>
+				40
+				AND iter.data_fine_validita IS NULL
+			</if>
+			<if test="isServizio != null">
+				AND iter.data_fine_validita IS NULL
+			</if>
+			<if test="tipologia != null">
+				and (tipo.id_tipo_procedimento = #{tipologia})
+			</if>
+			<if test="stato != null">
+				and (stato.id_stato_iter = #{stato})
+			</if>
+			<if test="dataStipulaDa != null">
+				and iter.data_inizio_validita <![CDATA[ >= ]]>
+				#{dataStipulaDa}
+			</if>
+			<if test="dataStipulaA != null">
+				and iter.data_inizio_validita <![CDATA[ <= ]]>
+				#{dataStipulaA}
+			</if>
+
+			<if
+				test='flagStatoCorrente != null and "S".equals(flagStatoCorrente)'>
+				and iter.data_fine_validita IS NULL
+			</if>
+			<if test="targa != null">
+				and ((UPPER(autobus.n_telaio) LIKE UPPER(#{targa}))
+				or
+				(UPPER(autobus.n_targa) LIKE UPPER(#{targa}))
+				or
+				(UPPER(autobus.primo_telaio) LIKE UPPER(#{targa})))
+
+			</if>
+
+			<if test="richiedente != null">
+				and ((UPPER(soggetto_giuridico.denominazione_breve) LIKE
+				UPPER(#{richiedente}))
+				or
+				(UPPER(soggetto_giuridico.denominazione_aaep) LIKE
+				UPPER(#{richiedente}))
+				or
+				(UPPER(soggetto_giuridico.denom_soggetto_giuridico) LIKE
+				UPPER(#{richiedente})))
+			</if>
+			<if test="progressivoRichiesta != null">
+				and UPPER(EXTRACT(YEAR FROM
+				iter2.data_inizio_validita)||'/'||tipo.cod_tipo_procedimento||'/'||procedimento.num_procedimento)
+				LIKE UPPER(#{progressivoRichiesta})
+			</if>
+		</where>
+		<!-- </if> -->
+
+
+
+
+		AND NOT EXISTS (SELECT sub.id_procedimento
+		FROM
+		rebus.rebusp_t_sub_procedimento sub
+		WHERE sub.id_sub_procedimento_1 =
+		procedimento.id_procedimento
+		OR sub.id_sub_procedimento_2 =
+		procedimento.id_procedimento)
+
+		ORDER BY dataStipulaDa DESC
+
+
+
+	</select>
+	<select id="getContratti" parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.ContrattoProcVO">
+		SELECT DISTINCT id_contratto, cod_id_nazionale, descrizione FROM
+		(SELECT c.id_contratto, c.cod_id_nazionale, c.desc_contratto AS
+		descrizione, pc.data_fine_proroga, FIRST_VALUE(pc.data_fine_proroga)
+		OVER (PARTITION BY c.id_contratto ORDER BY pc.data_fine_proroga DESC)
+		AS max_data_proroga FROM sirtpl_contratti.sirtplc_t_contratto AS c
+		LEFT OUTER JOIN sirtpl_contratti.sirtplc_r_contratto_raggrupp AS cr ON
+		cr.id_contratto = c.id_contratto LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_t_proroga_contratto AS pc ON pc.id_contratto
+		= c.id_contratto LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr ON
+		sr.id_contratto_raggrupp = cr.id_contratto_raggrupp LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc ON sc.id_contratto =
+		c.id_contratto WHERE (c.data_inizio_validita <![CDATA[ < ]]>
+		NOW() AND (c.data_fine_validita IS NULL OR c.data_fine_validita <![CDATA[ > ]]>
+		NOW() OR pc.data_fine_proroga <![CDATA[ > ]]>
+		NOW()))
+		<if test="idAzienda != null">
+			AND (c.id_sog_giurid_esecutore = #{idAzienda} OR
+			cr.id_soggetto_giuridico = #{idAzienda} OR sr.id_soggetto_giuridico =
+			#{idAzienda} OR sc.id_sog_giurid_esecutore = #{idAzienda})
+			AND NOT
+			EXISTS (SELECT 1
+			FROM sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc2
+			WHERE sc2.id_tipo_sostituzione = 2
+			AND sc2.id_contratto =
+			c.id_contratto
+
+			AND
+			(
+			(c.id_sog_giurid_esecutore = #{idAzienda} and
+			sc2.id_sog_giurid_esecutore is not null)
+			OR
+			(c.id_sog_giurid_committente = #{idAzienda} and
+			sc2.id_sog_giurid_committente is not null)
+			)
+			)
+
+			AND NOT EXISTS (SELECT 1
+			FROM
+			sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr2
+			INNER JOIN
+			sirtplc_r_contratto_raggrupp AS cr2 ON
+			cr2.id_contratto_raggrupp =
+			sr2.id_contratto_raggrupp
+			WHERE sr2.id_tipo_sostituzione = 2
+			AND
+			cr2.id_contratto = c.id_contratto
+			AND cr2.id_soggetto_giuridico =
+			#{idAzienda})
+		</if>
+		) AS tabl
+		WHERE data_fine_proroga IS NULL
+		OR data_fine_proroga =
+		max_data_proroga
+		<if test="idProcedimento != null">
+			UNION
+			select c.id_contratto,
+			cr.cod_id_nazionale,
+			cr.desc_contratto
+			from rebusp_r_proc_contratto as c join
+			sirtplc_t_contratto AS cr ON
+			cr.id_contratto = c.id_contratto
+			WHERE (
+			c.id_procedimento = #{idProcedimento} )
+		</if>
+		ORDER BY cod_id_nazionale
+	</select>
+
+
+	<select id="getTipiDocumento" parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebusDTipoDocumentoDTO">
+		select tipo.id_tipo_documento, tipo.descrizione
+		from
+		rebus.rebusp_c_tipo_proc_tipo_doc as c
+		join
+		rebus.rebus_d_tipo_documento as tipo on
+		tipo.id_tipo_documento=c.id_tipo_documento
+		join
+		sirtpl_trasv.sirtpl_d_contesto contesto on contesto.id_contesto =
+		tipo.id_contesto
+		where contesto.cod_contesto ='P'
+		<if test="idTipoProcedimento != null">
+			and c.id_tipo_procedimento = #{idTipoProcedimento}
+		</if>
+		order by tipo.descrizione
+	</select>
+
+	<select id="getDescAziendaFromProcedimento"
+		parameterType="java.lang.Long" resultType="java.lang.String">
+		SELECT s.denominazione_breve
+		FROM sirtpl_aziende.sirtpla_t_soggetto_giuridico s
+		INNER JOIN
+		sirtpl_trasv.sirtpl_r_utente_sog_giurid usg ON
+		usg.id_soggetto_giuridico = s.id_soggetto_giuridico
+		INNER JOIN
+		rebus.rebusp_t_iter_procedimento i ON i.id_utente_sog_giurid =
+		usg.id_utente_sog_giurid
+		WHERE i.id_procedimento = #{idProcedimento}
+		AND i.data_fine_validita IS NULL;
+	</select>
+
+	<select id="getDestinatarioMessaggioProcedimentoEnteCommittente"
+		parameterType="java.lang.Long" resultType="java.lang.Long">
+		select
+		MIN(sogg_giuridico.id_utente)
+		from
+		sirtpl_trasv.SIRTPL_R_UTENTE_SOG_GIURID sogg_giuridico
+		inner join
+		sirtpl_contratti.sirtplc_t_contratto contratto on
+		contratto.id_sog_giurid_committente=
+		sogg_giuridico.ID_SOGGETTO_GIURIDICO
+		where
+		sogg_giuridico.DATA_FINE_VALIDITA is NULL
+		and contratto.id_contratto =
+		#{idContratto}
+	</select>
+
+	<select id="getDestinatarioMessaggioProcedimentoConsorzio"
+		parameterType="map" resultType="java.lang.Long">
+		select MIN(sogg_giuridico.id_utente)
+		from sirtpl_trasv.SIRTPL_R_UTENTE_SOG_GIURID sogg_giuridico
+		INNER JOIN
+		sirtplc_t_contratto c ON c.id_sog_giurid_esecutore =
+		sogg_giuridico.ID_SOGGETTO_GIURIDICO
+		LEFT JOIN
+		sirtplc_r_contratto_raggrupp ragg ON ragg.ID_SOGGETTO_GIURIDICO
+		=
+		sogg_giuridico.ID_SOGGETTO_GIURIDICO
+		INNER JOIN rebusp_r_proc_contratto
+		contratto
+		ON ( (contratto.id_contratto = ragg.id_contratto
+		AND
+		ragg.capofila IS TRUE)
+		OR contratto.id_contratto = c.id_contratto)
+		where sogg_giuridico.DATA_FINE_VALIDITA is NULL
+		and
+		contratto.id_procedimento = #{idProcedimento}
+		and
+		contratto.id_contratto = #{idContratto}
+	</select>
+
+	<select
+		id="getDestinatarioMessaggioProcedimentoSostituzioneConsorzio"
+		parameterType="map" resultType="java.lang.Long">
+		SELECT MIN(sogg_giuridico.id_utente)
+		FROM sirtpl_trasv.SIRTPL_R_UTENTE_SOG_GIURID sogg_giuridico
+		INNER JOIN
+		sirtplc_t_contratto c ON c.id_sog_giurid_esecutore =
+		sogg_giuridico.ID_SOGGETTO_GIURIDICO
+		LEFT JOIN
+		sirtplc_r_contratto_raggrupp ragg ON ragg.ID_SOGGETTO_GIURIDICO
+		=
+		sogg_giuridico.ID_SOGGETTO_GIURIDICO
+		INNER JOIN rebusp_r_proc_contratto
+		contratto
+		ON ( (contratto.id_contratto = ragg.id_contratto
+		AND
+		ragg.capofila IS TRUE)
+		OR contratto.id_contratto = c.id_contratto)
+		WHERE sogg_giuridico.DATA_FINE_VALIDITA IS NULL
+		AND
+		contratto.id_contratto = #{idContratto}
+		AND EXISTS (SELECT
+		sub.id_procedimento
+		FROM rebus.rebusp_t_sub_procedimento sub
+		WHERE
+		(sub.id_sub_procedimento_1 = contratto.id_procedimento OR
+		sub.id_sub_procedimento_2 = contratto.id_procedimento)
+		AND
+		sub.id_procedimento = #{idProcedimento})
+	</select>
+
+	<select id="getDestinatarioMessaggioProcedimento"
+		parameterType="map" resultType="java.lang.Long">
+		SELECT MIN(sogg_giuridico.id_utente)
+		FROM sirtpl_trasv.SIRTPL_R_UTENTE_SOG_GIURID sogg_giuridico
+		INNER JOIN
+		sirtpl_trasv.sirtpl_t_utente utente on utente.id_utente =
+		sogg_giuridico.id_utente
+		WHERE sogg_giuridico.DATA_FINE_VALIDITA IS
+		NULL
+		AND utente.DATA_FINE_VALIDITA IS NULL
+		AND
+		sogg_giuridico.id_soggetto_giuridico = #{idSoggettoGiuridico}
+
+	</select>
+
+	<select id="getGestoreContrattoProcedimento" parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.SirtplaTSoggettoGiuridicoDTO">
+		SELECT DISTINCT sogg_giuridico.*
+		FROM
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico sogg_giuridico
+		INNER JOIN
+		(SELECT Distinct(CASE
+		WHEN EXISTS (SELECT 1
+		FROM sirtplc_t_contratto c
+		INNER JOIN sirtplc_r_sost_sog_contr sost_contr
+		ON
+		sost_contr.id_contratto = c.id_contratto
+		AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto
+		WHERE
+		contratto.id_contratto = #{idContratto}
+		AND contratto.id_procedimento =
+		#{idProcedimento}
+		AND sost_contr.id_sog_giurid_esecutore IS NOT NULL)
+		THEN
+		c.id_sog_giurid_esecutore
+
+		WHEN EXISTS (SELECT 1
+		FROM
+		sirtplc_t_contratto c
+		INNER JOIN sirtplc_r_sost_sog_contr sost_contr
+		ON
+		sost_contr.id_contratto = c.id_contratto
+		AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto
+		WHERE
+		contratto.id_contratto = #{idContratto}
+		AND contratto.id_procedimento =
+		#{idProcedimento}
+		AND sost_contr.id_sog_giurid_committente IS NOT NULL)
+		THEN
+		c.id_sog_giurid_committente
+		WHEN EXISTS (SELECT 1
+		FROM
+		sirtplc_t_contratto c
+		Inner JOIN sirtplc_r_contratto_raggrupp ragg ON
+		ragg.id_contratto =
+		c.id_contratto AND ragg.capofila IS TRUE
+		inner JOIN
+		sirtplc_r_sost_sog_contr_raggr sost_raggr ON
+		sost_raggr.id_contratto_raggrupp = ragg.id_contratto_raggrupp AND
+		sost_raggr.id_tipo_sostituzione = 2
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto
+		WHERE
+		contratto.id_contratto = #{idContratto}
+		AND contratto.id_procedimento =
+		#{idProcedimento}) THEN
+		sost_raggr.id_soggetto_giuridico
+		WHEN EXISTS
+		(SELECT 1
+		FROM sirtplc_t_contratto c
+		Inner JOIN
+		sirtplc_r_contratto_raggrupp ragg ON ragg.id_contratto =
+		c.id_contratto AND ragg.capofila IS TRUE
+		INNER JOIN
+		rebusp_r_proc_contratto contratto ON contratto.id_contratto =
+		c.id_contratto
+		WHERE contratto.id_contratto = #{idContratto}
+		AND
+		contratto.id_procedimento = #{idProcedimento}) THEN
+		ragg.id_soggetto_giuridico
+
+
+
+		END
+		) AS soggetto
+
+		FROM sirtplc_t_contratto c
+		LEFT JOIN sirtplc_r_contratto_raggrupp ragg ON ragg.id_contratto =
+		c.id_contratto AND ragg.capofila IS TRUE
+		LEFT JOIN
+		sirtplc_r_sost_sog_contr_raggr sost_raggr ON
+		sost_raggr.id_contratto_raggrupp = ragg.id_contratto_raggrupp AND
+		sost_raggr.id_tipo_sostituzione = 2
+		LEFT JOIN sirtplc_r_sost_sog_contr
+		sost_contr ON sost_contr.id_contratto =
+		c.id_contratto AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON ((contratto.id_contratto =
+		ragg.id_contratto AND
+		ragg.capofila IS TRUE) OR contratto.id_contratto
+		= c.id_contratto)
+		WHERE contratto.id_contratto = #{idContratto}
+		AND
+		contratto.id_procedimento = #{idProcedimento}) AS gestore_contratto
+		ON
+		gestore_contratto.soggetto = sogg_giuridico.id_soggetto_giuridico
+		WHERE sogg_giuridico.data_cessazione IS NULL
+	</select>
+
+	<select id="getGestoreContrattoProcedimentoSostituzione"
+		parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.SirtplaTSoggettoGiuridicoDTO">
+		SELECT DISTINCT sogg_giuridico.*
+		FROM
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico sogg_giuridico
+		INNER JOIN
+		(SELECT Distinct(CASE
+		WHEN EXISTS (SELECT 1
+		FROM sirtplc_t_contratto c
+		INNER JOIN sirtplc_r_sost_sog_contr sost_contr
+		ON
+		sost_contr.id_contratto = c.id_contratto
+		AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto
+		INNER JOIN
+		rebus.rebusp_t_sub_procedimento sub
+		ON (sub.id_sub_procedimento_1 =
+		contratto.id_procedimento
+		OR sub.id_sub_procedimento_2 =
+		contratto.id_procedimento)
+		AND sub.id_procedimento = #{idProcedimento}
+		WHERE contratto.id_contratto = #{idContratto}
+		AND
+		sost_contr.id_sog_giurid_esecutore IS NOT NULL) THEN
+		c.id_sog_giurid_esecutore
+
+		WHEN EXISTS (SELECT 1
+		FROM sirtplc_t_contratto
+		c
+		INNER JOIN sirtplc_r_sost_sog_contr sost_contr
+		ON
+		sost_contr.id_contratto = c.id_contratto
+		AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto
+		INNER JOIN
+		rebus.rebusp_t_sub_procedimento sub
+		ON (sub.id_sub_procedimento_1 =
+		contratto.id_procedimento
+		OR sub.id_sub_procedimento_2 =
+		contratto.id_procedimento)
+		AND sub.id_procedimento = #{idProcedimento}
+		WHERE contratto.id_contratto = #{idContratto}
+		AND
+		sost_contr.id_sog_giurid_committente IS NOT NULL) THEN
+		c.id_sog_giurid_committente
+		WHEN EXISTS (SELECT 1
+		FROM
+		sirtplc_t_contratto c
+		Inner JOIN sirtplc_r_contratto_raggrupp ragg ON
+		ragg.id_contratto =
+		c.id_contratto AND ragg.capofila IS TRUE
+		inner JOIN
+		sirtplc_r_sost_sog_contr_raggr sost_raggr ON
+		sost_raggr.id_contratto_raggrupp = ragg.id_contratto_raggrupp AND
+		sost_raggr.id_tipo_sostituzione = 2
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON contratto.id_contratto =
+		c.id_contratto
+		INNER JOIN
+		rebus.rebusp_t_sub_procedimento sub
+		ON (sub.id_sub_procedimento_1 =
+		contratto.id_procedimento
+		OR sub.id_sub_procedimento_2 =
+		contratto.id_procedimento)
+		AND sub.id_procedimento = #{idProcedimento}
+		WHERE contratto.id_contratto = #{idContratto}) THEN
+		sost_raggr.id_soggetto_giuridico
+		WHEN EXISTS (SELECT 1
+		FROM
+		sirtplc_t_contratto c
+		Inner JOIN sirtplc_r_contratto_raggrupp ragg ON
+		ragg.id_contratto =
+		c.id_contratto AND ragg.capofila IS TRUE
+		INNER JOIN
+		rebusp_r_proc_contratto contratto ON contratto.id_contratto =
+		c.id_contratto
+		INNER JOIN rebus.rebusp_t_sub_procedimento sub
+		ON
+		(sub.id_sub_procedimento_1 = contratto.id_procedimento
+		OR
+		sub.id_sub_procedimento_2 = contratto.id_procedimento)
+		AND
+		sub.id_procedimento = #{idProcedimento}
+		WHERE contratto.id_contratto =
+		#{idContratto}) THEN
+		ragg.id_soggetto_giuridico
+
+
+
+		END
+		) AS soggetto
+
+		FROM
+		sirtplc_t_contratto c
+		LEFT JOIN sirtplc_r_contratto_raggrupp ragg ON
+		ragg.id_contratto =
+		c.id_contratto AND ragg.capofila IS TRUE
+		LEFT JOIN
+		sirtplc_r_sost_sog_contr_raggr sost_raggr ON
+		sost_raggr.id_contratto_raggrupp = ragg.id_contratto_raggrupp AND
+		sost_raggr.id_tipo_sostituzione = 2
+		LEFT JOIN sirtplc_r_sost_sog_contr
+		sost_contr ON sost_contr.id_contratto =
+		c.id_contratto AND
+		sost_contr.id_tipo_sostituzione = 1
+		INNER JOIN rebusp_r_proc_contratto
+		contratto ON ((contratto.id_contratto =
+		ragg.id_contratto AND
+		ragg.capofila IS TRUE) OR contratto.id_contratto
+		= c.id_contratto)
+		INNER JOIN rebus.rebusp_t_sub_procedimento sub ON
+		(sub.id_sub_procedimento_1 = contratto.id_procedimento OR
+		sub.id_sub_procedimento_2 = contratto.id_procedimento) AND
+		sub.id_procedimento = #{idProcedimento}
+		WHERE contratto.id_contratto =
+		#{idContratto}) AS gestore_contratto ON
+		gestore_contratto.soggetto =
+		sogg_giuridico.id_soggetto_giuridico
+		WHERE
+		sogg_giuridico.data_cessazione IS NULL
+	</select>
+
+	<select id="getNoteMessaggio" parameterType="map"
+		resultType="java.lang.String">
+		SELECT DISTINCT (procedimento.note)
+		FROM
+		rebusp_t_iter_procedimento
+		procedimento
+		INNER JOIN
+		rebusp_t_iter_procedimento procedimento_2
+		ON
+		procedimento.id_procedimento = procedimento_2.id_procedimento
+		AND
+		DATE_TRUNC ('second',procedimento.data_inizio_validita) = DATE_TRUNC
+		('second',procedimento_2.data_fine_validita)
+		INNER JOIN
+		rebusp_d_transizione_automa transizione
+		ON procedimento.id_stato_iter =
+		transizione.id_stato_iter_a
+		AND procedimento_2.id_stato_iter =
+		transizione.id_stato_iter_da
+		WHERE transizione.id_tipo_messaggio =
+		#{idTipoMessaggio}
+		AND procedimento.id_procedimento = #{idProcedimento}
+		AND to_char(CAST(procedimento.data_inizio_validita AS
+		TIMESTAMP),'DD/MM/YYYY HH24:MI:SS') = to_char(CAST(#{dataCreazione} AS
+		TIMESTAMP),'DD/MM/YYYY HH24:MI:SS')
+	</select>
+
+	<select id="getSoggettoAbilitatoModifica" parameterType="map"
+		resultType="java.lang.Long">
+		SELECT DISTINCT (sogg.id_soggetto_giuridico)
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		LEFT JOIN rebusp_t_sub_procedimento sub
+		ON
+		sub.id_procedimento = procedimento.id_procedimento
+		AND
+		procedimento.id_tipo_procedimento <![CDATA[ = ]]>
+		2
+		LEFT JOIN REBUSP_R_PROC_CONTRATTO c1
+		ON c1.id_procedimento =
+		procedimento.id_procedimento
+		AND procedimento.id_tipo_procedimento <![CDATA[ <> ]]>
+		2
+		LEFT JOIN REBUSP_R_PROC_CONTRATTO c
+		ON (c.id_procedimento =
+		sub.id_sub_procedimento_1
+		OR c.id_procedimento =
+		sub.id_sub_procedimento_2)
+		AND procedimento.id_tipo_procedimento <![CDATA[ = ]]>
+		2
+		LEFT JOIN SIRTPLC_R_CONTRATTO_RAGGRUPP cr
+		ON (c.id_contratto =
+		cr.id_contratto
+		OR c1.id_contratto = cr.id_contratto)
+		AND capofila IS
+		TRUE
+		JOIN REBUSP_T_ITER_PROCEDIMENTO iter
+		ON (iter.id_procedimento =
+		c.id_procedimento
+		OR iter.id_procedimento = c1.id_procedimento)
+		AND
+		iter.id_stato_iter = 30
+		AND iter.DATA_FINE_VALIDITA IS NULL
+		JOIN
+		SIRTPL_CONTRATTI.sirtplc_t_contratto Contratto
+		ON
+		contratto.id_contratto = c.id_contratto
+		OR contratto.id_contratto =
+		c1.id_contratto
+		JOIN SIRTPL_R_UTENTE_SOG_GIURID sogg
+		ON
+		cr.id_soggetto_giuridico = sogg.id_soggetto_giuridico
+		OR
+		contratto.id_sog_giurid_esecutore = sogg.id_soggetto_giuridico
+		LEFT
+		OUTER JOIN sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr
+		ON
+		sr.id_contratto_raggrupp = cr.id_contratto_raggrupp
+		AND
+		sogg.id_soggetto_giuridico = sr.id_soggetto_giuridico
+		LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc
+		ON sc.id_contratto =
+		c.id_contratto
+		AND sogg.id_soggetto_giuridico =
+		sc.id_sog_giurid_esecutore
+		WHERE procedimento.id_procedimento =
+		#{idProcedimento}
+	</select>
+
+	<select id="getEnteAbilitatoModifica" parameterType="map"
+		resultType="java.lang.Long">
+		SELECT DISTINCT (CASE WHEN sc.id_sog_giurid_committente IS
+		NULL THEN
+		contratto.id_sog_giurid_committente ELSE
+		sc.id_sog_giurid_committente
+		END)
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		INNER JOIN rebusp_t_iter_procedimento iter ON
+		procedimento.id_procedimento
+		= iter.id_procedimento
+		LEFT JOIN (SELECT
+		DISTINCT procedimento.id_procedimento,
+		c.id_contratto
+		FROM
+		REBUSP_T_PROCEDIMENTO procedimento
+		LEFT JOIN
+		rebus.rebusp_t_sub_procedimento sub ON sub.id_procedimento =
+		procedimento.id_procedimento
+		INNER JOIN rebus.rebusp_r_proc_contratto c
+		ON (procedimento.id_tipo_procedimento = 2
+		AND (c.id_procedimento =
+		sub.id_sub_procedimento_1
+		OR c.id_procedimento =
+		sub.id_sub_procedimento_2))
+		OR (procedimento.id_tipo_procedimento != 2
+		AND procedimento.id_procedimento = c.id_procedimento)) AS
+		proc_contratto
+		ON procedimento.id_procedimento =
+		proc_contratto.id_procedimento
+		INNER JOIN sirtplc_t_contratto contratto
+		ON contratto.id_contratto =
+		proc_contratto.id_contratto
+		LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc ON
+		sc.id_contratto =
+		contratto.id_contratto AND
+		sc.id_sog_giurid_committente IS NOT NULL
+		WHERE procedimento.id_procedimento = #{idProcedimento}
+		AND
+		iter.id_stato_iter = 40
+		AND iter.data_fine_validita IS NULL
+		LIMIT 1
+	</select>
+
+	<select id="getSoggettoAbilitatoScaricaPDF" parameterType="map"
+		resultType="java.lang.Long">
+		select distinct(case when contratto.id_tipo_sog_giurid_esec
+		= 3 then
+		raggr.id_soggetto_giuridico else
+		contratto.id_sog_giurid_esecutore
+		end)
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		INNER JOIN rebusp_t_iter_procedimento iter ON
+		procedimento.id_procedimento
+		= iter.id_procedimento
+		inner join
+		rebusp_r_proc_contratto proc on proc.id_procedimento =
+		procedimento.id_procedimento
+		inner join sirtplc_t_contratto contratto
+		on contratto.id_contratto =
+		proc.id_contratto
+		left join
+		sirtplc_r_contratto_raggrupp raggr on contratto.id_contratto =
+		raggr.id_contratto
+		and raggr.capofila is true
+		where
+		procedimento.id_procedimento = #{idProcedimento}
+		and iter.id_stato_iter
+		= 40
+		AND iter.data_fine_validita IS NULL
+		and
+		contratto.id_tipo_sog_giurid_esec in (2, 3)
+	</select>
+
+	<select id="getEnteAbilitatoScaricaPDF" parameterType="map"
+		resultType="java.lang.Long">
+		select distinct(contratto.id_sog_giurid_committente)
+		FROM
+		REBUSP_T_PROCEDIMENTO procedimento
+		INNER JOIN
+		rebusp_t_iter_procedimento iter ON procedimento.id_procedimento
+		=
+		iter.id_procedimento
+		inner join rebusp_r_proc_contratto proc on
+		proc.id_procedimento =
+		procedimento.id_procedimento
+		inner join
+		sirtplc_t_contratto contratto on contratto.id_contratto =
+		proc.id_contratto
+		where procedimento.id_procedimento =
+		#{idProcedimento}
+		and iter.id_stato_iter = 60
+		AND
+		iter.data_fine_validita IS NULL
+	</select>
+
+	<select id="getProcedimentoForFirma"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebuspTProcedimentoDTO">
+		SELECT procedimento.*
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		INNER JOIN rebusp_t_iter_procedimento iter ON
+		procedimento.id_procedimento
+		= iter.id_procedimento
+		INNER JOIN
+		sirtpl_trasv.sirtpl_r_utente_sog_giurid utente_sogg ON
+		iter.id_utente_sog_giurid=utente_sogg.id_utente_sog_giurid
+		WHERE
+		id_stato_iter = 40 AND utente_sogg.id_soggetto_giuridico =
+		#{idAzienda}
+		ORDER BY iter.data_inizio_validita DESC, id_procedimento
+		LIMIT 1
+	</select>
+
+	<select id="getProcedimentoForFirmaEnte"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebuspTProcedimentoDTO">
+		SELECT procedimento.*
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		INNER JOIN rebusp_t_iter_procedimento iter ON
+		procedimento.id_procedimento
+		= iter.id_procedimento
+		INNER JOIN
+		sirtpl_trasv.sirtpl_r_utente_sog_giurid utente_sogg ON
+		iter.id_utente_sog_giurid=utente_sogg.id_utente_sog_giurid
+		WHERE
+		id_stato_iter = 60 AND utente_sogg.id_soggetto_giuridico = #{idEnte}
+		AND NOT EXISTS (SELECT 1
+		FROM rebusp_t_sub_procedimento sub
+		WHERE
+		sub.id_sub_procedimento_1 = procedimento.id_procedimento
+		OR
+		sub.id_sub_procedimento_2 = procedimento.id_procedimento)
+		ORDER BY
+		iter.data_inizio_validita DESC, id_procedimento
+		LIMIT 1
+	</select>
+
+	<select id="getProcedimentoForPremessePrescrizioni"
+		parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebuspTProcedimentoDTO">
+		SELECT procedimento.*
+		FROM REBUSP_T_PROCEDIMENTO
+		procedimento
+		INNER JOIN rebusp_t_iter_procedimento iter ON
+		procedimento.id_procedimento
+		= iter.id_procedimento
+		INNER JOIN
+		sirtpl_trasv.sirtpl_r_utente_sog_giurid utente_sogg ON
+		iter.id_utente_sog_giurid=utente_sogg.id_utente_sog_giurid
+		WHERE
+		id_stato_iter = 60 AND utente_sogg.id_soggetto_giuridico = #{idEnte}
+		AND procedimento.id_tipo_procedimento = #{idtipoProcedimento}
+		AND NOT
+		EXISTS (SELECT 1
+		FROM rebusp_t_sub_procedimento sub
+		WHERE
+		sub.id_sub_procedimento_1 = procedimento.id_procedimento
+		OR
+		sub.id_sub_procedimento_2 = procedimento.id_procedimento)
+		ORDER BY
+		iter.data_inizio_validita DESC, id_procedimento
+		LIMIT 1
+	</select>
+
+	<select id="countForNumProcedimento" parameterType="map"
+		resultType="java.lang.Long">
+		select MAX(distinct(p.num_procedimento))
+		from
+		rebus.rebusp_t_iter_procedimento i
+		inner join
+		rebus.rebusp_t_procedimento p on
+		p.id_procedimento=i.id_procedimento
+		left outer join rebus.rebusp_t_sub_procedimento sub1 on
+		sub1.id_sub_procedimento_1=p.id_procedimento
+		left outer join
+		rebus.rebusp_t_sub_procedimento sub2 on
+		sub2.id_sub_procedimento_2=p.id_procedimento
+		where i.id_stato_iter=10
+		and sub1.id_sub_procedimento_1 is null and sub2.id_sub_procedimento_1
+		is
+		null
+
+		<if test="idTipoProcedimento != null">
+			and p.id_tipo_procedimento = #{idTipoProcedimento}
+		</if>
+
+		<if test="dataInizio != null">
+			and i.data_inizio_validita <![CDATA[ >= ]]>
+			#{dataInizio}
+		</if>
+
+		<if test="dataFine != null">
+			and i.data_inizio_validita <![CDATA[ <= ]]>
+			#{dataFine}
+		</if>
+	</select>
+
+	<select id="getVeicoliTitolariContratto" parameterType="map"
+		resultType="int">
+		SELECT COUNT(*)
+		FROM rebusp_r_proc_veicolo veicolo
+		INNER JOIN
+		rebusp_r_proc_contratto contratto ON contratto.id_procedimento =
+		veicolo.id_procedimento
+		INNER JOIN rebusp_t_procedimento p ON
+		p.id_procedimento =
+		veicolo.id_procedimento
+		WHERE p.id_tipo_procedimento
+		IN (5,4,3,2)
+		AND id_tipo_ruolo = 1
+		AND veicolo.primo_telaio =
+		#{primo_telaio}
+		<if test="idProcedimento != null">
+			AND veicolo.id_procedimento <![CDATA[ <> ]]>
+			#{idProcedimento}
+		</if>
+	</select>
+
+	<select id="checkVeicoliContrattiUsoInLinea" parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebuspRProcVeicoloDTO">
+		SELECT v.*
+		FROM rebusp_r_proc_contratto c
+		INNER JOIN
+		rebusp_r_proc_veicolo v ON v.id_procedimento = c.id_procedimento
+		INNER
+		JOIN sirtplc_t_contratto contratto ON c.id_contratto =
+		contratto.id_contratto
+		WHERE c.id_tipo_ruolo = #{idTipoContratto}
+		AND
+		v.primo_telaio IN
+		<foreach item="item" index="index" collection="veicoloVO"
+			open="(" separator="," close=")">
+			#{item.primoTelaio}
+		</foreach>
+		AND (contratto.data_fine_validita IS NULL OR
+		contratto.data_fine_validita > NOW()::DATE)
+	</select>
+
+	<select id="getElencoStatiRichieste" parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebuspDStatoIterDTO">
+		select id_stato_iter, desc_stato_iter
+		from
+		rebusp_d_stato_iter
+		where current_date between data_inizio_validita and
+		nvl(data_fine_validita,
+		current_date)
+		order by id_stato_iter
+	</select>
+
+	<!-- Per soggetto subaffidatario consorziata, stampa pdf richieste -->
+	<select id="selectSogContr"
+		parameterType="it.csi.rebus.rebuscrus.integration.dto.SirtplcRSostSogContrSelector"
+		resultType="it.csi.rebus.rebuscrus.vo.RichiestaPdfVO">
+		select a.*, id_contratto
+		from sirtplc_r_sost_sog_contr_raggr a,
+		sirtplc_r_contratto_raggrupp cr
+		WHERE a.id_contratto_raggrupp =
+		cr.id_contratto_raggrupp
+		and ( 1=1
+		<if test="idContratto != null">
+			and id_contratto = #{idContratto}
+		</if>
+
+		<if test="idTipoSostituzione != null">
+			and id_tipo_sostituzione = #{idTipoSostituzione}
+		</if>
+
+		<if test="idSoggettoRichiedente != null">
+			and a.id_soggetto_giuridico =#{idSoggettoRichiedente}
+		</if>
+		)
+
+	</select>
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte SPDX-License-Identifier: 
+	EUPL-1.2 -->

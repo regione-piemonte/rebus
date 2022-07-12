@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.CommonDAO">
+
+	<select id="eseguiQuery" parameterType="java.lang.String"
+		resultType="java.lang.Integer">
+
+		${query}
+
+	</select>
+
+
+	<select id="getAziendaAutobusByIdVa"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.AziendaAutobusVO">
+		SELECT az.* FROM rebus.rebus_t_variaz_autobus va
+		INNER JOIN
+		rebus_r_azienda_autobus az
+		ON va.primo_telaio= az.primo_telaio
+		WHERE
+		va.id_variaz_autobus=#{idVariazAutobus}
+	</select>
+
+	<select id="getSoggettiByIdProcedimento"
+		parameterType="java.lang.Long" resultType="java.lang.Long">
+		SELECT distinct
+		(stsg.id_soggetto_giuridico)
+		FROM rebus.rebusp_t_iter_procedimento x
+		join sirtpl_trasv.sirtpl_r_utente_sog_giurid utente on
+		utente.id_utente_sog_giurid = x.id_utente_sog_giurid
+		join
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico stsg on
+		stsg.id_soggetto_giuridico = utente.id_soggetto_giuridico
+		WHERE
+		x.id_procedimento=#{idProcedimento}
+	</select>
+
+
+	<select id="getSoggettiById" parameterType="java.lang.Long"
+		resultType="java.lang.Long">
+		select
+		distinct va.fk_azienda
+		from rebus.v_procedimenti_veicoli p
+		join rebus.rebus_r_azienda_autobus va on va.primo_telaio = p.telaio
+		where p.id_p = #{id}
+		or p.sub1 = #{id}
+		or p.sub2 = #{id}
+
+		union
+
+		select sc.id_sog_giurid_esecutore
+		from rebusp_t_procedimento as p
+		join rebusp_r_proc_contratto as c on c.id_procedimento = p.id_procedimento
+		join sirtplc_t_contratto sc on sc.id_contratto = c.id_contratto
+		where p.id_procedimento = #{id}
+
+		union
+
+		select srusg.id_soggetto_giuridico
+		from rebus.rebusp_t_iter_procedimento it
+		join sirtpl_trasv.sirtpl_r_utente_sog_giurid srusg on
+		it.id_utente_sog_giurid = srusg.id_utente_sog_giurid
+		where it.id_procedimento = #{id}
+		and it.id_stato_iter = 10
+
+		union
+
+		select sc.id_sog_giurid_committente
+		from rebusp_t_procedimento as p
+		join rebusp_r_proc_contratto as c on c.id_procedimento = p.id_procedimento
+		join sirtplc_t_contratto sc on sc.id_contratto = c.id_contratto
+		where p.id_procedimento = #{id}
+	</select>
+
+
+
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte SPDX-License-Identifier: 
+	EUPL-1.2 -->

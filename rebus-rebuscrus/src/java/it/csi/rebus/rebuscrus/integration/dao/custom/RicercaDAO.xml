@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.RicercaDAO">
+
+	<select id="getElencoAutobus"
+		parameterType="it.csi.rebus.rebuscrus.vo.FiltroAutobusVO"
+		resultType="it.csi.rebus.rebuscrus.vo.AutobusVO">
+		SELECT DISTINCT varAutobus.id_variaz_autobus AS id,
+		varAutobus.n_targa
+		AS targa,
+		autobus.primo_telaio AS primoTelaio,
+		autobus.data_prima_immatricolazione AS dataPrimaImmatricolazione,
+		varAutobus.fk_tipo_allestimento AS idTipoAllestimento,
+		tipoAllestimento.descrizione AS tipoAllestimento,
+		varAutobus.fk_tipo_alimentazione AS idTipoAlimentazione,
+		tipologiaAliment.descrizione AS tipoAlimentazione,
+		classeAmbient.descrizione AS classeAmbientale,
+		varAutobus.data_aggiornamento,
+		CASE
+		WHEN
+		varAutobus.contributo_pubblico_acquisto > 0::DOUBLE precision THEN
+		'S'::TEXT
+		ELSE 'N'
+		END AS contributo,
+		decode(aziendaAutobus.data_alienazione,
+		NULL, 'N',
+		'S'
+		) AS flagAlienato,
+		varAutobus.flg_verificato_azienda AS flagVerificaAzienda,
+		decode(varAutobus.flg_verificato_amp,'U','-',varAutobus.flg_verificato_amp)
+		AS flagVerificaAmp,
+		varAutobus.n_matricola_aziendale AS matricola,
+		(aziende.denominazione) AS azienda,
+		varAutobus.lunghezza,
+		decode(aziendaAutobus.data_alienazione, NULL, 'N', 'S' ) AS
+		flagAlienato,
+		CASE
+		WHEN doc.id_variaz_autobus IS NOT NULL THEN TRUE
+		ELSE FALSE
+		END AS
+		isAllegato,
+		CASE WHEN pv.id_procedimento is not null then true
+		ELSE
+		false
+		END AS isProcedimento
+		FROM rebus_t_variaz_autobus varAutobus
+		LEFT
+		JOIN v_veicoli_procedimenti vp ON varAutobus.id_variaz_autobus =
+		vp.id_va
+		JOIN rebus_t_autobus autobus ON autobus.primo_telaio =
+		varAutobus.primo_telaio
+		JOIN rebus_r_azienda_autobus aziendaAutobus ON
+		aziendaAutobus.primo_telaio
+		= autobus.primo_telaio
+		<if test='flagProprieta != null and "S".equals(flagProprieta)'>
+			AND (aziendaAutobus.data_alienazione IS null or
+			(aziendaAutobus.data_alienazione IS not null and not exists (select 1
+			from rebus_r_azienda_autobus aa1
+			where aziendaAutobus.primo_telaio =
+			aa1.primo_telaio
+			and aa1.data_alienazione is null))
+			and
+			(aziendaAutobus.data_alienazione IS not null
+			and
+			not exists (select 1
+			from rebus_r_azienda_autobus aa1
+			where aziendaAutobus.primo_telaio =
+			aa1.primo_telaio
+			and aa1.data_alienazione >
+			aziendaAutobus.data_alienazione)))
+		</if>
+		AND (aziendaAutobus.data_alienazione IS NULL OR
+		aziendaAutobus.data_alienazione  <![CDATA[ <]]>
+		NOW() :: DATE)
+		JOIN rebus_t_aziende aziende ON aziende.id_azienda =
+		aziendaAutobus.fk_azienda
+		JOIN rebus_d_tipo_alimentazione
+		tipologiaAliment ON
+		tipologiaAliment.id_tipo_alimentazione =
+		varAutobus.fk_tipo_alimentazione
+		JOIN rebus_d_classe_amb_euro
+		classeAmbient ON
+		classeAmbient.id_classe_ambientale =
+		varAutobus.fk_classe_ambientale_euro
+		JOIN rebus_d_tipo_allestimento
+		tipoAllestimento ON
+		varAutobus.fk_tipo_allestimento =
+		tipoAllestimento.id_tipo_allestimento
+		JOIN rebus_d_tipologia_dimens
+		tipologiaDimens
+		ON tipologiaDimens.id_tipo_allestimento =
+		varAutobus.fk_tipo_allestimento
+		AND tipologiaDimens.progr_tipo_dimens =
+		varAutobus.progr_tipo_dimens
+		LEFT JOIN rebus_r_doc_variaz_autobus doc
+		ON varAutobus.id_variaz_autobus =
+		doc.id_variaz_autobus
+		LEFT JOIN
+		rebusp_r_proc_veicolo pv ON autobus.primo_telaio = pv.primo_telaio
+		<where>
+			<if test="richiesta != null">
+				and (UPPER(vp.num_proc) LIKE UPPER(#{richiesta}))
+			</if>
+			<if test="primoTelaio != null">
+				and (UPPER(autobus.primo_telaio) LIKE
+				UPPER(#{primoTelaio}))
+			</if>
+			<if test="telaio != null">
+				and (UPPER(varAutobus.primo_telaio) LIKE
+				UPPER(#{telaio}))
+			</if>
+			<if test="targa != null">
+				and (UPPER(varAutobus.n_targa) LIKE UPPER(#{targa}))
+			</if>
+			<if test="matricola != null">
+				and (UPPER(varAutobus.n_matricola_aziendale) LIKE
+				UPPER(#{matricola}))
+			</if>
+			<if test="denominazioneAzienda != null">
+				and (UPPER(aziende.denominazione) LIKE
+				UPPER(#{denominazioneAzienda})
+				or UPPER(aziende.natura_giuridica)
+				LIKE
+				UPPER(#{denominazioneAzienda}) )
+			</if>
+			<if test='flagRichiesta != null and "S".equals(flagRichiesta)'>
+				and vp.id_proc is not null
+			</if>
+			<if
+				test='flagVerificatoAmp != null and !"S".equals(flagVerificatoAmp)'>
+				and (UPPER(varAutobus.flg_verificato_amp) = 'N' or
+				UPPER(varAutobus.flg_verificato_amp) = 'U')
+			</if>
+
+			<if
+				test='flagVerificatoAzienda != null and "N".equals(flagVerificatoAzienda)'>
+				and UPPER(varAutobus.flg_verificato_azienda) LIKE
+				UPPER(#{flagVerificatoAzienda})
+			</if>
+
+			<if test='dataAlienazione == null or "N".equals(dataAlienazione)'>
+				and ( aziendaAutobus.data_alienazione is null AND
+				(varAutobus.flg_alienato is null OR varAutobus.flg_alienato = 'N') )
+			</if>
+			<if test="idAzienda != null">
+				and aziende.id_azienda = #{idAzienda}
+			</if>
+			<if test="tipoAlimentazione != null">
+				and varAutobus.fk_tipo_alimentazione =
+				#{tipoAlimentazione}
+			</if>
+			<if test="dataPrimaImmatricolazioneDa != null">
+				and autobus.data_prima_immatricolazione <![CDATA[ >= ]]>
+				#{dataPrimaImmatricolazioneDa}
+			</if>
+			<if test="dataPrimaImmatricolazioneA != null">
+				and autobus.data_prima_immatricolazione <![CDATA[ <= ]]>
+				#{dataPrimaImmatricolazioneA}
+			</if>
+		</where>
+		order by varAutobus.data_aggiornamento DESC
+
+	</select>
+
+	<select id="calcolaNumMessaggi" parameterType="map"
+		resultType="java.lang.Long">
+
+		select count(*)
+		from REBUS_T_MESSAGGI mes
+		where
+		mes.fk_utente_destinatario IN
+		(select id_utente from
+		sirtpl_trasv.sirtpl_r_utente_sog_giurid rUtente
+		where id_soggetto_giuridico = #{idAzienda}
+		or
+		id_soggetto_giuridico = #{idEnte}
+		)
+		and nvl(mes.flg_letto, 'N') = 'N'
+		and
+		nvl(mes.flg_archiviato, 'N') =
+		'N'
+
+	</select>
+
+
+	<select id="trovaDestinatario"
+		parameterType="it.csi.rebus.rebuscrus.integration.dto.RebusTVariazAutobusDTO"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebusTStoriaVariazAutobusDTO">
+
+		SELECT storiaAutobus.*
+		FROM rebus_t_storia_variaz_autobus
+		storiaAutobus
+		INNER JOIN rebus_r_azienda_autobus azienda_autobus
+		ON
+		azienda_autobus.primo_telaio = storiaAutobus.primo_telaio
+		AND
+		(azienda_autobus.data_alienazione IS NULL OR
+		azienda_autobus.data_alienazione > NOW() :: DATE)
+		INNER JOIN sirtpl_trasv.sirtpl_r_utente_sog_giurid utenteAzEnte
+		ON storiaAutobus.fk_utente =
+		utenteAzEnte.id_utente
+		AND azienda_autobus.fk_azienda =
+		utenteAzEnte.id_soggetto_giuridico
+		WHERE storiaAutobus.primo_telaio =
+		#{primoTelaio}
+		ORDER BY storiaAutobus.data_aggiornamento DESC LIMIT 1
+
+	</select>
+
+	<select id="getVeicoli" parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.custom.VeicoloDTO">
+
+		SELECT va.id_variaz_autobus,
+		va.primo_telaio,
+		va.n_targa,
+		classe.descrizione AS desc_classe_amb_euro,
+		ta.descrizione AS
+		desc_tipo_allestimento,
+		va.lunghezza,
+		autobus.marca,
+		autobus.modello,
+		autobus.data_prima_immatricolazione,
+		va.data_ultima_immatricolazione
+		FROM rebus_t_variaz_autobus AS va
+		INNER JOIN rebus_r_azienda_autobus AS
+		aa ON aa.primo_telaio =
+		va.primo_telaio
+		AND (aa.data_alienazione IS NULL
+		OR aa.data_alienazione > NOW() :: DATE)
+		INNER JOIN
+		rebus_d_classe_amb_euro AS classe ON
+		classe.id_classe_ambientale =
+		va.fk_classe_ambientale_euro
+		INNER JOIN rebus.rebus_d_tipo_allestimento
+		AS ta ON ta.id_tipo_allestimento
+		= va.fk_tipo_allestimento
+		INNER JOIN
+		rebus.rebus_t_autobus AS autobus ON autobus.primo_telaio =
+		va.primo_telaio
+		LEFT OUTER JOIN rebus.rebus_r_doc_variaz_autobus AS
+		docva ON
+		docva.id_variaz_autobus = va.id_variaz_autobus
+		<where>
+			<if test="idAzienda != null">
+				AND aa.fk_azienda = #{idAzienda}
+			</if>
+			<if test="idTipoProcedimento != null and idTipoProcedimento == 1">
+				AND va.n_targa IS NULL
+			</if>
+			<if test="idTipoProcedimento != null and idTipoProcedimento != 1">
+				AND va.n_targa IS NOT NULL
+				AND (va.flg_alienato != 'S'
+				OR
+				(aa.data_alienazione IS NULL OR aa.data_alienazione <![CDATA[ > ]]>
+				NOW()::DATE))
+			</if>
+			<if
+				test="idTipoProcedimento != null and (idTipoProcedimento == 1 || idTipoProcedimento == 3)">
+				AND (va.id_variaz_autobus NOT IN (SELECT va2.id_variaz_autobus
+				FROM
+				rebus_t_variaz_autobus AS va2
+				INNER JOIN rebusp_r_proc_veicolo
+				proc_veicolo ON
+				proc_veicolo.primo_telaio = va2.primo_telaio
+				INNER
+				JOIN rebusp_t_procedimento proc ON proc.id_procedimento =
+				proc_veicolo.id_procedimento
+				INNER JOIN rebusp_t_iter_procedimento
+				iter ON iter.id_procedimento =
+				proc.id_procedimento
+				WHERE
+				proc.id_tipo_procedimento = #{idTipoProcedimento}
+				AND
+				iter.id_stato_iter != 70
+				AND iter.data_fine_validita IS NULL)
+				<if test="idVeicoliSelezionati != null">
+					OR va.id_variaz_autobus IN
+					<foreach item="item" index="index"
+						collection="idVeicoliSelezionati" open="(" separator="," close=")">
+						#{item}
+					</foreach>
+				</if>
+				)
+				<if
+					test="idTipoProcedimento != null and (idTipoProcedimento == 1 )">
+					and docva.id_tipo_documento=5
+				</if>
+			</if>
+			<if test="idTipoProcedimento != null and idTipoProcedimento == 4">
+				AND ((va.id_variaz_autobus NOT IN (SELECT va2.id_variaz_autobus
+				FROM
+				rebus_t_variaz_autobus AS va2
+				INNER JOIN rebusp_r_proc_veicolo
+				proc_veicolo ON
+				proc_veicolo.primo_telaio = va2.primo_telaio
+				INNER
+				JOIN rebusp_t_procedimento proc ON proc.id_procedimento =
+				proc_veicolo.id_procedimento
+				INNER JOIN rebusp_t_iter_procedimento
+				iter ON iter.id_procedimento =
+				proc.id_procedimento
+				WHERE
+				proc.id_tipo_procedimento = #{idTipoProcedimento}
+				AND
+				iter.id_stato_iter NOT IN (60,70)
+				AND iter.data_fine_validita IS
+				NULL)
+				AND va.id_variaz_autobus NOT IN (SELECT va2.id_variaz_autobus
+				FROM rebus_t_variaz_autobus AS va2
+				INNER JOIN rebusp_r_proc_veicolo
+				proc_veicolo ON
+				proc_veicolo.primo_telaio = va2.primo_telaio
+				INNER
+				JOIN rebusp_t_procedimento proc ON proc.id_procedimento =
+				proc_veicolo.id_procedimento
+				INNER JOIN rebusp_t_iter_procedimento
+				iter ON iter.id_procedimento =
+				proc.id_procedimento
+				WHERE
+				proc.id_tipo_procedimento = 3
+				AND iter.id_stato_iter != 60
+				AND
+				iter.data_fine_validita IS NULL)
+				)
+				<if test="idVeicoliSelezionati != null">
+					OR va.id_variaz_autobus IN
+					<foreach item="item" index="index"
+						collection="idVeicoliSelezionati" open="(" separator="," close=")">
+						#{item}
+					</foreach>
+				</if>
+				)
+			</if>
+			<if
+				test="idTipoProcedimento != null and (idTipoProcedimento == 2 )">
+				and docva.id_tipo_documento=1
+			</if>
+			<!-- visualizza flg_verificato_amp="N" solo con alienazione id=3 -->
+			<if
+				test="idTipoProcedimento != null and (idTipoProcedimento != 3)">
+				and va.flg_verificato_amp IN ('S', 'U')
+			</if>
+			<if
+				test="idTipoProcedimento != null and (idTipoProcedimento == 3 or idTipoProcedimento == 4 or idTipoProcedimento == 5 or idTipoProcedimento == 6)">
+				and docva.id_variaz_autobus is not null
+				and
+				docva.id_tipo_documento=1
+			</if>
+			<if test="idTipoProcedimento != null and idTipoProcedimento == 7">
+				and (va.contributo_pubblico_acquisto is null or
+				va.contributo_pubblico_acquisto = 0)
+				and
+				autobus.data_prima_immatricolazione <![CDATA[ > ]]>
+				'2014-01-01'::DATE
+			</if>
+		</where>
+
+		<if test="idTipoProcedimento != null and idTipoProcedimento == 1">
+			order by va.primo_telaio
+		</if>
+		<if test="idTipoProcedimento != null and idTipoProcedimento != 1">
+			order by va.n_targa
+		</if>
+
+	</select>
+
+	<select id="getTipologiaDimensione"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebusDTipologiaDimensDTO">
+
+		select
+
+		MIN(tipologia.lunghezza_min) as lunghezza_min ,
+		MAX(tipologia.lunghezza_max) as lunghezza_max
+
+		from
+		rebus_d_tipologia_dimens as tipologia
+
+		where tipologia.tipologia_dimens
+		!= 'ND'
+
+		and tipologia.id_tipo_allestimento = #{idTipoAllestimento}
+
+	</select>
+
+	<select id="elencoMessaggi" parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebusTMessaggiDTO">
+		SELECT DISTINCT (m.*)
+		FROM rebus_t_messaggi m
+		INNER JOIN sirtpl_trasv.sirtpl_r_utente_sog_giurid utente ON
+		utente.id_utente = m.fk_utente_destinatario
+		INNER JOIN rebus_d_tipo_messaggio tipo ON tipo.id_tipo_messaggio =
+		m.fk_tipo_messaggio
+		WHERE 1 = 1
+		AND tipo.id_contesto = #{idContesto}
+		<if test="idUtente != null or idAzienda != null or idEnte != null">
+			AND (utente.id_utente = #{idUtente}
+			<if test="idAzienda != null">
+				OR (utente.id_soggetto_giuridico = #{idAzienda})
+			</if>
+			<if test="idEnte != null">
+				OR (utente.id_soggetto_giuridico = #{idEnte})
+			</if>
+			)
+		</if>
+		ORDER BY data_creazione DESC
+
+
+
+	</select>
+
+	<select id="getContestoHome" parameterType="map"
+		resultType="it.csi.rebus.rebuscrus.vo.ContestoVO">
+		SELECT contesto.id_contesto AS id,
+		contesto.cod_contesto AS cod,
+		contesto.desc_contesto AS descrizione
+		FROM rebus_t_messaggi m
+		INNER JOIN sirtpl_trasv.sirtpl_r_utente_sog_giurid utente ON
+		utente.id_utente = m.fk_utente_destinatario
+		INNER JOIN
+		rebus_d_tipo_messaggio tipo ON tipo.id_tipo_messaggio =
+		m.fk_tipo_messaggio
+		INNER JOIN sirtpl_d_contesto contesto ON
+		contesto.id_contesto =
+		tipo.id_contesto
+		WHERE m.flg_letto = 'N'
+		<if test="idUtente != null or idAzienda != null or idEnte != null">
+			AND (utente.id_utente = #{idUtente}
+			<if test="idAzienda != null">
+				OR (utente.id_soggetto_giuridico = #{idAzienda})
+			</if>
+			<if test="idEnte != null">
+				OR (utente.id_soggetto_giuridico = #{idEnte})
+			</if>
+			)
+		</if>
+		ORDER BY data_creazione DESC LIMIT 1
+
+	</select>
+
+	<select id="checkMessaggiNonLetti" parameterType="map"
+		resultType="java.lang.Boolean">
+		SELECT CASE
+		WHEN EXISTS (SELECT 1
+		FROM rebus_t_messaggi m
+		INNER JOIN sirtpl_trasv.sirtpl_r_utente_sog_giurid utente ON
+		utente.id_utente = m.fk_utente_destinatario
+		INNER JOIN
+		rebus_d_tipo_messaggio tipo ON tipo.id_tipo_messaggio =
+		m.fk_tipo_messaggio
+		WHERE tipo.id_contesto = #{idContesto}
+		AND flg_letto
+		= 'N'
+		<if test="idUtente != null or idAzienda != null or idEnte != null">
+			AND (utente.id_utente = #{idUtente}
+			<if test="idAzienda != null">
+				OR (utente.id_soggetto_giuridico = #{idAzienda})
+			</if>
+			<if test="idEnte != null">
+				OR (utente.id_soggetto_giuridico = #{idEnte})
+			</if>
+			)
+		</if>
+		) THEN TRUE
+		ELSE FALSE
+		END
+	</select>
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

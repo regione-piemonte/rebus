@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net http://dozer.sourceforge.net/schema/beanmapping.xsd">
+	
+	<mapping>
+		<class-a>it.csi.rebus.rebuscrus.integration.dto.RebusTUtentiDTO</class-a>
+		<class-b>it.csi.rebus.rebuscrus.vo.FunzionarioVO</class-b>
+		<field>
+			<a>idUtente</a>
+			<b>id</b>
+		</field>
+		<field>
+			<a>cf</a>
+			<b>codiceFiscale</b>
+		</field>
+		<field>
+			<a>cognome</a>
+			<b>cognome</b>
+		</field>
+		<field>
+			<a>nome</a>
+			<b>nome</b>
+		</field>
+	</mapping>
+	
+</mappings>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

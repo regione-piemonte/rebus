@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net http://dozer.sourceforge.net/schema/beanmapping.xsd">
+	
+	<mapping>
+		<class-a>it.csi.rebus.rebuscrus.integration.dto.VAutobusSmallDTO</class-a>
+		<class-b>it.csi.rebus.rebuscrus.vo.AutobusVO</class-b>
+		<field>
+			<a>idVariazAutobus</a>
+			<b>id</b>
+		</field>
+		<field>
+			<a>primoTelaio</a>
+			<b>telaio</b>
+		</field>
+		<field>
+			<a>marca</a>
+			<b>marca</b>
+		</field>
+		<field>
+			<a>modello</a>
+			<b>modello</b>
+		</field>
+		<field>
+			<a>contribuito</a>
+			<b>contributo</b>
+		</field>
+		<field>
+			<a>dataPrimaImmatricolazione</a>
+			<b date-format="yyyy-dd-MM">dataPrimaImmatricolazione</b>
+		</field>
+		<field>
+			<a>fkTipoAllestimento</a>
+			<b>tipoAllestimento</b>
+		</field>
+	</mapping>
+	
+</mappings>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

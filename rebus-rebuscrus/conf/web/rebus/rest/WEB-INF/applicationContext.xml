@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/util 
+       http://www.springframework.org/schema/util/spring-util.xsd"
+>
+	<!-- attiva annotation spring aop per log -->
+ 	<aop:aspectj-autoproxy />
+ 
+	<bean class="it.csi.rebus.rebuscrus.business.SpringApplicationContextHelper"></bean>
+	
+	<!-- bean della gestione log -->
+	<bean name="logInterceptor" class="it.csi.rebus.rebuscrus.integration.generator.LogInterceptor"></bean>
+  
+ 
+ 	<bean class="org.dozer.spring.DozerBeanMapperFactoryBean">
+        <property name="mappingFiles" value="classpath:it/csi/rebus/rebuscrus/integration/mapper/xml/*.xml"/>
+    </bean>
+    
+    <!-- Registra i file di property -->
+	<context:property-placeholder location="classpath:application.properties" />
+        
+	<import resource="/daoContext.xml"/>
+	
+	<context:component-scan base-package="it.csi.rebus.rebuscrus.integration.mapper" />
+	
+	<context:component-scan base-package="it.csi.rebus.rebuscrus.common" />
+	
+	<context:component-scan base-package="it.csi.rebus.rebuscrus.business" />
+	
+	<context:component-scan base-package="it.csi.rebus.rebuscrus.filter" />
+
+	
+</beans>

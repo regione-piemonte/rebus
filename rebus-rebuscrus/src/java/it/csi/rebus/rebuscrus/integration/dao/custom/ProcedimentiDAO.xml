@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.ProcedimentiDAO">
+
+	<select id="getProcByIdVa" parameterType="java.lang.String"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.custom.ProcedimentiDTO">
+		select id_va, num_proc, tipo_proc, stato_proc, data_stato, contratto,
+		ente_comm, esec_tit, richiesta, autorizzazione, id_proc, id_tipo_proc
+		from v_veicoli_procedimenti
+		where id_va = #{idVa}
+	</select>
+	
+
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

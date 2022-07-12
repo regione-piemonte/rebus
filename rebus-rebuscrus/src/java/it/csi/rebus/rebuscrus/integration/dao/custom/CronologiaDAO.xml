@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="it.csi.rebus.rebuscrus.integration.dao.custom.CronologiaDAO" >
+
+  <select id="getCronologia" parameterType="java.lang.String" resultType="it.csi.rebus.rebuscrus.integration.dto.custom.CronologiaDTO">
+    select  primo_telaio, denominazione_breve, data_alienazione
+    from rebus_r_azienda_autobus as autobus
+    INNER JOIN SIRTPLA_T_SOGGETTO_GIURIDICO AS soggetto ON soggetto.id_soggetto_giuridico = autobus.fk_azienda
+    WHERE primo_telaio = #{primoTelaio}
+    ORDER BY data_alienazione DESC
+  </select>
+ 
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

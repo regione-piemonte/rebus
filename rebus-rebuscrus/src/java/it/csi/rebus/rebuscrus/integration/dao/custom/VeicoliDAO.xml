@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.VeicoliDAO">
+
+	
+	<select id="getViewVeicoli"
+		 parameterType="java.util.List" 
+		resultType="it.csi.rebus.rebuscrus.integration.dto.custom.VeicoliDTO">
+		select *
+		from v_procedimenti_veicoli as pv
+		<if test="id != null">
+			where id_p = #{id}
+			or sub1 = #{id}
+			or sub2 = #{id}
+		</if>
+	</select>
+
+</mapper>
+
+
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

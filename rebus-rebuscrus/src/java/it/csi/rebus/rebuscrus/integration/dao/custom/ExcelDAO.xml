@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.ExcelDAO">
+
+	<select id="getPrimoTelaioByPrimoTelaio"
+		parameterType="java.util.List"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebusTVariazAutobusDTO">
+		select a.primo_telaio, azienda_autobus.fk_azienda,
+		a.flg_verificato_azienda
+		from rebus_t_variaz_autobus a
+		INNER JOIN
+		rebus_r_azienda_autobus azienda_autobus ON
+		azienda_autobus.primo_telaio = a.primo_telaio AND
+		(azienda_autobus.data_alienazione IS NULL OR
+		azienda_autobus.data_alienazione > NOW() :: DATE)
+		<foreach item="item" index="index" collection="list"
+			open="JOIN (VALUES" separator="," close=")">
+			(#{item})
+		</foreach>
+		as telaio_tab (primo_telaio) on telaio_tab.primo_telaio=a.primo_telaio
+	</select>
+
+	<select id="getTargheByTarghe" parameterType="java.util.List"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.RebusTVariazAutobusDTO">
+		select a.n_targa, azienda_autobus.fk_azienda
+		from
+		rebus_t_variaz_autobus a
+		INNER JOIN rebus_r_azienda_autobus
+		azienda_autobus ON
+		azienda_autobus.primo_telaio = a.primo_telaio AND
+		(azienda_autobus.data_alienazione IS NULL OR
+		azienda_autobus.data_alienazione > NOW() :: DATE)
+		<foreach item="item" index="index" collection="list"
+			open="JOIN (VALUES" separator="," close=")">
+			(#{item})
+		</foreach>
+		as targa_tab (targa) on targa_tab.targa=a.n_targa
+	</select>
+
+	<select id="getExcelReport"
+		parameterType="it.csi.rebus.rebuscrus.vo.FiltroAutobusVO"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.VExportRicercaAutobusDTO">
+		select *
+		from v_export_ricerca_autobus
+
+		where 1=1
+
+		<if test="tipoAlimentazione != null">
+			and fk_tipo_alimentazione =
+			#{tipoAlimentazione,jdbcType=INTEGER}
+		</if>
+		<if test="denominazioneAzienda != null">
+			and UPPER(denominazione) LIKE
+			UPPER(#{denominazioneAzienda})
+		</if>
+
+		<if test="primoTelaio != null">
+			and (UPPER(n_telaio) LIKE UPPER(#{primoTelaio}))
+		</if>
+		<if test="targa != null">
+			and (UPPER(n_targa) LIKE UPPER(#{targa}))
+		</if>
+		<if test="matricola != null">
+			and (UPPER(n_matricola_aziendale) LIKE
+			UPPER(#{matricola}))
+		</if>
+		<if test="idAzienda != null">
+			and id_azienda = #{idAzienda}
+		</if>
+
+
+		<if test="dataPrimaImmatricolazioneDa != null">
+			and data_prima_immatricolazione <![CDATA[ >= ]]>
+			#{dataPrimaImmatricolazioneDa}
+		</if>
+		<if test="dataPrimaImmatricolazioneA != null">
+			and data_prima_immatricolazione <![CDATA[ <= ]]>
+			#{dataPrimaImmatricolazioneA}
+		</if>
+
+		<if test="codiceRichiesta != null">
+			and (UPPER(procedimenti) LIKE UPPER(#{codiceRichiesta}))
+		</if>
+
+
+
+		and (1!=1
+		<if test='autobus != null and "S".equals(autobus)'>
+			or fk_categoria_veicolo  <![CDATA[ <>]]>1
+		</if>
+		<if test='autovetture != null and "S".equals(autovetture)'>
+			or fk_categoria_veicolo=1
+		</if>
+		)
+
+
+		<if test='includiPropPrec != null and "N".equals(includiPropPrec)'>
+
+			and proprieta_precedente is false
+		</if>
+
+
+		and (1!=1
+		<if test='attivo != null and "S".equals(attivo)'>
+			or (attivo is true and alienato_azienda is false)
+		</if>
+		<if test='ritirato != null and "S".equals(ritirato)'>
+			or (ritirato is true and alienato_azienda is false)
+		</if>
+		<if test='alienatoAzienda != null and "S".equals(alienatoAzienda)'>
+			or alienato_azienda is true
+		</if>
+		<if
+			test='alienatoNoAzienda != null and "S".equals(alienatoNoAzienda)'>
+			or alienato_no_azienda is true
+		</if>
+
+		<if test='daImmatricolare != null and "S".equals(daImmatricolare)'>
+			or da_immatricolare is true
+		</if>
+		<if test='includiPropPrec != null and "S".equals(includiPropPrec)'>
+			or proprieta_precedente is true
+		</if>
+		)
+
+		and (1!=1
+		<if
+			test='verificatoAziende != null and "S".equals(verificatoAziende)'>
+			or FLG_VERIFICATO_AZIENDA = 'S'
+		</if>
+		<if test='verificatoAMP != null and "S".equals(verificatoAMP)'>
+			or FLG_VERIFICATO_AMP = 'S'
+		</if>
+		<if test='bozza != null and "S".equals(bozza)'>
+			or FLG_VERIFICATO_AZIENDA = 'N'
+		</if>
+		)
+
+
+
+		<choose>
+			<when
+				test='(richieste != null and "S".equals(richieste)) and (rendicontazione != null and "S".equals(rendicontazione)) '>
+				and (oggetto_richieste is true or presenza_rendicontazione is
+				true)
+			</when>
+			<otherwise>
+
+				<if test='(richieste != null and "S".equals(richieste))'>
+					and oggetto_richieste is true
+				</if>
+				<if
+					test='(rendicontazione != null and "S".equals(rendicontazione))'>
+					and presenza_rendicontazione is true
+				</if>
+			</otherwise>
+		</choose>
+
+
+		ORDER BY data_aggiornamento DESC
+
+	</select>
+
+	<select id="getExcelReportStorico"
+		parameterType="it.csi.rebus.rebuscrus.vo.FiltroAutobusVO"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.VExportRicercaStoriaAutobusDTO">
+		select * from (
+		WITH tab AS
+		(
+		SELECT exp_storia.*
+		, row_number() OVER (ORDER BY primo_telaio,
+		data_aggiornamento_storia)
+		AS progr
+		FROM v_export_ricerca_storia_autobus
+		exp_storia
+		WHERE exp_storia.data_aggiornamento_storia IS NOT NULL
+		AND
+		EXISTS ( SELECT 1
+		FROM v_export_ricerca_storia_autobus
+		WHERE
+		data_aggiornamento_storia IS NOT NULL
+		AND primo_telaio =
+		exp_storia.primo_telaio
+		AND TRUNC(data_aggiornamento_storia) <![CDATA[ = ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		AND EXISTS ( SELECT 1 FROM
+		v_export_ricerca_storia_autobus
+		WHERE data_aggiornamento_storia IS NOT
+		NULL
+		AND primo_telaio = exp_storia.primo_telaio
+		AND
+		TRUNC(data_aggiornamento_storia) <![CDATA[ > ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		)
+		)
+		AND TRUNC(exp_storia.data_inserimento) <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		)
+		SELECT
+		data_aggiornamento,id_azienda,denominazione,n_telaio,n_targa,data_prima_immatricolazione,
+		data_ultima_immatricolazione,alimentazione,n_posti_sedere,n_posti_in_piedi,n_posti_riservati,
+		omologazione_direttiva_europea,omologazione_classe,flg_filtro_fap,facilitazione_disabili,
+		impianti_audio,impianti_visivi,flg_rilevatore_bip,prezzo_tot_acquisto,contributo_pubblico_acquisto,
+		flg_veicolo_assicurato,data_ultima_revisione,note,primo_telaio,n_matricola_aziendale,tipo_immatricolazione,
+		ente_autorizz_prima_imm,classe_veicolo,marca,modello,flg_due_piani,flg_snodato,caratteristiche_particolari,
+		fk_tipo_alimentazione,altra_alimentazione,tipo_allestimento,lunghezza,numero_porte,posti_carrozzina,
+		flg_impianto_condizionamento,flg_cabina_guida_isolata,dispositivi_prevenz,altri_dispositivi_prevenz_inc,
+		flg_otx,flg_avm,flg_contapasseggeri,proprieta_leasing,flg_conteggiato_miv,deposito,data_alienazione,
+		tipologia_dimens,flg_alienato,contribuito,scad_vincoli_no_alien,nota_riservata_azienda,nota_riservata_amp,
+		nota_riservata_rp,flg_richiesta_contr,anno_sost_prog,data_inserimento,data_aggiornamento_storia,
+		flg_verificato_azienda, flg_verificato_amp , motivazione
+		FROM tab
+		WHERE
+		tab.progr
+		<choose>
+			<when test='"S".equals(flagIncludiVariazioniPre)'>
+		   <![CDATA[ <= ]]>
+			</when>
+			<otherwise>
+		   <![CDATA[ = ]]>
+			</otherwise>
+		</choose>
+
+		(SELECT tab.progr FROM tab
+		WHERE TRUNC(tab.data_aggiornamento_storia) =
+		TRUNC(#{situazioneAl} :: DATE)
+		)+1
+
+		UNION ALL
+			<![CDATA[ <= ]]> TRUNC(#{situazioneAl} :: DATE) -->
+		SELECT
+		data_aggiornamento,id_azienda,denominazione,n_telaio,n_targa,data_prima_immatricolazione,data_ultima_immatricolazione,alimentazione,n_posti_sedere,n_posti_in_piedi,n_posti_riservati,omologazione_direttiva_europea,omologazione_classe,flg_filtro_fap,facilitazione_disabili,impianti_audio,impianti_visivi,flg_rilevatore_bip,prezzo_tot_acquisto,contributo_pubblico_acquisto,flg_veicolo_assicurato,data_ultima_revisione,note,primo_telaio,n_matricola_aziendale,tipo_immatricolazione,ente_autorizz_prima_imm,classe_veicolo,marca,modello,flg_due_piani,flg_snodato,caratteristiche_particolari,fk_tipo_alimentazione,altra_alimentazione,tipo_allestimento,lunghezza,numero_porte,posti_carrozzina,flg_impianto_condizionamento,flg_cabina_guida_isolata,dispositivi_prevenz,altri_dispositivi_prevenz_inc,flg_otx,flg_avm,flg_contapasseggeri,proprieta_leasing,flg_conteggiato_miv,deposito,data_alienazione,tipologia_dimens,flg_alienato,contribuito,scad_vincoli_no_alien,nota_riservata_azienda,nota_riservata_amp,nota_riservata_rp,flg_richiesta_contr,anno_sost_prog,data_inserimento,data_aggiornamento_storia,flg_verificato_azienda,flg_verificato_amp,motivazione
+		FROM
+
+		(WITH exp AS
+		(
+		SELECT * FROM v_export_ricerca_storia_autobus
+		)
+		SELECT
+		*
+		FROM EXP export
+		LEFT JOIN LATERAL (SELECT MAX(1) flag_controllo
+		FROM
+		EXP
+		WHERE primo_telaio = export.primo_telaio
+		AND
+		TRUNC(data_aggiornamento_storia) <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)) exp_storia
+		ON
+		export.data_aggiornamento_storia IS NULL
+		AND TRUNC
+		(export.data_aggiornamento) <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		<if test='"S".equals(flagIncludiVariazioniPre)'>
+			LEFT JOIN LATERAL (SELECT MAX(1) flag_controllo
+			FROM EXP
+			WHERE
+			primo_telaio = export.primo_telaio
+			AND data_aggiornamento_storia IS
+			NULL
+			AND TRUNC(data_aggiornamento) <![CDATA[ <= ]]>
+			TRUNC(#{situazioneAl} :: DATE)
+			AND
+			TRUNC(export.data_aggiornamento_storia) <![CDATA[ <= ]]>
+			TRUNC(data_aggiornamento)
+			) exp_actual ON
+			export.data_aggiornamento_storia IS NOT NULL
+		</if>
+		WHERE TRUNC(export.data_inserimento) <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		AND (exp_storia.flag_controllo IS NOT
+		NULL
+		<if test='"S".equals(flagIncludiVariazioniPre)'>
+			OR exp_actual.flag_controllo IS NOT NULL
+		</if>
+		)
+		)sub_tab
+
+		UNION ALL
+		SELECT exp_storia.*
+		FROM v_export_ricerca_storia_autobus exp_storia
+		WHERE exp_storia.data_aggiornamento_storia IS NOT NULL
+		AND ((
+		TRUNC(exp_storia.data_aggiornamento) <![CDATA[ < ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		AND TRUNC(data_aggiornamento_storia) <![CDATA[ > ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		)
+		<if test='"S".equals(flagIncludiVariazioniPre)'>
+			OR TRUNC(data_aggiornamento_storia) <![CDATA[ < ]]>
+			TRUNC(#{situazioneAl} :: DATE)
+		</if>
+		)
+		AND EXISTS (
+		SELECT 1 FROM v_export_ricerca_storia_autobus exp_actual
+		WHERE exp_actual.data_aggiornamento_storia IS NULL
+		AND
+		exp_actual.primo_telaio = exp_storia.primo_telaio
+		AND
+		TRUNC(data_aggiornamento) <![CDATA[ > ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		)
+		AND TRUNC(data_inserimento) <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+
+		UNION ALL
+		SELECT exp_actual.*
+		FROM v_export_ricerca_storia_autobus exp_actual
+		WHERE exp_actual.data_aggiornamento_storia IS NULL
+		AND NOT EXISTS (
+		SELECT 1 FROM v_export_ricerca_storia_autobus exp_storia
+		WHERE
+		exp_actual.primo_telaio = exp_storia.primo_telaio
+		AND
+		exp_storia.data_aggiornamento_storia IS NOT NULL
+		)
+		AND
+		TRUNC(data_inserimento) <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+
+		UNION ALL
+		SELECT exp_storia.*
+		FROM v_export_ricerca_storia_autobus exp_storia
+		JOIN ( SELECT primo_telaio
+		, MIN(data_aggiornamento_storia) AS
+		data_agg_storia
+		FROM v_export_ricerca_storia_autobus
+		WHERE
+		data_aggiornamento_storia IS NOT NULL
+		GROUP BY primo_telaio
+		) minDataAgg ON exp_storia.primo_telaio =
+		minDataAgg.primo_telaio
+		AND exp_storia.data_aggiornamento_storia =
+		minDataAgg.data_agg_storia
+
+		WHERE exp_storia.data_aggiornamento_storia
+		IS NOT NULL
+		AND TRUNC(exp_storia.data_aggiornamento) <![CDATA[ > ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		AND
+		TRUNC(exp_storia.data_aggiornamento_storia)  <![CDATA[ > ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		AND TRUNC(data_inserimento)  <![CDATA[ <= ]]>
+		TRUNC(#{situazioneAl} :: DATE)
+		) tab
+		where 1=1
+		<if test="tipoAlimentazione != null">
+			and tab.fk_tipo_alimentazione =
+			#{tipoAlimentazione,jdbcType=INTEGER}
+		</if>
+		<if test="denominazioneAzienda != null">
+			and UPPER(tab.denominazione) LIKE
+			UPPER(#{denominazioneAzienda})
+		</if>
+
+		<if test="primoTelaio != null">
+			and UPPER(tab.n_telaio) LIKE UPPER(#{primoTelaio})
+		</if>
+		<if test="targa != null">
+
+			and ( UPPER(tab.n_targa) LIKE UPPER(#{targa})
+			)
+
+		</if>
+		<if test="idAzienda != null">
+			and tab.id_azienda = #{idAzienda}
+		</if>
+
+		<if test='dataAlienazione == null or "N".equals(dataAlienazione)'>
+			and ( tab.data_alienazione is null AND (tab.flg_alienato
+			is null OR
+			tab.flg_alienato = 'N') )
+		</if>
+
+		<if test="dataPrimaImmatricolazioneDa != null">
+			and tab.data_prima_immatricolazione <![CDATA[ >= ]]>
+			#{dataPrimaImmatricolazioneDa}
+		</if>
+		<if test="dataPrimaImmatricolazioneA != null">
+			and tab.data_prima_immatricolazione <![CDATA[ <= ]]>
+			#{dataPrimaImmatricolazioneA}
+		</if>
+		<if test='verificatoAMP != null and !"S".equals(verificatoAMP)'>
+			and (UPPER(tab.flg_verificato_amp) = 'N' or
+			UPPER(tab.flg_verificato_amp) = 'U')
+		</if>
+		<if
+			test='verificatoAziende != null and "N".equals(verificatoAziende)'>
+			and UPPER(tab.flg_verificato_azienda) LIKE
+			UPPER(#{flagVerificatoAzienda})
+		</if>
+		<if test="codiceRichiesta != null">
+			and (UPPER(procedimenti) LIKE UPPER(#{richiesta}))
+		</if>
+
+
+		<choose>
+			<when test="targa != null">
+				order by tab.denominazione asc, tab.primo_telaio asc,
+				tab.data_aggiornamento desc
+			</when>
+			<otherwise>
+				order by tab.n_targa asc, tab.data_aggiornamento desc
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+
+
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.AutobusDAO">
+
+	<select id="getAutobusForContribuzioneAzienda"
+		parameterType="java.lang.Long" resultType="java.lang.String">
+
+		SELECT rta.primo_telaio
+		FROM
+		rebus_t_autobus rta
+		INNER JOIN rebus_t_variaz_autobus rtva ON
+		rta.primo_telaio=rtva.primo_telaio
+		and rtva.flg_contribuzione = true
+		INNER JOIN rebus_r_azienda_autobus rraa ON
+		rta.primo_telaio=rraa.primo_telaio
+		and rraa.fk_azienda = #{fkAzienda}
+		and rraa.data_alienazione is null
+		where not exists (
+		select
+		rrpv.primo_telaio
+		from rebusp_r_proc_veicolo rrpv,
+		rebus.rebusp_t_procedimento p
+		where rrpv.id_procedimento =
+		p.id_procedimento
+		and rrpv.primo_telaio = rta.primo_telaio
+		and
+		p.id_tipo_procedimento = 7
+		);
+
+	</select>
+
+	<select id="getDocVariazAutobusForInfo"
+		parameterType="java.lang.Long"
+		resultType="it.csi.rebus.rebuscrus.vo.DocVariazAutobusVO">
+
+		SELECT dva.id_variaz_autobus, dva.id_tipo_documento,
+		dva.nome_file, dva.data_caricamento, dva.note
+		FROM
+		rebus.rebus_r_doc_variaz_autobus dva
+		WHERE dva.id_variaz_autobus =
+		#{idVariazAutobus}
+
+	</select>
+
+	<insert id="insertDocVariazAutobus"
+		parameterType="java.util.List">
+		Insert Into
+		rebus_r_doc_variaz_autobus (
+		id_variaz_autobus,
+		id_tipo_documento,
+		nome_file,
+		data_caricamento,
+		note,
+		fk_utente,
+		documento)
+		values
+		<foreach collection="list" item="element" index="index" open="(" separator="),("  close=")" >	
+			#{element.idVariazAutobus,jdbcType=INTEGER},
+			#{element.idTipoDocumento,jdbcType=INTEGER},
+			#{element.nomeFile,jdbcType=VARCHAR},
+			#{element.dataCaricamento,jdbcType=DATE},
+			#{element.note,jdbcType=VARCHAR},
+			#{element.fkUtente,jdbcType=INTEGER},
+			#{element.documento,jdbcType=BINARY}
+		</foreach>
+	</insert>
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

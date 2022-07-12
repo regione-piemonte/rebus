@@ -1,0 +1,41 @@
+/*
+* SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+* SPDX-License-Identifier: EUPL-1.2
+*/
+package it.csi.rebus.rebuscrus.integration.generator.plugin;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mybatis.generator.api.IntrospectedColumn;
+import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+
+public class ForceNumericToLongPlugin extends PluginAdapter {
+
+	public ForceNumericToLongPlugin() {
+
+	}
+
+	public boolean validate(List<String> warnings) {
+		return true;
+	}
+
+	@Override
+	public void initialized(IntrospectedTable introspectedTable) {
+
+		List<String> toReplace = new ArrayList<String>();
+		toReplace.add("java.lang.Short");
+		toReplace.add("java.lang.Integer");
+		String forceTo = "java.lang.Long";
+
+		for (IntrospectedColumn o : introspectedTable.getAllColumns()) {
+			if (toReplace.contains(o.getFullyQualifiedJavaType().getFullyQualifiedName())) {
+				FullyQualifiedJavaType fullyQualifiedJavaType = new FullyQualifiedJavaType(forceTo);
+				o.setFullyQualifiedJavaType(fullyQualifiedJavaType);
+			}
+		}
+
+	}
+}

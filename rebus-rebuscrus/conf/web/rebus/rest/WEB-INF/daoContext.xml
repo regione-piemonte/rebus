@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    					http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+    					http://www.springframework.org/schema/tx  http://www.springframework.org/schema/tx/spring-tx.xsd
+    					http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
+
+
+	<jee:jndi-lookup id="rebusDS"
+		jndi-name="java:jboss/jdbc/rebusDS" />
+
+	<!-- Transaction manager -->
+	<bean id="txManager"
+		class="org.springframework.transaction.jta.JtaTransactionManager">
+		<!-- Abilitazione dei livelli personalizzati di isolamento delle transazioni: 
+			Isolation.SERIALZABLE ad esempio -->
+		<property name="allowCustomIsolationLevels" value="true" />
+	</bean>
+
+	<tx:annotation-driven
+		transaction-manager="txManager" />
+
+	<bean id="sqlSessionFactory"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="rebusDS" />
+		<property name="transactionFactory">
+			<bean
+				class="org.apache.ibatis.transaction.managed.ManagedTransactionFactory" />
+		</property>
+		<property name="configLocation"
+			value="/WEB-INF/mybatis-config.xml" />
+	</bean>
+
+
+
+	<!-- DAO MyBatis -->
+	<bean id="rebusDClasseAmbEuroDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDClasseAmbEuroDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDClasseVeicoloDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDClasseVeicoloDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDDispositiviPrevenzDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDDispositiviPrevenzDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDDotazioneDisabiliDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDDotazioneDisabiliDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDImpiantiAudioDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDImpiantiAudioDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDImpiantiVisiviDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDImpiantiVisiviDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDProprietaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDProprietaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipoAlimentazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipoAlimentazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipoAllestimentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipoAllestimentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipoDocumentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipoDocumentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipoImmatricolDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipoImmatricolDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipologiaDimensDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipologiaDimensDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+		<bean id="rebusDCategoriaVeicoloDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDCategoriaVeicoloDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipoMessaggioDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipoMessaggioDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspCTipoProcTipoDocDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspCTipoProcTipoDocDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspDMotivazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDMotivazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspDMotorizzazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDMotorizzazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspDStatoIterDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDStatoIterDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspDTipoContrattoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDTipoContrattoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspDTipoProcedimentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDTipoProcedimentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspDTipoStampaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDTipoStampaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuspDTransizioneAutomaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspDTransizioneAutomaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspRProcContrattoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspRProcContrattoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspRProcDocumentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspRProcDocumentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspRProcVeicoloDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspRProcVeicoloDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspTIterProcedimentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspTIterProcedimentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspTProcedimentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspTProcedimentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspTSubProcedimentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspTSubProcedimentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusRAziendaAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusRAziendaAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusRDocVariazAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusRDocVariazAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusRStoriaVarautobusDpDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusRStoriaVarautobusDpDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusRUtenteAzEnteDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusRUtenteAzEnteDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebusRVarautobusDpDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusRVarautobusDpDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTAziendeDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTAziendeDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTDepositiDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTDepositiDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTEntiDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTEntiDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTMessaggiDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTMessaggiDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTStoriaVariazAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTStoriaVariazAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTUtentiDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTUtentiDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTVariazAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTVariazAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusTVariazAziendeDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusTVariazAziendeDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplaTSoggettoGiuridicoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplaTSoggettoGiuridicoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplcDBacinoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplcDBacinoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplcRContrattoRaggruppDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplcRContrattoRaggruppDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplcTContrattoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplcTContrattoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplDComuneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplDComuneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplRUtenteSogGiuridDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplRUtenteSogGiuridDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="vAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.VAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="vAutobusSmallDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.VAutobusSmallDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="vExportRicercaAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.VExportRicercaAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="vExportRicercaStoriaAutobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.VExportRicercaStoriaAutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuspRVoceCostoVeicoloDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspRVoceCostoVeicoloDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuspTDocumentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuspTDocumentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplcDTipoRaggruppamentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplcDTipoRaggruppamentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplcRSostSogContrDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplcRSostSogContrDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplcRSostSogContrRaggrDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplcRSostSogContrRaggrDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplaTDepositoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplaTDepositoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplaRSogGiuridDepositoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplaRSogGiuridDepositoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplDProvinciaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplDProvinciaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusDTipoMessaggioSistemaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusDTipoMessaggioSistemaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="sirtplDContestoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplDContestoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscDVoceCostoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDVoceCostoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscDTipoDocQuietanzaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDTipoDocQuietanzaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscDTipoSostituzioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDTipoSostituzioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTAttoAssegnazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTAttoAssegnazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTFonteFinanziamentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTFonteFinanziamentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTOrdineAcquistoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTOrdineAcquistoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTAssegnazioneRisorseDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTAssegnazioneRisorseDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscRVoceCostoFornituraDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscRVoceCostoFornituraDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTCostoFornituraDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTCostoFornituraDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscRDocContribuzioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscRDocContribuzioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTDatoFatturaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTDatoFatturaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTDatoSpesaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTDatoSpesaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscRDocDatoMessaServizioDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscRDocDatoMessaServizioDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTDatoMessaServizioDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTDatoMessaServizioDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebuscTContribuzioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTContribuzioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscROggettoFatturaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscROggettoFatturaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebusmTMisurazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmTMisurazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="rebusmDTipoMonitoraggioDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmDTipoMonitoraggioDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebusmDCampagnaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmDCampagnaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebusmTMisEmissioniDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmTMisEmissioniDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebusmTMisPortabiciDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmTMisPortabiciDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebusmRCampagnaMisurazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmRCampagnaMisurazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+
+	<bean id="rebusmRDocMisurazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebusmRDocMisurazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="vExportRicercaContribuzioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.VExportRicercaContribuzioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscDPortabiciDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDPortabiciDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscDSistemaBigliettazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDSistemaBigliettazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscDSistemaLocalizzazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDSistemaLocalizzazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscDSistemaVideosorveglianzaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscDSistemaVideosorveglianzaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscTDatoBonificoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscTDatoBonificoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="rebuscRFatturaBonificoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.RebuscRFatturaBonificoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- DAO Custom -->
+	<bean id="commonDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.CommonDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="excelDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.ExcelDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="procedimentoDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.ProcedimentoDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="ricercaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.RicercaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="cronologiaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.CronologiaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="procedimentiDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.ProcedimentiDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="veicoliDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.VeicoliDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="contribuzioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.ContribuzioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="sirtplaDNaturaGiuridicaDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.SirtplaDNaturaGiuridicaDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="misurazioneDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.MisurazioneDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="autobusDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.AutobusDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="documentiDAO"
+		class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface"
+			value="it.csi.rebus.rebuscrus.integration.dao.custom.DocumentiDAO" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+
+
+
+</beans>
+	

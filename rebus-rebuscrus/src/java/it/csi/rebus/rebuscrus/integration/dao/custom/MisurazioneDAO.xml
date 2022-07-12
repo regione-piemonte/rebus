@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="it.csi.rebus.rebuscrus.integration.dao.custom.MisurazioneDAO">
+
+
+	<select id="selectByTelaio" parameterType="java.lang.String"
+		resultType="it.csi.rebus.rebuscrus.integration.dto.custom.MisurazioneDTO">
+
+		SELECT mis.id_misurazione,
+		mis.primo_telaio,
+		mis.id_doc_misurazione,
+		mis.data_inizio,
+		mis.data_fine,
+		mis.id_utente_aggiornamento,
+		mis.data_aggiornamento,
+		campagna.id_campagna,
+		campagna.descrizione,
+		campagna.id_tipo_monitoraggio,
+		tipo_mon.cod_tipo_monitoraggio,
+		campagna.data_inizio_validita,
+		campagna.data_fine_validita,
+		campagna.data_inizio_restituzione,
+		campagna.data_fine_restituzione
+		FROM rebusm_t_misurazione as mis
+		INNER JOIN rebusm_r_campagna_misurazione as campagna_mis ON
+		campagna_mis.id_misurazione=mis.id_misurazione
+		INNER JOIN rebusm_d_campagna as campagna ON
+		campagna.id_campagna=campagna_mis.id_campagna
+		INNER JOIN rebusm_d_tipo_monitoraggio as tipo_mon ON
+		tipo_mon.id_tipo_monitoraggio=campagna.id_tipo_monitoraggio
+		WHERE primo_telaio = #{primoTelaio}
+
+	</select>
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

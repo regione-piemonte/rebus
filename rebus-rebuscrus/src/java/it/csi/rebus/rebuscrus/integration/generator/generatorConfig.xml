@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+
+  <context id="rebusDB" targetRuntime="MyBatis3">
+
+	<!--
+		PLUGINS
+	 -->
+	<plugin type="org.mybatis.generator.plugins.CaseInsensitiveLikePlugin" />
+	<plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
+	<plugin type="org.mybatis.generator.plugins.ToStringPlugin" />
+	
+	<plugin type="org.mybatis.generator.plugins.RenameExampleClassPlugin">
+		<property name="searchString" value="Example$" />
+		<property name="replaceString" value="Selector" />
+	</plugin>
+
+	<plugin type="it.csi.rebus.rebuscrus.integration.generator.plugin.RenameClassesPlugin">
+		<property name="searchStringMapper" value="Mapper$" />
+		<property name="replaceStringMapper" value="DAO" />
+		<property name="searchStringDto" value="$" />
+		<property name="replaceStringDto" value="DTO" />
+		<property name="searchStringXml" value="Mapper" />
+		<property name="replaceStringXml" value="DAO" />
+	</plugin>
+	
+	<plugin type="it.csi.rebus.rebuscrus.integration.generator.plugin.ForceDecimalToDoublePlugin" />
+	<plugin type="it.csi.rebus.rebuscrus.integration.generator.plugin.ForceNumericToLongPlugin" />
+	
+
+    <jdbcConnection driverClass="org.postgresql.Driver" 
+    	connectionURL="jdbc:postgresql://"
+        userId=""
+        password="">
+
+    </jdbcConnection>
+
+    <javaTypeResolver >
+      <property name="forceBigDecimals" value="false" />
+    </javaTypeResolver>
+
+    <javaModelGenerator
+    	targetPackage="it.csi.rebus.rebuscrus.integration.dto"
+    	targetProject="WAR-REBUSCRUS"
+   	>
+      	<property name="trimStrings" value="true" />
+    	<property name="rootClass" value="it.csi.rebus.rebuscrus.integration.dto.ParentDTO" />
+		<property name="enableSubPackages" value="false" />
+    </javaModelGenerator>
+
+    <sqlMapGenerator
+    	targetPackage="it.csi.rebus.rebuscrus.integration.dao"
+    	targetProject="WAR-REBUSCRUS"
+   	>
+   		<property name="enableSubPackages" value="false" />
+   	</sqlMapGenerator>
+
+    <javaClientGenerator type="XMLMAPPER"
+    	targetPackage="it.csi.rebus.rebuscrus.integration.dao"
+    	targetProject="WAR-REBUSCRUS"
+   	>
+   		<property name="rootInterface" value="it.csi.rebus.rebuscrus.integration.dao.ParentDAO" />
+		<property name="enableSubPackages" value="false" />
+    </javaClientGenerator>
+
+  <!-- 
+	<table tableName="rebus_t_utenti" />
+ 
+
+    <table tableName="rebus_d_classe_amb_euro" />
+    <table tableName="rebus_d_classe_veicolo" />
+    <table tableName="rebus_d_dispositivi_prevenz" />
+    <table tableName="rebus_d_dotazione_disabili" />
+    <table tableName="rebus_d_impianti_audio" />
+    <table tableName="rebus_d_impianti_visivi" />
+    <table tableName="rebus_d_proprieta" />
+    <table tableName="rebus_d_tipo_alimentazione" />
+    <table tableName="rebus_d_tipo_allestimento" />
+    <table tableName="rebus_d_tipo_immatricol" />
+    <table tableName="rebus_d_tipologia_dimens" />
+    <table tableName="rebus_r_azienda_autobus" />
+    <table tableName="rebus_d_tipo_allestimento" />
+   -->
+   
+   <!-- 
+   <table tableName="rebusc_t_assegnazione_risorse">
+    	<generatedKey column="id_assegnazione_risorse" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_t_ordine_acquisto">
+    	<generatedKey column="id_ordine_acquisto" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_t_costo_fornitura">
+    	<generatedKey column="id_costo_fornitura" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_r_voce_costo_fornitura">
+    	<generatedKey column="id_voce_costo_fornitura" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_t_dato_spesa">
+    	<generatedKey column="id_dato_spesa" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_t_dato_fattura">
+    	<generatedKey column="id_dato_fattura" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_r_doc_contribuzione">
+    	<generatedKey column="id_doc_contribuzione" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusc_t_contribuzione">
+		<generatedKey column="id_contribuzione" sqlStatement="JDBC" />
+	</table>
+	<table tableName="rebusc_t_dato_messa_servizio">
+		<generatedKey column="id_dato_messa_servizio" sqlStatement="JDBC" />
+	</table>
+    
+    
+    <table tableName="rebusc_r_doc_dato_messa_servizio" />
+	<table tableName="rebusc_r_oggetto_fattura" />
+	<table tableName="rebusc_r_fattura_bonifico"/>
+	<table tableName="rebusc_t_dato_bonifico">
+		<generatedKey column="id_dato_bonifico" sqlStatement="JDBC" />
+	</table>
+	
+    SOLO LETTURA
+    <table tableName="rebusc_t_atto_assegnazione" />
+    <table tableName="rebusc_t_fonte_finanziamento" />
+    <table tableName="rebusc_d_voce_costo" />
+    <table tableName="rebusc_d_tipo_doc_quietanza" />
+    <table tableName="rebusc_d_tipo_sostituzione" />
+	<table tableName="rebusc_d_portabici" />
+	<table tableName="rebusc_d_sistema_bigliettazione" />
+	<table tableName="rebusc_d_sistema_localizzazione" />
+	<table tableName="rebusc_d_sistema_videosorveglianza" />
+
+
+    <table tableName="v_export_ricerca_autobus"/>-->   
+    
+    <table tableName="v_autobus"/> 
+	<!--<table tableName="rebus_d_tipo_messaggio" />
+	
+	<table tableName="v_export_ricerca_storia_autobus"/> 
+	<table tableName="v_export_ricerca_autobus"/> 
+	<table tableName="rebus_t_variaz_autobus"/> 
+	<table tableName="REBUS_D_CATEGORIA_VEICOLO"/>-->
+	
+<!-- 	
+	<table tableName="v_export_ricerca_contribuzione" />
+ -->
+ 
+ <!--     
+	<table tableName="rebusm_d_tipo_monitoraggio" />
+    <table tableName="rebusm_d_campagna" />
+    <table tableName="rebusm_t_mis_emissioni" />
+ 	<table tableName="rebusm_t_mis_portabici" />
+ 	<table tableName="rebusm_r_campagna_misurazione" />
+ 	<table tableName="rebusm_r_doc_misurazione" />
+ -->
+
+    <!-- 
+    <table tableName="rebus_r_doc_variaz_autobus"/>
+    <table tableName="rebus_r_storia_varautobus_dp" />
+    <table tableName="rebus_r_utente_az_ente"></table>
+    <table tableName="sirtpla_t_soggetto_giuridico"></table>
+    <table tableName="sirtpla_t_soggetto_giuridico"></table>
+	<table tableName="sirtplc_r_contratto_raggrupp"></table>
+    <table tableName="sirtpl_d_comune"></table>
+    <table tableName="sirtplc_d_bacino"></table>
+    <table tableName="rebusp_d_motorizzazione"></table>
+    <table tableName="rebusp_r_proc_documento"></table>
+   
+    <table tableName="rebusp_t_procedimento">
+        <generatedKey column="id_procedimento" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebusp_d_tipo_procedimento" ></table>
+    <table tableName="sirtplc_r_sost_sog_contr">
+    	<generatedKey column="id_sost_sog_contr" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtplc_r_sost_sog_contr_raggr">
+    	<generatedKey column="id_sost_sog_contr_raggr" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtplc_r_sost_sog_contr"></table>
+    
+    <table tableName="REBUSP_T_DOCUMENTO">
+        <generatedKey column="id_documento" sqlStatement="JDBC" />
+    </table>  
+    <table tableName="rebusp_t_sub_procedimento"></table>   
+    
+    <table tableName="rebus_r_varautobus_dp" />
+    <table tableName="rebus_t_aziende">
+        <generatedKey column="id_azienda" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebus_t_enti">
+        <generatedKey column="id_ente" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="rebusp_t_iter_procedimento" >
+        <generatedKey column="id_iter_procedimento" sqlStatement="JDBC" />
+    </table>   
+    <table tableName="rebusp_d_tipo_stampa" />   
+    <table tableName="rebusp_d_stato_iter" />
+    <table tableName="rebusp_r_proc_contratto" >
+        <generatedKey column="id_proc_contratto" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="rebusp_d_motivazione"/>
+    <table tableName="rebusp_r_proc_veicolo"></table>     
+    <table tableName="sirtplc_t_contratto"></table> 
+    <table tableName="rebusp_c_tipo_proc_doc" ></table>    
+    <table tableName="sirtpl_r_utente_sog_giurid"></table>
+    <table tableName="rebus_d_tipologia_dimens"></table>
+	<table tableName="rebusp_d_tipo_contratto"></table>  
+	<table tableName="rebusp_d_transizione_automa"></table>
+	<table tableName="sirtpla_t_deposito"></table>
+	<table tableName="sirtpla_r_sog_giurid_deposito"></table> 
+	<table tableName="sirtpl_d_provincia"></table>
+    <table tableName="REBUS_T_STORIA_VARIAZ_AUTOBUS">
+        <generatedKey column="id_storia_variaz_autobus" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebus_t_utenti" />
+    <table tableName="rebus_t_variaz_autobus">
+        <generatedKey column="id_variaz_autobus" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebus_t_storia_variaz_autobus">
+        <generatedKey column="id_storia_variaz_autobus" sqlStatement="JDBC" />
+    </table>
+     <table tableName="rebusp_d_motorizzazione"/>
+     <table tableName="rebus_d_tipo_messaggio_sistema"/>
+    
+     <table tableName="rebus_t_messaggi" >
+        <generatedKey column="id_messaggio" sqlStatement="JDBC" />
+    </table>
+   <table  tableName="sirtpl_d_contesto"></table>
+    <table tableName="rebus_d_tipo_documento" />   
+    <table tableName="rebus_t_autobus"/>
+    
+    <table tableName="rebus_t_variaz_aziende">
+        <generatedKey column="id_variaz_azienda" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="rebus_t_depositi">
+        <generatedKey column="id_deposito" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="v_autobus" />
+    
+    <table tableName="v_autobus_small" />
+    
+    <table tableName="v_export_ricerca_storia_autobus" />
+    
+    <table tableName="v_export_ricerca_autobus" /> 
+
+	 -->
+	 
+  </context>
+</generatorConfiguration>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->
