@@ -1,0 +1,122 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'MESSAGGISTICA'" [filtroNavbar]="context"></app-navbar>
+
+<div *ngIf="isLoading()" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<div *ngIf="!isLoading()">
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>Torna all'elenco
+    </button>
+  </div>
+
+
+  <div style="margin-top: 1em;margin-bottom:1em; margin-left:10%; margin-right:10%" id="containerCenter">
+
+    <h3 *ngIf="idContesto==1 && dettaglioMessaggio.fkTipoMessaggioSistema==null"
+      class="titolo paddingleft2 centerTitolo">
+      {{dettaglioMessaggio?.descTipoMessaggio}} del veicolo targa {{dettaglioMessaggio?.targa}} di
+      {{dettaglioMessaggio?.azienda}} effettuate in data {{dataCreazione | date : 'dd/MM/yyyy HH:mm'}}</h3>
+
+    <h3 *ngIf="dettaglioMessaggio.fkTipoMessaggioSistema!=null" class="titolo paddingleft2 centerTitolo">
+      {{dettaglioMessaggio?.descTipoMessaggio}} inviata in data {{dataCreazione | date : 'dd/MM/yyyy HH:mm'}}</h3>
+
+    <h3 *ngIf="idContesto != 1  && dettaglioMessaggio.fkTipoMessaggioSistema==null"
+      class="titolo paddingleft2 centerTitolo">
+      {{dettaglioMessaggio?.descTipoMessaggio}} da parte di {{aziendaMessaggio }} inviata in data
+      {{dataCreazione | date : 'dd/MM/yyyy HH:mm'}}</h3>
+
+    <div *ngIf="dettaglioMessaggio.fkTipoMessaggio==2">Verifica dei dati del veicolo targa
+      {{dettaglioMessaggio?.targa}} di {{dettaglioMessaggio?.azienda}} effettuate in data
+      {{dataCreazione | date : 'dd/MM/yyyy HH:mm'}}</div>
+
+    <div *ngIf="dettaglioMessaggio.fkTipoMessaggio==3">Motivazione: {{dettaglioMessaggio.messaggio}}</div>
+
+    <div class="formattazioneAcapo" *ngIf="dettaglioMessaggio.fkTipoMessaggioSistema!=null">{{dettaglioMessaggio?.testoMessaggioSistema}}</div>
+
+    <div  *ngIf="(idContesto == 2 || idContesto ==5) && dettaglioMessaggio.fkTipoMessaggioSistema==null">Note:
+      {{dettaglioMessaggio?.note}}</div>
+
+    <table *ngIf="dettaglioMessaggio.fkTipoMessaggio==1" style="width:100%">
+      <colgroup>
+        <col *ngFor="let col of staticColumnsMessaggi" style="width: 30%;" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th *ngFor="let col of staticColumnsMessaggi" style="text-align: left;text-decoration: underline; ">{{col}}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let varautobus of getKeys(mapVariazioneAutobus)">
+          <tr
+            *ngIf=" isArray(mapVariazioneAutobus.get(varautobus)) && mapVariazioneAutobus.get(varautobus)!=mapVariazioneStoricoAutobus.get(varautobus) && isData(varautobus)">
+            <td>
+              {{convertiLabel(varautobus)}}
+            </td>
+            <td>
+              {{mapVariazioneStoricoAutobus.get(varautobus) | date : 'dd/MM/yyyy'}}
+            </td>
+            <td>
+              {{mapVariazioneAutobus.get(varautobus) | date : 'dd/MM/yyyy'}}
+            </td>
+          </tr>
+          <tr
+            *ngIf="isArray(mapVariazioneAutobus.get(varautobus)) && mapVariazioneAutobus.get(varautobus)!=mapVariazioneStoricoAutobus.get(varautobus) && !isData(varautobus) && varautobus != 'dispositiviPrevenzInc'">
+            <td>
+              {{convertiLabel(varautobus)}}
+            </td>
+            <td>
+              {{convertiLabel(mapVariazioneStoricoAutobus.get(varautobus))}}
+            </td>
+            <td>
+              {{convertiLabel(mapVariazioneAutobus.get(varautobus))}}
+            </td>
+          </tr>
+          <tr
+            *ngIf="isArray(mapVariazioneAutobus.get(varautobus)) && !isData(varautobus) && varautobus == 'dispositiviPrevenzInc' && !flagConfrontoArray">
+            <td>
+              {{convertiLabel(varautobus)}}
+            </td>
+            <td>
+              {{convertiLabel(mapVariazioneStoricoAutobus.get(varautobus))}}
+            </td>
+            <td>
+              {{convertiLabel(mapVariazioneAutobus.get(varautobus))}}
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+
+
+    <div
+      *ngIf="((isModificaAbilitata) && loadComplete) && idContesto == 1  && dettaglioMessaggio.fkTipoMessaggioSistema==null"
+      style="margin-top: 1em;margin-bottom:1em;">
+      <button mat-button (click)="modificabus(dettaglioMessaggio.fkVariazAutobus)" color="primary">
+        <mat-icon>edit</mat-icon>
+        Vai alla modifica
+      </button>
+    </div>
+    <div *ngIf="idContesto ==2   && dettaglioMessaggio.fkTipoMessaggioSistema==null "
+      style="margin-top: 1em;margin-bottom:1em;">
+      <button mat-button (click)="modificaProcedimento(dettaglioMessaggio.fkProcedimento)" color="primary">
+        <mat-icon>edit</mat-icon> 
+        Vai al procedimento
+      </button>
+    </div>
+    <div *ngIf="idContesto == 5  && dettaglioMessaggio.fkTipoMessaggioSistema==null "
+      style="margin-top: 1em;margin-bottom:1em;"> 
+      <button mat-button (click)="modificaRendicontazione(dettaglioMessaggio.fkProcedimento)" color="primary">
+        <mat-icon>edit</mat-icon>
+        Vai alla pratica
+      </button>
+    </div>
+  </div>
+
+</div>

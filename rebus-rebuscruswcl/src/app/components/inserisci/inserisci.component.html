@@ -1,0 +1,970 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'INSERIMENTO_ANAGRAFICA_BUS'" [filtroNavbar]="context"></app-navbar>
+
+<mat-card>
+  <mat-card-content>
+
+
+    <div *ngIf="feedback" class="alert-danger box-error">
+      Attenzione! Alcuni campi non risultano essere stati valorizzati correttamente .
+      <p>{{feedback}}</p>
+      <br>
+    </div>
+
+    <!-- Gestione doppi errori di salvataggi -->
+    <div *ngIf="doubleError" class="alert-danger box-error">
+      Attenzione! Alcuni campi non risultano essere stati valorizzati correttamente .
+      <p #doubleErrorP>{{fristMessages}}
+        <br> {{secondMessages}}
+      </p>
+    </div>
+
+    <form #autobusForm="ngForm" (ngSubmit)="save()">
+      <section>
+        <h3>Dati Identificativi e d'Immatricolazione</h3>
+        <div class="row" *ngIf="loadComplete">
+          <!-- aziende -->
+          <mat-form-field class="col" *ngIf="!isUtenteAzienda">
+            <mat-select placeholder="{{AutobusLabel.azienda}}" [(ngModel)]="autobus.idAzienda" name="azienda"
+              #azienda="ngModel" required (change)="loadDepositi(autobus.idAzienda)">
+              <mat-option *ngFor="let choice of aziende" [value]="choice.id">
+                {{ choice?.descrizione }} {{ choice?.ragioneSociale }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(azienda.dirty || azienda.touched) && azienda.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="col" *ngIf="isUtenteAzienda">
+            <input matInput placeholder="{{AutobusLabel.azienda}}" name="azienda" maxlength="100" disabled>
+            {{azienda?.descrizione}} {{azienda?.ragioneSociale}}
+          </mat-form-field>
+        </div>
+        <!-- da immatricolare -->
+        <div style="display: flex; align-items: center; width: 135px; padding: 0px 10px 0px 10px;">
+          <mat-checkbox [align]="'start'" [(ngModel)]="autobus.daImmatricolare" name="daImmatricolare"
+            (change)="daImmatricolareOnChange()">
+            Autobus nuovo da immatricolare
+          </mat-checkbox>
+          <!-- VEICOLO DA CONTRIBUIRE -->
+          <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgContribuzione" name="flgContribuzione"
+            style="margin-left: 25px;" (change)="resetFieldsDotazioniSpecifiche()">
+            {{AutobusLabel.daContribuire}}
+          </mat-checkbox>
+        </div>
+        <div class="row">
+          <!-- telaio -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.telaio}}" [(ngModel)]="autobus.telaio" name="telaio"
+              #telaio="ngModel" maxlength="17" required>
+            <mat-hint align="end">{{autobus.telaio?.length || 0}} / 17</mat-hint>
+            <mat-error *ngIf="(telaio.dirty || telaio.touched) && telaio.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <!-- tipo immatricolazione -->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idTipoImmatricolazione}}"
+              [(ngModel)]="autobus.idTipoImmatricolazione" name="tipoImmatricolazione" #tipoImmatricolazione="ngModel"
+              required>
+              <mat-option *ngFor="let choice of getChoices('TIPO_IMMATRICOLAZIONE')" [value]="choice.codice">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="(tipoImmatricolazione.dirty || tipoImmatricolazione.touched) && tipoImmatricolazione.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="row">
+          <!-- primo telaio -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.primoTelaio}}" [(ngModel)]="autobus.primoTelaio"
+              name="primoTelaio" #primoTelaio="ngModel" maxlength="17" (change)="primoTelaioChanged()" required>
+            <mat-hint align="end">{{autobus.primoTelaio?.length || 0}} / 17</mat-hint>
+            <mat-error *ngIf="(primoTelaio.dirty || primoTelaio.touched) && primoTelaio.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <!-- data prima immatricolazione -->
+          <mat-form-field class="col">
+            <input matInput [matDatepicker]="pickerDataPrimaImmatricolazione"
+              placeholder="{{AutobusLabel.dataPrimaImmatricolazione}}" [(ngModel)]="autobus.dataPrimaImmatricolazione"
+              name="dataPrimaImmatricolazione" #dataPrimaImmatricolazione="ngModel" required
+              (ngModelChange)="popolaScadenzaVincoli()" [matDatepickerFilter]="filtroDataPrimaImmatricolazione"
+              (ngModelChange)="verificaDataPrimaImmatricolazione(true)"
+              (blur)="checkData(autobus.dataPrimaImmatricolazione,'dataPrimaImmatricolazione')">
+            <mat-datepicker-toggle matSuffix [for]="pickerDataPrimaImmatricolazione"></mat-datepicker-toggle>
+            <mat-datepicker #pickerDataPrimaImmatricolazione></mat-datepicker>
+            <mat-error *ngIf="(autobus.dataPrimaImmatricolazione == null)">
+              Data non valida!
+            </mat-error>
+            <mat-error
+              *ngIf="(dataPrimaImmatricolazione.dirty || dataPrimaImmatricolazione.touched) && dataPrimaImmatricolazione.errors?.matDatepickerParse">
+              Data non valida
+            </mat-error>
+            <mat-error
+              *ngIf="dataPrimaImmatricolazione.invalid && dataPrimaImmatricolazione?.hasError('valoreNonConsentito')">
+              Data immessa precedente al 01/01/1980
+            </mat-error>
+            <mat-error
+              *ngIf="dataPrimaImmatricolazione.invalid && dataPrimaImmatricolazione?.hasError('primaMaggioreDiUltima')">
+              Data successiva a "Data Ultima Immatricolazione"</mat-error>
+            <mat-error
+              *ngIf="dataPrimaImmatricolazione.invalid && dataPrimaImmatricolazione?.hasError('primaMaggioreUgualeUltimaRevisione')">
+              Data successiva o uguale a "Data Ultima Revisione"</mat-error>
+            <mat-error
+              *ngIf="dataPrimaImmatricolazione.invalid && dataPrimaImmatricolazione?.hasError('primaMaggioreUgualeAlienazione')">
+              Data successiva o uguale a "Data Alienazione"</mat-error>
+            <mat-error
+              *ngIf="dataPrimaImmatricolazione.invalid && dataPrimaImmatricolazione?.hasError('primaMaggioreSostProg')">
+              Anno successivo a "Anno sostituzione programmata"</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="row" style="width: 100%;">
+          <!-- targa -->
+          <div class="col" style="display: flex;">
+            <mat-form-field style="flex-grow: inherit;">
+              <input matInput placeholder="{{AutobusLabel.targa}}" [(ngModel)]="autobus.targa" name="targa"
+                #targa="ngModel" maxlength="7" required>
+              <mat-hint align="end">{{autobus.targa?.length || 0}} / 7</mat-hint>
+              <mat-error *ngIf="(targa.dirty || targa.touched) && targa.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <!-- ente che ha autorizzato... -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.enteAutorizzPrimaImm}}"
+              [(ngModel)]="autobus.enteAutorizzPrimaImm" name="enteAutorizzPrimaImm" #enteAutorizzPrimaImm="ngModel"
+              maxlength="200" required>
+            <mat-hint align="end">{{autobus.enteAutorizzPrimaImm?.length || 0}} / 200</mat-hint>
+            <mat-error
+              *ngIf="(enteAutorizzPrimaImm.dirty || enteAutorizzPrimaImm.touched) && enteAutorizzPrimaImm.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="row">
+          <!-- matricola -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.matricola}}" [(ngModel)]="autobus.matricola" name="matricola"
+              #matricola="ngModel" maxlength="20">
+            <mat-hint align="end">{{autobus.matricola?.length || 0}} / 20</mat-hint>
+          </mat-form-field>
+          <!-- data ultima immatricolazione -->
+          <mat-form-field class="col">
+            <input matInput [matDatepicker]="pickerDataUltimaImmatricolazione"
+              [matDatepickerFilter]="filtroDataUltimaImmatricolazione"
+              placeholder="{{AutobusLabel.dataUltimaImmatricolazione}}" [(ngModel)]="autobus.dataUltimaImmatricolazione"
+              name="dataUltimaImmatricolazione" #dataUltimaImmatricolazione="ngModel"
+              (ngModelChange)="refreshDirective()"
+              (blur)="verificaDataUltimaImmatricolazione(true);checkData(autobus.dataUltimaImmatricolazione,'dataUltimaImmatricolazione')">
+            <mat-datepicker-toggle matSuffix [for]="pickerDataUltimaImmatricolazione"></mat-datepicker-toggle>
+            <mat-datepicker #pickerDataUltimaImmatricolazione></mat-datepicker>
+            <mat-error *ngIf="(autobus.dataUltimaImmatricolazione == null)">
+              Data non valida!
+            </mat-error>
+            <mat-error
+              *ngIf="(dataUltimaImmatricolazione.dirty || dataUltimaImmatricolazione.touched) && dataUltimaImmatricolazione.errors?.matDatepickerParse">
+              Data non valida
+            </mat-error>
+            <mat-error
+              *ngIf="dataUltimaImmatricolazione.invalid && dataUltimaImmatricolazione?.hasError('valoreNonConsentito')">
+              Data immessa precedente al 01/01/1980
+            </mat-error>
+            <mat-error
+              *ngIf="dataUltimaImmatricolazione.invalid && dataUltimaImmatricolazione?.hasError('ultimaMinoreDiPrima')">
+              Data antecedente a "Data Prima Immatricolazione"</mat-error>
+            <mat-error
+              *ngIf="dataUltimaImmatricolazione.invalid && dataUltimaImmatricolazione?.hasError('ultimaMaggioreUgualeDataAlienazione')">
+              Data successiva o uguale a "Data Alienazione"</mat-error>
+          </mat-form-field>
+        </div>
+      </section>
+      <section>
+        <h3>Caratteristiche Fisiche e Tecnologiche</h3>
+        <div class="row">
+          <!-- marca -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.marca}}" [(ngModel)]="autobus.marca" name="marca"
+              #marca="ngModel" maxlength="200" required>
+            <mat-hint align="end">{{autobus.marca?.length || 0}} / 200</mat-hint>
+            <mat-error *ngIf="(marca.dirty || marca.touched) && marca.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <!-- allestimento -->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.categoriaVeicolo}}" [(ngModel)]="autobus.idCategoriaVeicolo"
+              name="categoriaVeicolo" #categoriaVeicolo="ngModel" required>
+              <mat-option *ngFor="let choice of listOfCategorieVeicolo" [value]="choice.codice"
+                (click)="changeAllestimento(choice)">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(categoriaVeicolo.dirty ||categoriaVeicolo.touched) && categoriaVeicolo.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idTipoAllestimento}}" [(ngModel)]="autobus.idTipoAllestimento"
+              name="allestimento" #allestimento="ngModel" required (change)="popolaScadenzaVincoli()"
+              (change)="popolaTipologiaDimensionale()" (change)="getTipologiaDimensionale(autobus.idTipoAllestimento)">
+              <mat-option *ngFor="let choice of getChoices('TIPO_ALLESTIMENTO')" [value]="choice.codice"
+                (click)="changeCategoriaVeicolo(choice)" [disabled]="choice.codice===10">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(allestimento.dirty || allestimento.touched) && allestimento.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <div class="row">
+          <!-- modello -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.modello}}" [(ngModel)]="autobus.modello" name="modello"
+              #modello="ngModel" maxlength="200" required>
+            <mat-hint align="end">{{autobus.modello?.length || 0}} / 200</mat-hint>
+            <mat-error *ngIf="(modello.dirty || modello.touched) && modello.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <!-- alimentazione -->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idTipoAlimentazione}}" [(ngModel)]="autobus.idTipoAlimentazione"
+              name="alimentazione" #alimentazione="ngModel" required>
+              <mat-option *ngFor="let choice of getChoices('TIPO_ALIMENTAZIONE')" [value]="choice.codice"
+                (click)="changeClasseAmbientale(choice)">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(alimentazione.dirty || alimentazione.touched) && alimentazione.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <!-- omologazione -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.omologazioneDirettivaEuropea}}"
+              [(ngModel)]="autobus.omologazioneDirettivaEuropea" name="omologazioneDirettivaEuropea"
+              #omologazioneDirettivaEuropea="ngModel" maxlength="300">
+            <mat-hint align="end">{{autobus.omologazioneDirettivaEuropea?.length || 0}} / 300</mat-hint>
+          </mat-form-field>
+          <!-- altra alimentazione -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.altraAlimentazione}}" [(ngModel)]="autobus.altraAlimentazione"
+              name="altraAlimentazione" #altraAlimentazione="ngModel" maxlength="100"
+              [required]="autobus.idTipoAlimentazione == 999">
+            <mat-hint align="end">{{autobus.altraAlimentazione?.length || 0}} / 100</mat-hint>
+            <mat-error
+              *ngIf="(altraAlimentazione.dirty || altraAlimentazione.touched) && altraAlimentazione.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <!-- omologazione classe -->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idClasseAmbientale}}" [(ngModel)]="autobus.idClasseAmbientale"
+              name="classeAmbientale" #classeAmbientale="ngModel" required>
+              <mat-option *ngFor="let choice of getChoices('TIPO_EURO')" [value]="choice.codice"
+                (click)="changeIdAlimentazione(choice)">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="(classeAmbientale.dirty || classeAmbientale.touched) && classeAmbientale.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <!-- caratteristiche particolari -->
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.caratteristicheParticolari}}"
+              [(ngModel)]="autobus.caratteristicheParticolari" name="caratteristicheParticolari"
+              #caratteristicheParticolari="ngModel" maxlength="255">
+            <mat-hint align="end">{{autobus.caratteristicheParticolari?.length || 0}} / 255</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <!-- classe veicolo -->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idClasseVeicolo}}" [(ngModel)]="autobus.idClasseVeicolo"
+              name="classeVeicolo" #classeVeicolo="ngModel" required>
+              <mat-option *ngFor="let choice of getChoices('CLASSE_VEICOLO')" [value]="choice.codice">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(classeVeicolo.dirty || classeVeicolo.touched) && classeVeicolo.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+
+          <!-- lunghezza -->
+          <mat-form-field class="col">
+            <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?" placeholder="{{AutobusLabel.lunghezza}}"
+              [(ngModel)]="autobus.lunghezza" name="lunghezza" #lunghezza="ngModel" required
+              (change)="changeLunghezza(autobus.lunghezza)" [disabled]="!autobus.idTipoAllestimento">
+            <mat-hint>Ammette fino a 3 decimali</mat-hint>
+            <mat-error *ngIf="lunghezza.errors?.tooLong">
+              Il valore deve essere compreso tra {{tipologiaDimensione.lunghezzaMin | number}} e
+              {{tipologiaDimensione.lunghezzaMax | number}}
+            </mat-error>
+            <mat-error *ngIf="(lunghezza.dirty || lunghezza.touched) && lunghezza.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+
+          <!-- due piani -->
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgDuePiani" name="duePiani"
+              [indeterminate]="autobus.flgDuePiani === null">
+              {{AutobusLabel.flgDuePiani}}
+            </mat-checkbox>
+          </div>
+          <!--Snodato -->
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgSnodato" name="flgSnodato"
+              [indeterminate]="autobus.flgSnodato === null">
+              {{AutobusLabel.flgSnodato}}
+            </mat-checkbox>
+          </div>
+          <!-- Cabina guida isolata -->
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgCabinaGuidaIsolata" name="flgCabinaGuidaIsolata">
+              {{AutobusLabel.flgCabinaGuidaIsolata}}
+            </mat-checkbox>
+          </div>
+        </div>
+
+
+        <div class="row">
+          <!-- Porte -->
+          <mat-form-field class="col">
+            <input matInput type="number" pattern="[0-9]" placeholder="{{AutobusLabel.numeroPorte}}"
+              [(ngModel)]="autobus.numeroPorte" name="numeroPorte" #numeroPorte="ngModel"
+              (change)="troncaDecimali(autobus.numeroPorte, 'porte')">
+            <mat-error *ngIf="(numeroPorte.dirty || numeroPorte.touched)">
+              Valore non corretto
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Posti in Piedi -->
+          <mat-form-field class="col">
+            <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?" placeholder="{{AutobusLabel.nPostiInPiedi}}"
+              [(ngModel)]="autobus.nPostiInPiedi" name="nPostiInPiedi" #nPostiInPiedi="ngModel" required
+              (change)="troncaDecimali(autobus.nPostiInPiedi, 'postiInPiedi')">
+            <mat-error *ngIf="(nPostiInPiedi.dirty || nPostiInPiedi.touched) && nPostiInPiedi.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Posti a sedere -->
+          <mat-form-field class="col">
+            <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?" placeholder="{{AutobusLabel.nPostiSedere}}"
+              [(ngModel)]="autobus.nPostiSedere" name="nPostiSedere" #nPostiSedere="ngModel" required
+              (change)="troncaDecimali(autobus.nPostiSedere, 'postiASedere')">
+            <mat-error *ngIf="(nPostiSedere.dirty || nPostiSedere.touched) && nPostiSedere.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Posti riservati -->
+          <mat-form-field class="col">
+            <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?"
+              placeholder="{{AutobusLabel.nPostiRiservati}}" [(ngModel)]="autobus.nPostiRiservati"
+              name="nPostiRiservati" #nPostiRiservati="ngModel"
+              (change)="troncaDecimali(autobus.nPostiRiservati, 'postiRiservati')">
+          </mat-form-field>
+
+          <!-- Posti in carrozina -->
+          <mat-form-field class="col">
+            <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?"
+              placeholder="{{AutobusLabel.postiCarrozzina}}" [(ngModel)]="autobus.postiCarrozzina"
+              name="postiCarrozzina" #postiCarrozzina="ngModel" required
+              (change)="troncaDecimali(autobus.postiCarrozzina, 'postiInCarrozzina')">
+            <mat-error *ngIf="(postiCarrozzina.dirty || postiCarrozzina.touched) && postiCarrozzina.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section>
+        <h3>Dotazioni Specifiche</h3>
+        <div class="row">
+          <!--Dotazione Disabili-->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idDotazioneDisabili}}" [(ngModel)]="autobus.idDotazioneDisabili"
+              name="dotazioneDisabili" #dotazioneDisabili="ngModel" required>
+              <mat-option *ngFor="let choice of getChoices('TIPO_FACILITAZIONI')" [value]="choice.codice">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="(dotazioneDisabili.dirty || dotazioneDisabili.touched) && dotazioneDisabili.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+          <!--Dispositivi Prevenzione Incidenti-->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.dispositiviPrevSelezionati}}"
+              [(ngModel)]="autobus.idAltriDispositiviPrevInc" name="dispositiviPrevInc" #dispositiviPrevInc="ngModel"
+              required multiple>
+              <mat-option *ngFor="let choice of getChoices('TIPO_DISPOSITIVI_PREVENZIONE')" [value]="choice.codice"
+                (click)="filterDispositiviPrevInc(choice)">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error
+              *ngIf="(dispositiviPrevInc.dirty || dispositiviPrevInc.touched) && dispositiviPrevInc.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+        <!--Altri Dispositivi Prevenzione Incidenti-->
+        <div class="row">
+          <mat-form-field class="col">
+            <input matInput placeholder="{{AutobusLabel.altriDispositiviPrevenzInc}}"
+              [(ngModel)]="autobus.altriDispositiviPrevenzInc" name="altriDispositiviPrevenzInc"
+              #altriDispositiviPrevenzInc="ngModel" maxlength="255">
+            <mat-hint align="end">{{autobus.altriDispositiviPrevenzInc?.length || 0}} / 255</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <!--Impianti Audio-->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idImpiantiAudio}}" [(ngModel)]="autobus.idImpiantiAudio"
+              name="impiantiAudio" #impiantiAudio="ngModel" required>
+              <mat-option *ngFor="let choice of getChoices('TIPO_AUDIO')" [value]="choice.codice">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(impiantiAudio.dirty || impiantiAudio.touched) && impiantiAudio.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+
+          <!--Impianti Visivi-->
+          <mat-form-field class="col">
+            <mat-select placeholder="{{AutobusLabel.idImpiantiVisivi}}" [(ngModel)]="autobus.idImpiantiVisivi"
+              name="impiantiVisivi" #impiantiVisivi="ngModel" required>
+              <mat-option *ngFor="let choice of getChoices('TIPO_VIDEO')" [value]="choice.codice">
+                {{ choice.descrizione }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="(impiantiVisivi.dirty || impiantiVisivi.touched) && impiantiVisivi.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+
+        <!-- Impianto Condizionamento-->
+        <div class="row">
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgImpiantoCondizionamento"
+              name="flgImpiantoCondizionamento" [indeterminate]="autobus.flgImpiantoCondizionamento === null">
+              {{AutobusLabel.flgImpiantoCondizionamento}} *
+            </mat-checkbox>
+          </div>
+          <!--flgOtx-->
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgOtx" name="flgOtx"
+              [indeterminate]="autobus.flgOtx === null">
+              {{AutobusLabel.flgOtx}}
+            </mat-checkbox>
+          </div>
+          <!--flgFiltroFap-->
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgFiltroFap" name="flgFiltroFap">
+              {{AutobusLabel.flgFiltroFap}}
+            </mat-checkbox>
+          </div>
+        </div>
+        <div class="row" style="height: 77px;">
+          <!--flgAvm-->
+          <div class="colCheckbox">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgAvm" name="flgAvm"
+              [indeterminate]="autobus.flgAvm === null" (change)="resetFieldsDotazioniSpecifiche()">
+              {{AutobusLabel.flgAvm}} *
+            </mat-checkbox>
+          </div>
+          <!-- TIPOLOGIA -->
+          <div style="width: 30%;">
+            <mat-form-field style="width: 100%;">
+              <mat-select
+                [placeholder]="autobus.flgAvm == true && autobus.flgContribuzione == true ? AutobusLabel.tipologiaAVM + ' **' : AutobusLabel.tipologiaAVM"
+                name="fkSistemaLocalizzazione" [disabled]="autobus.flgAvm != true || autobus.flgContribuzione != true"
+                [(ngModel)]="autobus.fkSistemaLocalizzazione" #fkSistemaLocalizzazione="ngModel">
+                <mat-option *ngFor="let choice of listOfSistemaLocalizzazione" [value]="choice.idSistemaLocalizzazione">
+                  {{ choice.descSistemaLocalizzazione }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="(fkSistemaLocalizzazione.dirty || fkSistemaLocalizzazione.touched) && fkSistemaLocalizzazione.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row" style="height: 77px;">
+          <!--flgContapasseggeri-->
+          <div class="colCheckbox">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgContapasseggeri" name="flgContapasseggeri"
+              [indeterminate]="autobus.flgContapasseggeri === null" (change)="resetFieldsDotazioniSpecifiche()">
+              {{AutobusLabel.flgContapasseggeri}} *
+            </mat-checkbox>
+          </div>
+          <div class="colCheckbox">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgContapasseggeriIntegrato"
+              #flgContapasseggeriIntegrato
+              [disabled]="autobus.flgContapasseggeri != true || autobus.flgContribuzione != true"
+              name="flgContapasseggeriIntegrato" [indeterminate]="autobus.flgContapasseggeriIntegrato === null">
+              {{AutobusLabel.bigliettazioneElettronica}}
+              <label *ngIf="autobus.flgContapasseggeri == true && autobus.flgContribuzione == true">**</label>
+            </mat-checkbox>
+          </div>
+        </div>
+        <div class="row" style="height: 77px;">
+          <!--flgRilevatoreBip-->
+          <div class="colCheckbox">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgRilevatoreBip" name="flgRilevatoreBip"
+              (change)="resetFieldsDotazioniSpecifiche()">
+              {{AutobusLabel.flgRilevatoreBip}}
+            </mat-checkbox>
+          </div>
+          <!-- PREDISPOSIZIONE CABLAGGIO -->
+          <div class="colCheckbox">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgBipCablato" name="flgBipCablato"
+              [indeterminate]="autobus.flgBipCablato === null"
+              [disabled]="autobus.flgRilevatoreBip == true || autobus.flgContribuzione != true">
+              {{AutobusLabel.predisposizioneCablaggio}}
+              <label *ngIf="autobus.flgRilevatoreBip != true && autobus.flgContribuzione == true">**</label>
+            </mat-checkbox>
+          </div>
+        </div>
+        <div class="row" style="height: 77px;">
+          <!--FLG SISTEMA PROTEZIONE AUTISTA-->
+          <div class="colCheckbox">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgSistemiProtezioneAutista"
+              name="flgSistemiProtezioneAutista" [indeterminate]="autobus.flgSistemiProtezioneAutista === null"
+              [disabled]="autobus.flgContribuzione != true">
+              {{AutobusLabel.sistemaProtezioneAutista}}
+              <label *ngIf="autobus.flgContribuzione == true">**</label>
+            </mat-checkbox>
+          </div>
+        </div>
+        <div class="row">
+          <!--  SISTEMA VIDEOSORVEGLIANZA A BORDO -->
+          <mat-form-field class="col">
+            <mat-select
+              [placeholder]="autobus.flgContribuzione == true  ? AutobusLabel.sistemaVideosorveglianza + ' **' : AutobusLabel.sistemaVideosorveglianza"
+              name="sistemaVideosorveglianza" [(ngModel)]="autobus.fkSistemaVideosorveglianza"
+              #sistemaVideosorveglianza="ngModel" [disabled]="autobus.flgContribuzione != true">
+              <mat-option *ngFor=" let choice of listOfSistemaVideosorveglianza"
+                [value]="choice.idSistemaVideosorveglianza">
+                {{ choice.descSistemaVideosorveglianza }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="row">
+          <!-- PORTABICI -->
+          <mat-form-field class="col">
+            <mat-select
+              [placeholder]="autobus.flgContribuzione == true ? AutobusLabel.portabiciAutobus + ' **' : AutobusLabel.portabiciAutobus"
+              name="portabici" [(ngModel)]="autobus.fkPortabici" #portabiciAutobus="ngModel"
+              [disabled]="autobus.flgContribuzione != true">
+              <mat-option *ngFor="let choice of listOfPortabiciAutobus" [value]="choice.idPortabici">
+                {{ choice.descPortabici }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="row">
+          <!-- ALTRI ALLESTIMENTI -->
+          <mat-form-field class="col">
+            <textarea matInput
+              [placeholder]="autobus.flgContribuzione == true  ? AutobusLabel.altriAllestimenti + ' (**)' : AutobusLabel.altriAllestimenti"
+              matTextareaAutosize matAutosizeMinRows="2" matAutosizeMaxRows="4" rows="4" maxlength="200"
+              [disabled]="autobus.flgContribuzione != true" [(ngModel)]="autobus.altriAllestimenti"
+              name="altriAllestimenti" #altriAllestimenti="ngModel"></textarea>
+            <mat-hint align="end">{{autobus.notaRiservataAzienda?.length || 0}} / 200</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+      <section>
+        <h3>Deposito Prevalente</h3>
+        <div *ngIf=" depositi == null ||  depositi?.length == 0">
+          <span style="color:red"> Nessun deposito definito nella propria anagrafica Soggetto Giuridico </span>
+        </div>
+        <div *ngIf=" depositi?.length > 0">
+          <div class="row" *ngIf="loadedDepositi">
+            <!-- denominazione -->
+            <mat-form-field class="col" style="max-width: 80%;">
+              <mat-select placeholder="{{AutobusLabel.denominazioneDeposito}}" [(ngModel)]="autobus.idDeposito"
+                name="deposito" (change)="changeDeposito($event)" #deposito="ngModel"
+                [disabled]="!depositi || depositi.length==0">
+                <mat-optgroup *ngFor="let group of depositoGroup" [label]="group.name">
+                  <mat-option *ngFor="let choice of group.deposito" [value]="choice.id">
+                    {{ choice.denominazione }}
+                  </mat-option>
+                </mat-optgroup>
+              </mat-select>
+            </mat-form-field>
+            <!-- deposito prevalente -->
+            <div class="col" style="max-width: 30%; display: flex; align-items: center;">
+              <mat-checkbox [align]="'start'" [(ngModel)]="isDepSelectedPrevalente" name="depPrev" disabled>
+                {{AutobusLabel.depositoPrevalente}}
+              </mat-checkbox>
+            </div>
+          </div>
+          <div class="row" *ngIf="loadedDepositi">
+            <!-- indirizzo -->
+            <mat-form-field class="col" style="max-width: 80%;">
+              <input matInput placeholder="{{AutobusLabel.indirizzoDeposito}}" [(ngModel)]="indirizzoDepSelected"
+                disabled [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+            <!-- telefono -->
+            <mat-form-field class="col" style="max-width: 30%;">
+              <input matInput placeholder="{{AutobusLabel.telefonoDeposito}}" [(ngModel)]="telefonoDepSelected" disabled
+                [ngModelOptions]="{standalone: true}">
+            </mat-form-field>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h3>Dati Amministrativi ed Economici</h3>
+        <!-- PROPIETA'/LEASING - PREZZO TOTALE ACQUISTO - ANTE NUOVA PROCEDURA DI RENDICONTAZIONE-->
+        <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+
+          <mat-grid-tile colspan="4">
+            <mat-form-field>
+              <mat-select placeholder="{{AutobusLabel.idProprietaLeasing}}" [(ngModel)]="autobus.idProprietaLeasing"
+                name="proprietaLeasing" #proprietaLeasing="ngModel" required>
+                <mat-option *ngFor="let choice of getChoices('PROPRIETA_LEASING')" [value]="choice.codice">
+                  {{ choice.descrizione }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-error
+              *ngIf="(proprietaLeasing.dirty || proprietaLeasing.touched) && proprietaLeasing.errors?.required">
+              Campo richiesto
+            </mat-error>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="4">
+            <mat-form-field>
+              <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?"
+                placeholder="{{AutobusLabel.prezzoTotAcquisto}}" [(ngModel)]="autobus.prezzoTotAcquisto"
+                name="prezzoTotAcquisto" #prezzoTotAcquisto="ngModel" (change)="markAsTouched()"
+                (change)="troncaDueDigitali(autobus.prezzoTotAcquisto,'prezzo')" contributoPubblicoAcquisto
+                [autobus]="autobus" [type]="'MIN'">
+            </mat-form-field>
+            <mat-error
+              *ngIf="prezzoTotAcquisto.invalid && prezzoTotAcquisto?.hasError('prezzoTotAcquistoMINcontributoPubblicoAcquisto')">
+              Importo immesso minore di "Entità contributo pubblico"
+            </mat-error>
+            <mat-error *ngIf="prezzoTotAcquisto.invalid && prezzoTotAcquisto?.hasError('prezzoTotAcquistoisString')">
+              Inserire un prezzo valido
+            </mat-error>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="4">
+            <div style="width: 100%;">
+              {{AutobusLabel.nuovaProceduraRendicontazione}}
+              <mat-divider [inset]="true"
+                style="border-color: #6fd2ff; border-width: 2px; width: 100%; margin-left: unset !important;">
+              </mat-divider>
+            </div>
+          </mat-grid-tile>
+        </mat-grid-list>
+
+        <!-- DATA ULTIMA REVISIONE - TIPOLOGIA DIMENSIONALE - ENTITA' CONTRIBUTO PUBBLICO -->
+        <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+          <mat-grid-tile colspan="4">
+            <mat-form-field>
+              <input matInput [matDatepicker]="pickerDataUltimaRevisione"
+                [matDatepickerFilter]="filtroDataUltimaRevisione" placeholder="{{AutobusLabel.dataUltimaRevisione}}"
+                [(ngModel)]="autobus.dataUltimaRevisione" name="dataUltimaRevisione" #dataUltimaRevisione="ngModel"
+                (blur)="verificaDataUltimaRevisione(true)">
+              <mat-datepicker-toggle matSuffix [for]="pickerDataUltimaRevisione"></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataUltimaRevisione></mat-datepicker>
+              <mat-error *ngIf="(autobus.dataUltimaRevisione == null)">
+                Data non valida!
+              </mat-error>
+              <mat-error *ngIf="dataUltimaRevisione.invalid && dataUltimaRevisione?.hasError('valoreNonConsentito')">
+                Data immessa precedente al 01/01/1980
+              </mat-error>
+              <mat-error
+                *ngIf="dataUltimaRevisione.invalid && dataUltimaRevisione?.hasError('ultimaRevMinoreUgualePrimaImm')">
+                Data antecedente o uguale a "Data Prima Immatricolazione"
+              </mat-error>
+              <mat-error
+                *ngIf="dataUltimaRevisione.invalid && dataUltimaRevisione?.hasError('ultimaRevMaggioreUgualeDataAlien')">
+                Data successiva o uguale a "Data Alienazione"
+              </mat-error>
+            </mat-form-field>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="4">
+            <mat-form-field>
+              <input matInput placeholder="{{AutobusLabel.tipologiaDimensionale}}"
+                [(ngModel)]="autobus.tipologiaDimensionale" name="tipologiaDimensionale"
+                #tipologiaDimensionale="ngModel" maxlength="15" disabled>
+            </mat-form-field>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="4">
+            <mat-form-field>
+              <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?"
+                placeholder="{{AutobusLabel.entitaContrPub}}" [(ngModel)]="autobus.contributoPubblicoAcquisto"
+                name="contributoPubblicoAcquisto" #contributoPubblicoAcquisto="ngModel"
+                (change)="changeEntitaContributoPubblico()" (change)="markAsTouched()" contributoPubblicoAcquisto
+                [autobus]="autobus" [type]="'MAX'" disabled>
+              <mat-error
+                *ngIf="contributoPubblicoAcquisto.invalid && contributoPubblicoAcquisto?.hasError('contributoPubblicoAcquistoMAXPrezzoTotAcquisto')">
+                Importo immesso maggiore di "Prezzo totale d'acquisto"</mat-error>
+              <mat-error
+                *ngIf="contributoPubblicoAcquisto.invalid && contributoPubblicoAcquisto?.hasError('prezzoTotAcquistoisString')">
+                Inserire un prezzo valido</mat-error>
+            </mat-form-field>
+          </mat-grid-tile>
+        </mat-grid-list>
+
+        <!-- ASSICURATO - CONTEGGIATO MIV - SCADENZA VINCOLI NON ALIENABILITA' - ANNO SOSTIUTUZIONE - CONTRIBUITO -->
+        <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+
+          <mat-grid-tile colspan="2">
+            <div class="col vertical-center">
+              <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgVeicoloAssicurato" name="flgVeicoloAssicurato">
+                {{AutobusLabel.flgVeicoloAssicurato}}
+              </mat-checkbox>
+            </div>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="2">
+            <div class="col vertical-center">
+              <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgConteggiatoMiv" name="flgConteggiatoMiv"
+                [indeterminate]="autobus.flgConteggiatoMiv === null" [disabled]="true">
+                {{AutobusLabel.flgConteggiatoMiv}}
+              </mat-checkbox>
+            </div>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="2">
+            <mat-form-field>
+              <input matInput [matDatepicker]="pickerScadenzaVincoliNonAlienabilita"
+                placeholder="{{AutobusLabel.dataScadVincoliNoAlien}}" [(ngModel)]="autobus.dataScadVincoliNoAlien"
+                name="dataScadVincoliNoAlien" disabled>
+              <mat-datepicker #pickerScadenzaVincoliNonAlienabilita></mat-datepicker>
+            </mat-form-field>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="2">
+            <mat-form-field>
+              <input matInput type="text" pattern="[0-9]+([,\.][0-9]{0,3})?" maxlength="4"
+                placeholder="{{AutobusLabel.annoSostProg}}" [(ngModel)]="autobus.annoSostProg" name="annoSostProg"
+                #annoSostProg="ngModel" maxlength="4" (change)="troncaDecimali(autobus.annoSostProg, 'annoSostProg')"
+                (blur)="verificaAnnoSostProg(true)">
+              <mat-error *ngIf="annoSostProg.invalid && annoSostProg?.hasError('primaMaggioreSostProg')">
+                Anno antecedente a "Data prima immatricolazione"
+              </mat-error>
+            </mat-form-field>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="4">
+            <div class="col vertical-center">
+              <mat-checkbox [align]="'start'" [ngModel]="isDisableCheck" name="contribuito" [disabled]="true">
+                {{AutobusLabel.contribuito}}
+              </mat-checkbox>
+            </div>
+          </mat-grid-tile>
+        </mat-grid-list>
+
+        <!-- STATO TP - DATA ALIENAZIONE - SPAZIO VUOTO - AUTOBUS GIA' ACQUISTATO DA CONTRIBUIRE -->
+        <mat-grid-list cols="12" rowHeight="97px" class="matGridStyleRowRadio">
+          <mat-grid-tile colspan="1">
+            <p style="margin-block: unset;">Stato TPL:</p>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="1">
+            <div class="col vertical-center" style="max-width:15%;">
+              <mat-radio-group aria-labelledby="radio-group-label" class="radio-group" [(ngModel)]="flagSelezionato"
+                name="flgAlienato" style="display: inline-flex; flex-direction: column;">
+                <mat-radio-button class="radio-button" *ngFor="let tipo of tipoAlienato" [value]="tipo.id"
+                  (change)="changeFlagAlienato2(tipo.id)">
+                  {{tipo.desc}}
+                </mat-radio-button>
+              </mat-radio-group>
+            </div>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="3" class="dataAlienazione">
+            <mat-form-field>
+              <input matInput [matDatepicker]="pickerDataAlineazione" placeholder="{{AutobusLabel.dataAlienazione}}"
+                [matDatepickerFilter]="filtroDataAlienazione" [(ngModel)]="autobus.dataAlienazione"
+                name="dataAlienazione" (ngModelChange)="dataAlienazioneValue()" #dataAlienazione="ngModel"
+                (blur)="verificaDataAlienazione(true)" [required]="autobus.flagAlienato  || !dataDisabled"
+                [disabled]="dataDisabled">
+              <mat-datepicker-toggle matSuffix [for]="pickerDataAlineazione"></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataAlineazione></mat-datepicker>
+              <mat-error *ngIf="(autobus.dataAlienazione == null)">
+                Data non valida!
+              </mat-error>
+              <mat-error *ngIf="dataAlienazione?.hasError('valoreNonConsentito')">
+                Data immessa precedente al 01/01/1980
+              </mat-error>
+              <mat-error
+                *ngIf="dataAlienazione.invalid && dataAlienazione?.hasError('alienazioneMinoreUgualePrimaImm')">
+                Data antecedente o uguale a "Data Prima Immatricolazione"
+              </mat-error>
+              <mat-error
+                *ngIf="dataAlienazione.invalid && dataAlienazione?.hasError('alienazioneMinoreUgualeUltimaImm')">
+                Data antecedente o uguale a "Data Ultima Immatricolazione"
+              </mat-error>
+              <mat-error
+                *ngIf="dataAlienazione.invalid && dataAlienazione?.hasError('alienazioneMinoreUgualeUltimaRev')">
+                Data antecedente o uguale a "Data Ultima Revisione"
+              </mat-error>
+              <mat-error *ngIf="dataAlienazione.invalid && dataAlienazione?.hasError('dataScadVincoliNoAlien')">
+                Data antecedente a "Data Scad Vincoli Non Alienabili"
+              </mat-error>
+            </mat-form-field>
+          </mat-grid-tile>
+          <mat-grid-tile colspan="3">
+          </mat-grid-tile>
+          <mat-grid-tile colspan="4">
+            <div class="col vertical-center">
+              <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flgRichiestaContr" name="flgRichiestaContr"
+                #flgRichiestaContr disabled>
+                {{AutobusLabel.contributoPubblicoAcquisto}}
+              </mat-checkbox>
+              <!--[disabled]="isDisableCheck"-->
+            </div>
+          </mat-grid-tile>
+        </mat-grid-list>
+
+      </section>
+
+      <section>
+        <h3>Verifica e Note</h3>
+        <div class="row">
+          <!-- Verificato Azienda -->
+          <div class="col vertical-center">
+            <mat-checkbox [align]="'start'" [(ngModel)]="autobus.flagVerificaAzienda" name="flagVerificaAzienda">
+              {{AutobusLabel.flagVerificaAzienda}}
+            </mat-checkbox>
+          </div>
+          <!-- Note Azienda -->
+          <mat-form-field class="col">
+            <textarea matInput placeholder="{{AutobusLabel.notaRiservataAzienda}}"
+              [(ngModel)]="autobus.notaRiservataAzienda" name="notaRiservataAzienda" #notaRiservataAzienda="ngModel"
+              matTextareaAutosize matAutosizeMinRows="2" matAutosizeMaxRows="4" rows="4" maxlength="2000"></textarea>
+            <mat-hint align="end">{{autobus.notaRiservataAzienda?.length || 0}} / 2000</mat-hint>
+          </mat-form-field>
+        </div>
+        <div class="row">
+          <!-- Note -->
+          <mat-form-field class="col">
+            <textarea matInput placeholder="{{AutobusLabel.note}}" [(ngModel)]="autobus.note" name="note"
+              #note="ngModel" matTextareaAutosize matAutosizeMinRows="4" rows="4" maxlength="2000"></textarea>
+            <mat-hint align="end">{{autobus.note?.length || 0}} / 2000</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <!--Documenti Allegati-->
+      <section>
+        <h3>Documenti Allegati</h3>
+        <div class="row">
+          <!--Tipo Documento-->
+          <mat-form-field class="col">
+            <mat-select placeholder="Tipo Documento" [(ngModel)]="autobus.idDocumento" name="documento"
+              #documento="ngModel">
+              <mat-option *ngFor="let choice of listOfDocToShow" [value]="choice.idTipoDocumento"
+                [disabled]="listOfDocToShow.length <= 0" (change)="handleFileInput()">
+                {{ choice.descrizione}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Note -->
+          <mat-form-field class="col" style="padding-top: 0px; bottom: 7px;">
+            <textarea matInput placeholder="Note" [(ngModel)]="autobus.noteDocumento" name="noteDocumento"
+              #noteDocumento="ngModel" matTextareaAutosize matAutosizeMinRows="2" matAutosizeMaxRows="4" rows="4"
+              maxlength="200" [disabled]="listOfDocToShow.length <= 0"></textarea>
+            <mat-hint align="end">{{autobus.noteDocumento?.length || 0}} / 200</mat-hint>
+          </mat-form-field>
+
+          <!--Upload File -->
+          <form class="col" style=" margin-top: 19px;   border-left-width: 0px; padding-left: 0px; margin-left: 50px; ">
+            <div>
+              <label for="uploadFile"> Carica </label>
+              <input id="uploadFile" type="file" (change)="uploadDoc($event.target.files); handleFileInput()"
+                name="uploadFile" #fileInput accept=".pdf" required [disabled]="listOfDocToShow.length <= 0">
+            </div>
+          </form>
+        </div>
+        <!-- LISTA DOCUMENTI AUTOBUS -->
+        <mat-divider *ngIf="listOfDocVariazAutobusVO.length>0" [inset]="true"
+          style="border-color: #6fd2ff; border-width: 2px"></mat-divider>
+        <div *ngFor="let documento of listOfDocVariazAutobusVO; let i = index">
+          <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+            <mat-form-field class="col" style="padding-bottom: 0px; max-width: 35%;">
+              <input type="text" placeholder="Tipo documento" aria-label="Number" matInput
+                [ngModel]="documento.descEstesa" [ngModelOptions]="{standalone: true}" disabled>
+            </mat-form-field>
+            <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 48%;">
+              <input matInput placeholder="Note" [ngModel]="documento.note" [ngModelOptions]="{standalone: true}"
+                disabled>
+            </mat-form-field>
+            <a class="col" title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+              (click)="downloadDoc(i)">
+              <mat-icon>
+                <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+              </mat-icon>
+            </a>
+            <!--Elimina documento-->
+            <a class="col" title="Elimina" href="javascript:void(0)" class="no-underline" (click)="eliminaDoc(i)">
+              <mat-icon style="color: #03a9f4 ;">delete</mat-icon>
+            </a>
+          </div>
+          <mat-divider *ngIf="listOfDocVariazAutobusVO.length>1  && i!=listOfDocVariazAutobusVO.length-1" [inset]="true"
+            style="border-color: #6fd2ff; border-width: 2px; padding-top: 10px"></mat-divider>
+        </div>
+      </section>
+
+
+
+      <section>
+        <div style="margin-top:1em">
+          <i>I campi contrassegnati da * sono obbligatori</i>
+        </div>
+        <div style="margin-top:1em">
+          <i>I campi contrassegnati da ** sono obbligatori ai fini della rendicontazione</i>
+        </div>
+        <div *ngIf="isValidCampiRequired()" class="alert-danger box-error" style="margin-top:1em">
+          Prima di procedere è necessario compilare tutti i campi obbligatori!
+          <br>
+        </div>
+        <br>
+
+        <div *ngIf="isCampiInvalid()" class="alert-danger box-error" style="margin-top:1em">
+          Attenzione! Sono presenti dati non coerenti
+          <br>
+        </div>
+        <br>
+
+        <button type="submit" [disabled]="isValidCampiRequired() || isCampiInvalid()" mat-raised-button color="primary">
+          <mat-icon>save</mat-icon>Salva
+        </button>
+        <a mat-raised-button (click)="reset()">
+          <mat-icon>clear</mat-icon> Pulisci
+        </a>
+      </section>
+    </form>
+
+  </mat-card-content>
+</mat-card>

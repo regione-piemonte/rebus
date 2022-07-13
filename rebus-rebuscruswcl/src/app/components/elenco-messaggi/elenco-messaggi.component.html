@@ -1,0 +1,91 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'MESSAGGISTICA'" [filtroNavbar]="context"></app-navbar>
+<mat-tab-group [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
+  <mat-tab *ngFor="let header of headers">
+    <ng-container *ngIf="(dataSource) === null || (dataSource != null && dataSource.data==null)">
+      Loading messaggi...
+    </ng-container>
+
+    <div *ngIf="!this.loadComplete" id="loader-container" class="preloader-background">
+      <div id="loader"></div>
+    </div>
+    <ng-template *ngIf="loadHeaderComplete" mat-tab-label>
+      <div style="    width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;" (click)="loadMessaggi(header.idContestoMess)" [ngClass]="{ 'headerBold': header.bold}">
+        {{ header.descMess
+        }}
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>
+<div *ngIf="!loadComplete" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+<div class="example-container mat-elevation-z8" >
+  <mat-table  [dataSource]="dataSource" *ngIf="loadComplete">
+
+    <!-- ICONA TIPO MESSAGGIO -->
+    <ng-container matColumnDef="tipoMessaggio" >
+      <mat-cell *matCellDef="let element"
+        style="padding-left: 0px;margin-right: -65px;border-right-width: 0px;border-right-style: solid;flex:0 0 10%">
+        <!-- MESSAGGI DI SISTEMA -->
+        <mat-icon *ngIf="element.fkTipoMessaggioSistema != null" title="Informazione di Sistema">
+          priority_high
+        </mat-icon>
+        <!-- PARCO BUS -->
+        <img *ngIf="element.fkTipoMessaggio == 1 " src="assets/bus_res_28.png" title="Modifica dati autobus">
+        <img *ngIf="element.fkTipoMessaggio == 2 " src="assets/spunta_new_28.png" title="Autobus verificato azienda">
+        <img *ngIf="element.fkTipoMessaggio == 3 " src="assets/X_res.png" title="Autobus rifiutato azienda">
+        <!-- RICHIESTE -->
+        <img *ngIf="tipiMessaggiProcedimento(element.fkTipoMessaggio)" src="assets/tipoProcedimento.png"
+          title="Trasmissione richiesta">
+        <!-- RENDICONTAZIONE -->
+        <span class="material-icons" *ngIf="element.idContestoMessaggio == 5 && element.fkTipoMessaggioSistema == null">
+          euro_symbol
+        </span>
+      </mat-cell>
+    </ng-container>
+
+    <!-- MESSAGGIO -->
+    <ng-container matColumnDef="messaggio">
+      <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 85%;"> Azienda
+      </mat-header-cell>
+      <mat-cell *matCellDef="let element" style="flex: 0 0 85%; white-space:nowrap; font-family: monospace;"
+        [ngStyle]="{'font-weight': element.flgLetto == 'S' ? 'normal' : 'bold'}"> {{element.dataCreazione | date : 'dd/MM/yyyy HH:mm'}}{{element.messaggio}}</mat-cell>
+    </ng-container>
+
+    <!-- AZIONI -->
+    <ng-container matColumnDef="azioni">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Azioni </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <a title="Dettaglio" href="javascript:void(0)" class="no-underline" (click)="dettaglioMessaggio(row.idMessaggio)"
+          >
+          <mat-icon class="blueIcon">visibility</mat-icon>
+        </a>
+        <input type="hidden" id="custId" name="custId" value={{row.idMessaggio}}>
+        <a title="Ripristina" *ngIf="(row.flgLetto == 'S')" href="javascript:void(0)" class="no-underline"
+        (click)="ripristinaNonLetto(row.idMessaggio)" >
+          <img src="assets/ripristina.png" style="width: 24px;height: 24px">
+        </a>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="dataRow" >
+      <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 25%;"></mat-header-cell>
+      <mat-cell *matCellDef="let row"
+        style="flex: 0 0 25%;white-space:nowrap;color: white; font-size:120%!important "> {{row.dataRow | date :
+        'EEEE dd/MM/yyyy' | titlecase}}</mat-cell>
+    </ng-container>
+    <mat-row *matRowDef="let row; columns:['dataRow']; when: isExtendedRow" class="titolo"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row> 
+  </mat-table>
+  <!-- NgStyle utitlizzato per nascondere il paginator quando carica i dati -->
+  <mat-paginator [ngStyle]="{'display': loadComplete ? 'revert' : 'none'}" #paginator [pageSize]="100" [pageSizeOptions]="[100, 1000, 2500, 5000]">
+  </mat-paginator>
+</div>

@@ -1,0 +1,94 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<div *ngIf="!loadedPDF" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="progressivoRichiesta">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 15%' : '0 0 10%'}"> Codice richiesta 
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 15%' : '0 0 10%'}"> {{row.progressivoRichiesta}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="tipologia">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 18%' : '0 0 15%'}"> Tipologia
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 18%' : '0 0 15%'}"> {{row.tipologia}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="richiedente">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 20%;"> Richiedente
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 20%;white-space:nowrap;"> {{troncaCaratteri(row.richiedente)}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="stato">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 25%' : '0 0 20%'}"> Stato
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 25%' : '0 0 20%'}"> {{troncaCaratteri(row.stato)}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="dataStato">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 12%' : '0 0 10%'}"> Data Stato
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"
+      [ngStyle]="{'flex': isUtenteAzienda ? '0 0 12%' : '0 0 10%'}">{{row.dataStipulaDa | date: 'dd/MM/yyyy HH:mm'}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="gestoreContratto" *ngIf="!isUtenteAzienda">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 15%;"> Gestore Contratto
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 15%;white-space:nowrap;">
+      {{troncaCaratteriGestoreContratto(row.gestoreContratto)}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="azioni">
+    <mat-header-cell *matHeaderCellDef style="text-align: start;flex: 0 0 10%;"> Azioni </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;">
+      <a title="Dettaglio" *ngIf="isConsultaAbilitato || row.isAbilitatoDettaglio" href="javascript:void(0)"
+        class="no-underline" (click)="dettaglioRichiesta(row.idProcedimento)">
+        <mat-icon class="blueIcon">visibility</mat-icon>
+      </a>
+      <input type="hidden" id="custId" name="custId" value={{row.idProcedimento}}>
+      <a title="Modifica" *ngIf="isModificaAbilitata && row.isAbilitatoModifica" href="javascript:void(0)"
+        class="no-underline" (click)="modificaRichiesta(row.idProcedimento)">
+        <mat-icon class="blueIcon">edit</mat-icon>
+      </a>
+      <a title="Elimina" *ngIf="isCancellaAbilitato && row.isAbilitatoElimina" href="javascript:void(0)"
+        class="no-underline" (click)="eliminaProcedimentopopup(row.idProcedimento)">
+        <mat-icon class="blueIcon">delete</mat-icon>
+      </a>
+      <a title="Scarica/Visualizza PDF Richiesta" *ngIf="isScaricaPDFAbilitato && row.isAbilitatoScaricaPDFAzienda"
+        href="javascript:void(0)" class="no-underline"
+        (click)="scaricaPDF(row.idProcedimento,row.idTipologia,7,row.progressivoRichiesta)">
+        <mat-icon class="blueIcon">picture_as_pdf</mat-icon>
+      </a>
+      <a title="Scarica/Visualizza PDF Autorizzazione" *ngIf="isScaricaPDFAbilitato && row.isAbilitatoScaricaPDFEnte"
+        href="javascript:void(0)" class="no-underline"
+        (click)="scaricaPDF(row.idProcedimento,row.idTipologia,8,row.progressivoRichiesta)">
+        <mat-icon class="blueIcon">picture_as_pdf</mat-icon>
+      </a>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row [ngClass]="{ 'boldStyle': (this.isAmp && row.idStato == 40 && isModificaAbilitata && row.isAbilitatoModifica)}"
+    *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+</mat-table>
+
+<mat-paginator [pageSize]="defaultPageSize" [pageSizeOptions]="pageSizeOption"></mat-paginator>

@@ -1,0 +1,31 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+
+@import '../../../styles.scss';
+
+.blueIcon{
+    color: #03A9F4;
+}
+
+/deep/ .titolo{
+    background-color: mat-color($custom-theme-accent);
+    color:white;
+    font-size: mat-size(200px); 
+}
+
+.container{background-color: #f7f7f7}
+
+textarea{
+    font-family: Lucida Sans Unicode;
+    font-weight: bold;
+}
+
+.no-underline{
+    text-decoration:none;
+}
+
+.headerBold{
+    font-weight: bold;
+}

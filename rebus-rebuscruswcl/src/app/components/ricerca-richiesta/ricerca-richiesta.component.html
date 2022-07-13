@@ -1,0 +1,81 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_PROCEDIMENTI'" [filtroNavbar]="context"></app-navbar>
+
+<div *ngIf="isLoading()" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+
+<div class="container">
+  <form #searchForm="ngForm" (submit)="aggiorna()">
+    <div class="filterRicerca" >
+      <mat-form-field class="margin-top;" style="width: 10%">
+        <input matInput placeholder="Codice richiesta" value="" name="progressivoRichiesta"
+          [(ngModel)]="filtro.progressivoRichiesta">
+      </mat-form-field>
+      <mat-form-field class="margin-top" style="margin-bottom: 15px;" [formGroup]="tipoProcedimentoGroup">
+        <input type="text" placeholder="Tipologia" aria-label="Number" matInput
+          #trigger="matAutocompleteTrigger" formControlName="tipoProcedimentoForm"
+          [matAutocomplete]="autoTipoProcedimento" (blur)="check('TipoProc')">
+        <button mat-button *ngIf="tipoProcedimentoGroup.controls['tipoProcedimentoForm'].value?.id" matSuffix mat-icon-button aria-label="Clear"
+          (click)="svuotaFlitri('tipologia');selectionMade($event,trigger)">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-autocomplete autoActiveFirstOption #autoTipoProcedimento="matAutocomplete" [displayWith]="displayFn"
+          (optionSelected)="click($event,'TipoProc')">
+          <mat-option *ngFor="let choice of filteredOptionsTipoProcedimento | async" [value]="choice">
+            {{choice.descrizione}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+      <mat-form-field class="margin-top;">
+        <input matInput placeholder="Richiedente " value="" name="richiedente" [(ngModel)]="filtro.richiedente">
+      </mat-form-field>
+
+      <mat-form-field class="margin-top" style="margin-bottom: 15px; width: 22%" [formGroup]="statoProcedimentoGroup">
+        <input type="text" placeholder="Stato" aria-label="Number" matInput formControlName="statoProcedimentoForm"
+          [matAutocomplete]="autoStatoProcedimento" #trigger2="matAutocompleteTrigger"
+          (blur)="check('StatoProc')">
+        <button mat-button *ngIf="statoProcedimentoGroup.controls['statoProcedimentoForm'].value?.id" matSuffix mat-icon-button aria-label="Clear"
+          (click)="svuotaFlitri('stato');selectionMade($event,trigger2)">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-autocomplete autoActiveFirstOption #autoStatoProcedimento="matAutocomplete" [displayWith]="displayFn"
+          (optionSelected)="click($event,'StatoProc')">
+          <mat-option *ngFor="let choice of filteredOptionsStatoProcedimento | async" [value]="choice">
+            {{choice.descrizione}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+      <mat-form-field class="margin-top;" style="width: 15%">
+        <input matInput placeholder="Targa/Telaio" value="" name="targa" [(ngModel)]="filtro.targa"  maxlength="17">
+      </mat-form-field>
+    </div>
+
+    <mat-grid-list cols="12" rowHeight="50px">
+      <mat-grid-tile [colspan]="3">
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button mat-raised-button color="primary" type="submit">
+          <mat-icon>search</mat-icon>Cerca
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button type="button" mat-raised-button (click)="pulisci();">
+          <mat-icon>clear</mat-icon>Pulisci
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+      </mat-grid-tile>
+    </mat-grid-list>
+
+  </form>
+</div>
+<div style="margin-top: 1em;margin-bottom:1em;min-height: 20em;">
+  <app-elenco-richiesta (isLoadingEvent)="isLoadingChild($event)"></app-elenco-richiesta>
+</div>

@@ -1,0 +1,10 @@
+{
+    "beServer": "http://localhost:8080/parcobustplweb",
+    "devBackendServer": "http://localhost:8080",
+    "shibbolethSSOLogoutURL": "",
+    "otherParam": "development_param_value",
+    "publicPath": "http://localhost:4200/parcobustplweb",
+    "timeout": 1000,
+    "srcEnviroment": "",
+    "anagrafichePath": "http://localhost:4200/anagrafichetplweb"
+}

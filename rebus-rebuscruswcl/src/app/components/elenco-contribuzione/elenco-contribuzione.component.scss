@@ -1,0 +1,21 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+.boldStyle{
+    font-weight: bold;
+}
+
+.blueIcon{
+    color: #03A9F4;
+}
+
+.no-underline{
+    text-decoration: none !important;
+}
+
+
+::ng-deep .mat-sort-header-button{
+    text-align: left;
+        
+}

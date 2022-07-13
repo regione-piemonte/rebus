@@ -1,0 +1,179 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_ANAGRAFICA_BUS'" [filtroNavbar]="context"></app-navbar>
+
+<div *ngIf="filtroincorso || downloadincorso" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<div class="container">
+  <form #searchForm="ngForm" (submit)="aggiorna()">
+
+    <div class="filterRicerca" style="padding-top: 15px;">
+
+      <mat-form-field class="margin-top" *ngIf="!isUtenteAzienda">
+        <input matInput placeholder="Azienda" value="" name="denom" [(ngModel)]="filtro.denominazioneAzienda">
+      </mat-form-field>
+
+      <mat-form-field class="margin-top" style="max-width: 100px">
+        <input matInput placeholder="Targa" value="" name="targa" [(ngModel)]="filtro.targa" maxlength="8">
+      </mat-form-field>
+      <mat-form-field class="margin-top">
+        <input matInput placeholder="Matricola aziendale" value="" name="matricola" [(ngModel)]="filtro.matricola">
+      </mat-form-field>
+      <mat-form-field class="margin-top">
+        <input matInput placeholder="Primo Telaio" value="" name="primoTelaio" [(ngModel)]="filtro.primoTelaio"
+          maxlength="17">
+      </mat-form-field>
+
+      <mat-form-field class="margin-top" style="max-width: 150px">
+        <mat-select placeholder="Alimentazione" [(ngModel)]="filtro.tipoAlimentazione" name="idTipoAlimentazione">
+          <mat-option *ngFor="let alimentazione of tipiAlimentazione" [value]="alimentazione.codice">
+            {{ alimentazione.descrizione }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div>
+        <mat-form-field class="margin-top">
+          <input matInput placeholder="Codice richiesta" value="" name="codiceRichiesta"
+            [(ngModel)]="filtro.codiceRichiesta" [disabled]="filtro.situazioneAl || richieste" maxlength="17">
+        </mat-form-field>
+      </div>
+      <div class="paddingInterno">
+        <p
+          style="margin-top: 0;margin-bottom:-20px;text-align:left; color: rgba(0,0,0,.42); font-family: Roboto, 'Helvetica Neue', sans-serif;">
+          Data Prima Immatricolazione</p>
+        <mat-form-field class="margin-top" style="max-width: 110px">
+          <input matInput [matDatepicker]=" picker" placeholder="Da" [(ngModel)]="filtro.dataPrimaImmatricolazioneDa"
+            name="dataPrimaImmatricolazioneDa" #dataPrimaImmatricolazioneDa="ngModel"
+            [max]="filtro.dataPrimaImmatricolazioneA"
+            (blur)="checkDataPrimaImmatricolazione(filtro.dataPrimaImmatricolazioneDa,filtro.dataPrimaImmatricolazioneA)"
+            maxlength="12">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error
+            *ngIf="dataPrimaImmatricolazioneDa.invalid && dataPrimaImmatricolazioneDa?.hasError('daMaggioreA')">
+            Data successiva a "Data Prima Immatricolazione A"
+          </mat-error>
+        </mat-form-field>
+
+
+
+        <mat-form-field class="margin-top" style="max-width: 110px">
+          <input matInput [matDatepicker]="picker1" placeholder="A" [(ngModel)]="filtro.dataPrimaImmatricolazioneA"
+            name="dataPrimaImmatricolazioneA" #dataPrimaImmatricolazioneA="ngModel"
+            [min]="filtro.dataPrimaImmatricolazioneDa"
+            (blur)="checkDataPrimaImmatricolazione(filtro.dataPrimaImmatricolazioneDa,filtro.dataPrimaImmatricolazioneA)"
+            maxlength="12">
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-datepicker #picker1></mat-datepicker>
+          <mat-error *ngIf="dataPrimaImmatricolazioneA.invalid && dataPrimaImmatricolazioneA?.hasError('aMinoreDa')">
+            Data antecedente a "Data Prima Immatricolazione Da"
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <mat-expansion-panel style="margin-left: 5%;" class="panel">
+      <mat-expansion-panel-header class="titoloRicerca">
+        <mat-panel-title style="color: black !important;">
+          Ricerca avanzata
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <mat-grid-list cols="4" rowHeight="35px">
+        <mat-grid-tile>
+          <label>CATEGORIA <sup> <i> * </i></sup></label>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <label>STATO TPL <sup> <i> * </i></sup></label>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <label>STATO SCHEDA <sup> <i> * </i></sup></label>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <label>OGGETTO DI</label>
+        </mat-grid-tile>
+      </mat-grid-list>
+
+      <mat-grid-list cols="4" rowHeight="220px">
+        <mat-grid-tile>
+          <div style="display: flex; flex-direction: column;">
+            <mat-checkbox (change)="changeAutobus($event)" [(ngModel)]="autobus" name="autobus" class="margin-top">
+              Autobus</mat-checkbox>
+            <mat-checkbox (change)="chengeAutovetture($event)" [(ngModel)]="autovetture" name="autovetture"
+              class="margin-top">
+              Autovettura</mat-checkbox>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div style="display: flex; flex-direction: column;">
+            <mat-checkbox name="attivo" class="margin-top" [(ngModel)]="attivo" (change)="chengeAttivo($event)">Attivo
+            </mat-checkbox>
+            <mat-checkbox name="ritirato" class="margin-top" [(ngModel)]="ritirato" (change)="chengeRitirato($event)">
+              Ritirato</mat-checkbox>
+            <mat-checkbox name="alienato" class="margin-top" [(ngModel)]="alienato" (change)="chengeAlienato($event)">
+              Alienato</mat-checkbox>
+            <mat-checkbox name="daImmatricolare" class="margin-top" [(ngModel)]="daImmatricolare"
+              (change)="chengeDaImmatricolare($event)">Da immatricolare</mat-checkbox>
+            <mat-checkbox name="includiPropPrec" class="margin-top" [(ngModel)]="includiPropPrec"
+              (change)="chengeIncludiPropPrec($event)" *ngIf='!isUtenteAzienda'>Mostra proprietà precedenti
+            </mat-checkbox>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div style="display: flex; flex-direction: column;">
+            <mat-checkbox name="verificatoAziende" class="margin-top" [(ngModel)]="verificatoAziende"
+              (change)="chengeVerificatoAziende($event)">Verificato azienda</mat-checkbox>
+            <mat-checkbox name="verificatoAMP" class="margin-top" [(ngModel)]="verificatoAMP"
+              (change)="chengeVerificatoAMP($event)">Verificato AMP (e Verificato azienda)</mat-checkbox>
+            <mat-checkbox name="bozza" class="margin-top" [(ngModel)]="bozza" (change)="chengeBozza($event)">Non
+              verificato azienda (Bozza)
+            </mat-checkbox>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div style="display: flex; flex-direction: column;">
+            <mat-checkbox name="richieste" class="margin-top" [(ngModel)]="richieste"
+              (change)="chengeRichieste($event)">Richieste</mat-checkbox>
+            <mat-checkbox name="rendicontazione" class="margin-top" [(ngModel)]="rendicontazione"
+              (change)="chengeRendicontazione($event)">Rendicontazione</mat-checkbox>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+      <i>* Selezionare almeno un'opzione per gruppo</i>
+    </mat-expansion-panel>
+
+    <mat-grid-list cols="12" rowHeight="50px">
+      <mat-grid-tile [colspan]="3">
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button mat-raised-button color="primary">
+          <mat-icon>search</mat-icon>Cerca
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button mat-raised-button (click)="pulisci();" (click)="$event.preventDefault()">
+          <mat-icon>clear</mat-icon>Pulisci
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button *ngIf="(filtro.situazioneAl==null || filtro.situazioneAl=='') && !isEnableExcel; else elseBlock"
+          mat-raised-button (click)="scaricaExcel('Ricerca_Autobus_');">
+          <img src="assets/excel.png"> Scarica Excel Ricerca</button>
+        <ng-template #elseBlock>
+          <button mat-raised-button *ngIf="!isEnableExcel" (click)="scaricaExcel('Ricerca_Storico_Autobus_');">
+            <img src="assets/excel.png"> Scarica Excel Storico</button>
+        </ng-template>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+      </mat-grid-tile>
+    </mat-grid-list>
+  </form>
+</div>
+<div [style.display]="filtro.situazioneAl==null || filtro.situazioneAl=='' ? 'block' : 'none'"
+  style="margin-top: 1em;margin-bottom:1em;min-height: 20em;">
+  <app-elenco (isLoadingEvent)="isLoading($event)"></app-elenco>
+</div>

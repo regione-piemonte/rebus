@@ -1,0 +1,17 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<mat-card class="matCard">
+    <mat-card-header>
+        <mat-card-title class="titleHeaderCard" >Si è verificato il seguente errore</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+            <img src="assets/error.png">
+			<span> {{message}} </span>
+            <div class="buttonStyle">
+                <button mat-raised-button style="float:right"
+                [routerLink]="'/home'">Home</button>
+            </div>
+    </mat-card-content>
+</mat-card>

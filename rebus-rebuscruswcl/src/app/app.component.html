@@ -1,0 +1,318 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+
+<div *ngIf="loadingFunzionario || loadingTipologie" id="loader-container" class="preloader-background">
+        <div id="loader"></div>
+</div>
+
+<div *ngIf="!loadingFunzionario && !loadingTipologie">
+        <div style="display: flex; min-height: 100vh;height: 100px; flex-direction: column;">
+                <mat-toolbar color="accent" class="box_header">
+                        <button mat-button [matMenuTriggerFor]="menu" style="text-align: left;">
+                                <img src="assets/menu.png">
+                        </button>
+                        <mat-menu #menu="matMenu">
+                                <a mat-menu-item class="no-underline" routerLink="home">Home</a>
+                                <button mat-menu-item [matMenuTriggerFor]="menuBus">
+                                        <a class="no-underline" href="#"><span style="color: black;">Anagrafica
+                                                        Autobus</span></a>
+                                </button>
+                                <button mat-menu-item [matMenuTriggerFor]="menuProcedimenti">
+                                        <a class="no-underline" href="#"
+                                                *ngIf="assertMenu('nuovoProcedimenti') || assertMenu('ricercaProcedimenti') ">
+                                                <span style="color: black;">Richieste </span>
+                                        </a>
+                                </button>
+                                <button *ngIf="isAutorizzatoRendicontazione" mat-menu-item
+                                        [matMenuTriggerFor]="menuContribuzione">
+                                        <a class="no-underline" href="#"
+                                                *ngIf="assertMenu('nuovaContribuzione') || assertMenu('ricercaContribuzione') ">
+                                                <span style="color: black;">Rendicontazione </span>
+                                        </a>
+                                </button>
+                                <button mat-menu-item *ngIf="isAutorizzatoMessaggistica" class="no-underline"
+                                        (click)="goToMessaggi(1)">Messaggi</button>
+                                <a mat-menu-item *ngIf="isAutorizzatoRiferimenti" class="no-underline"
+                                        [routerLink]="['riferimentiNormativi']">Riferimenti normativi</a>
+                                <mat-divider
+                                        *ngIf="assertMenu('anagraficaAziende') || assertMenu('anagraficaContratti')">
+                                </mat-divider>
+                                <button mat-menu-item [matMenuTriggerFor]="menuAltriApplicativi"
+                                        *ngIf="assertMenu('anagraficaAziende') || assertMenu('anagraficaContratti')">
+                                        <a class="no-underline" href="#"><span style="color: black;">Altri
+                                                        applicativi</span></a>
+                                </button>
+                        </mat-menu>
+
+
+                        <mat-menu #menuBus="matMenu">
+                                <mat-list role="list">
+                                        <a mat-menu-item class="no-underline" routerLink="ricercabusazienda"
+                                                *ngIf="assertMenu('ricercabusazienda')" role="listitem">
+                                                <span style="color: black;">Ricerca</span>
+                                        </a>
+                                        <a mat-menu-item class="no-underline " routerLink="ricercabusazienda"
+                                                *ngIf="assertMenu('ricercabusente')" role="listitem">
+                                                <span style="color: black;">Ricerca</span>
+                                        </a>
+
+
+                                        <a mat-menu-item class="no-underline " routerLink="inserisci"
+                                                *ngIf="assertMenu('inserimentoBus')" role="listitem">
+                                                <span style="color: black;">Inserisci</span>
+                                        </a>
+
+
+                                        <a mat-menu-item class="no-underline " routerLink="upload"
+                                                *ngIf="assertMenu('upload')" role="listitem">
+                                                <span style="color: black;">Carica dati da modulo</span>
+                                        </a>
+
+
+                                        <a mat-menu-item class="no-underline" routerLink="download"
+                                                *ngIf="assertMenu('download')" role="listitem">
+                                                <span style="color: black;">Scarica modulo</span>
+                                        </a>
+
+                                </mat-list>
+                        </mat-menu>
+
+                        <mat-menu #menuProcedimenti="matMenu">
+                                <mat-list role="list">
+
+
+                                        <a mat-menu-item style="color: black; " class="no-underline"
+                                                routerLink="ricercaProcedimenti"
+                                                *ngIf="assertMenu('ricercaProcedimenti')" role="listitem">Ricerca</a>
+                                        <button mat-menu-item [matMenuTriggerFor]="menuProcedimentiNuovo"
+                                                #trigger="matMenuTrigger" (mouseenter)="trigger.openMenu()"
+                                                *ngIf="assertMenu('nuovoProcedimenti')">
+                                                <a class="no-underline" style="color: black;" href="#">
+                                                        Inserisci
+                                                </a>
+                                        </button>
+
+                                </mat-list>
+                        </mat-menu>
+
+                        <mat-menu #menuContribuzione="matMenu">
+                                <mat-list role="list">
+                                        <a mat-menu-item style="color: black; " class="no-underline"
+                                                routerLink="ricercaContribuzione"
+                                                *ngIf="assertMenu('ricercaContribuzione')" role="listitem">Ricerca</a>
+                                        <!-- ID TIPO RPOCEDIMENTO VIENE PASSATO STATICAMENTE -->
+                                        <a mat-menu-item style="color: black; " class="no-underline"
+                                                [routerLink]="['inserisciContribuzione', 7]"
+                                                *ngIf="assertMenu('nuovaContribuzione')" role="listitem">Inserisci</a>
+                                </mat-list>
+                        </mat-menu>
+
+                        <mat-menu #menuAltriApplicativi="matMenu">
+                                <mat-list role="list">
+
+                                        <a mat-menu-item class="no-underline" [attr.href]="anagrafichePath"
+                                                target="_blank" *ngIf="assertMenu('anagraficaAziende')"
+                                                role="listitem"><span style="color: black;">Anagrafica
+                                                        Soggetti</span></a>
+
+
+                                        <a mat-menu-item class="no-underline" [attr.href]="anagrafichePath"
+                                                target="_blank" *ngIf="assertMenu('anagraficaContratti')"
+                                                role="listitem"><span style="color: black;">Anagrafica
+                                                        Contratti</span></a>
+
+                                </mat-list>
+                        </mat-menu>
+
+                        <mat-menu #menuProcedimentiNuovo="matMenu">
+                                <mat-nav-list role="list">
+                                        <mat-list-item *ngFor="let link of links" role="listitem">
+                                                <div *ngIf="link.id!=6 && link.id!=5 && link.id!=7; else noLinkBlock">
+                                                        <!--  <div *ngIf="link.id!=6; else noLinkBlock">-->
+                                                        <!-- id 6 uso non in linea, 7 contribuzione e 5 uso in linea -->
+                                                        <div *ngIf="link.id !=2; else linkSostituzione"
+                                                                [matMenuTriggerFor]="menuProcedimentiSostituzione"
+                                                                #trigger2="matMenuTrigger"
+                                                                (mouseenter)="trigger2.closeMenu()">
+                                                                <a *ngIf="link.id !=5" matLine
+                                                                        [routerLink]="['inserisciRichiesta',link.id]">{{
+                                                                        link.descrizione }}</a>
+                                                                <a *ngIf="link.id ==5" matLine
+                                                                        [routerLink]="['inserisciRichiestaUsoInLinea',link.id]">{{
+                                                                        link.descrizione }}</a>
+                                                        </div>
+
+                                                        <ng-template #linkSostituzione>
+                                                                <button style="padding-left: 0px ;" mat-menu-item
+                                                                        [matMenuTriggerFor]="menuProcedimentiSostituzione"
+                                                                        #trigger2="matMenuTrigger"
+                                                                        (mouseenter)="trigger2.openMenu()"
+                                                                        *ngIf="assertMenu('nuovoProcedimenti')">
+                                                                        <a class="no-underline" href="#">
+                                                                                <span style="color: black;">{{
+                                                                                        link.descrizione }}
+                                                                                </span>
+                                                                        </a>
+                                                                </button>
+
+                                                        </ng-template>
+                                                </div>
+                                                <ng-template #noLinkBlock>
+                                                        <div style="cursor: not-allowed !important;
+                                                        opacity: 0.5;
+                                                        text-decoration: none;">
+                                                                {{ link.descrizione }}
+                                                        </div>
+                                                </ng-template>
+                                        </mat-list-item>
+                                </mat-nav-list>
+                        </mat-menu>
+
+                        <mat-menu #menuProcedimentiSostituzione="matMenu">
+                                <mat-nav-list role="list">
+                                        <mat-list-item *ngIf="assertMenu('nuovoProcedimenti')">
+                                                <a matLine
+                                                        [routerLink]="['inserisciRichiestaSostituzione',nuovoProcedimento1?.id]">{{
+                                                        nuovoProcedimento1.descrizione }}</a>
+                                        </mat-list-item>
+                                        <mat-list-item *ngIf="assertMenu('nuovoProcedimenti')">
+                                                <a matLine
+                                                        [routerLink]="['inserisciRichiestaSostituzione',nuovoProcedimento4?.id]">{{
+                                                        nuovoProcedimento4.descrizione }}</a>
+                                        </mat-list-item>
+                                </mat-nav-list>
+                        </mat-menu>
+
+                        <h2 style="font-size: 1.8em; text-align: center;width:80%;">
+                                PARCO AUTOBUS TPL PIEMONTE</h2>
+                        <div style="right: 3%;display:flex;height:90%">
+                                <div *ngIf="numMessDaLeggere != null && numMessDaLeggere != 0 && isAutorizzatoMessaggistica"
+                                        style="display:flex;justify-content:flex-end;align-items:flex-top;margin-right: -10px">
+
+                                        <!-- Link button -->
+                                        <button mat-button color="accent"
+                                                style="color:rgb(230, 22, 22);text-decoration:none;"
+                                                (click)="goToMessaggi(0)">
+                                                <span
+                                                        style="background-image: url('assets/fumetto.png'); background-size: cover; font-weight:900; margin-left: 4px;margin-bottom: 45px; display: flex;">
+                                                        <span
+                                                                style="padding-top: 2px;margin-inline: auto;">{{numMessDaLeggere}}</span></span>
+                                        </button>
+
+                                </div>
+
+                                <div style="display:flex;justify-content:flex-end;align-items:flex-end;">
+                                        <button mat-button [matMenuTriggerFor]="menuUtente"
+                                                style="position: relative;padding-left:0;">
+                                                <img src="assets/account_circle.png"> Utente {{funzionario?.cognome}}
+                                                <br> {{funzionario?.ente}} {{funzionario?.aziendaDesc}}
+                                                <br>
+                                        </button>
+
+
+                                        <mat-menu #menuUtente="matMenu">
+                                                <button mat-menu-item disabled>
+                                                        <strong>Utente</strong> {{funzionario?.nome}}
+                                                        {{funzionario?.cognome}}
+                                                </button>
+                                                <button mat-menu-item disabled>{{funzionario?.ente}}
+                                                        {{funzionario?.aziendaDesc}}</button>
+                                                <button mat-menu-item (click)="logout()"
+                                                        style="color:black;text-decoration:none">Esci</button>
+
+                                        </mat-menu>
+                                </div>
+                        </div>
+                </mat-toolbar>
+
+                <main style="flex: 1 0 auto;">
+                        <app-logout
+                                *ngIf="funzionario?.aziende?.length>1 && funzionario?.idAzienda==null && funzionario?.ruoli?.length>1 && funzionario?.ruolo==null && isLogout"
+                                (isLogout)="changeIsLogout($event)"></app-logout>
+                        <router-outlet
+                                *ngIf="(1>=funzionario?.aziende?.length || funzionario?.idAzienda!=null) && (funzionario?.ruolo!=null)">
+                        </router-outlet>
+                        <mat-card class="matCard" style="padding: 16px;"
+                                *ngIf="funzionario?.aziende?.length>1 && funzionario?.idAzienda==null && !isLogout  && ruoloConfirmed">
+                                <mat-card-header>
+                                        <mat-card-title style="font-size: 20px; margin-bottom: 16px;">Login
+                                        </mat-card-title>
+                                </mat-card-header>
+                                <mat-card-content>
+                                        <mat-icon class="blueIcon">warning</mat-icon>
+                                        <div>Selezionare l'azienda con cui si intende operare</div>
+                                        <div>
+                                                <mat-radio-group [(ngModel)]="aziendaSelected"
+                                                        style="display: inline-flex; flex-direction: column;">
+                                                        <mat-radio-button *ngFor="let azienda of funzionario?.aziende"
+                                                                style="padding-top:10px" [value]="azienda">
+                                                                {{azienda.descrizione}}
+                                                        </mat-radio-button>
+                                                </mat-radio-group>
+                                                <div style="display:flex; justify-content:flex-end;">
+                                                        <button type="button" mat-raised-button
+                                                                (click)="confermaLogin()"
+                                                                [disabled]="aziendaSelected==null">Conferma</button>
+                                                </div>
+                                        </div>
+                                </mat-card-content>
+                        </mat-card>
+                        <mat-card class="matCard" style="padding: 16px;"
+                                *ngIf="funzionario?.ruoli?.length>1 && funzionario?.ruolo==null && !isLogout">
+                                <mat-card-header>
+                                        <mat-card-title style="font-size: 20px; margin-bottom: 16px;">Ruolo
+                                        </mat-card-title>
+                                </mat-card-header>
+                                <mat-card-content>
+                                        <mat-icon class="blueIcon">warning</mat-icon>
+                                        <div>Con quale ruolo si intende lavorare ?</div>
+                                        <div>
+                                                <mat-radio-group [(ngModel)]="ruoloSelected"
+                                                        style="display: inline-flex; flex-direction: column;">
+                                                        <mat-radio-button *ngFor="let ruolo of funzionario?.ruoli"
+                                                                style="padding-top:10px" [value]="ruolo">
+                                                                {{ruolo.codiceRuolo}}
+                                                        </mat-radio-button>
+                                                </mat-radio-group>
+                                                <div style="display:flex; justify-content:flex-end;">
+                                                        <button type="button" mat-raised-button
+                                                                (click)="confermaRuolo()"
+                                                                [disabled]="ruoloSelected==null || disabledButtonConfermaRuolo">Conferma</button>
+                                                </div>
+                                        </div>
+                                </mat-card-content>
+                        </mat-card>
+                </main>
+
+
+                <div class="box_footer">
+                        <div id="image" style="padding-left:1em">
+                                <a style="margin-right:15px;display:block;" href="http://www.regione.piemonte.it"
+                                        title="Sito Ufficiale della Regione Piemonte">
+                                        <img border=0 height="64px" width="200px" src="assets/regione_piemonte.jpg">
+                                </a>
+                                <a style="margin-left:15px" href="http://mtm.torino.it/it"
+                                        title="Sito Ufficiale della Agenzia della mobilità piemontese">
+                                        <img border=0 height="64px" width="200px" src="assets/logo_amp.jpg">
+                                </a>
+                        </div>
+                        <div class="textfooter">
+                                <label>
+                                        <strong>CONTATTI &nbsp;&nbsp; </strong>
+                                        <strong>Assistenza tecnica:</strong>
+                                </label>
+                                <a style="margin-left: 23%;"
+                                        href="mailto:assistenza.trasporti@csi.it">assistenza.trasporti@csi.it</a>
+
+                                <label style="margin-left: 23%;">
+                                        <strong>Abilitazione utenti:</strong>
+                                </label>
+                                <a style="margin-left: 23%;"
+                                        href="mailto:controllo.trasporti@regione.piemonte.it">controllo.trasporti@regione.piemonte.it</a>
+                        </div>
+                </div>
+        </div>
+
+</div>

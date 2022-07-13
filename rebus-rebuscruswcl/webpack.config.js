@@ -1,0 +1,1 @@
+module.exports = require('./buildfiles/webpack.dev.js');

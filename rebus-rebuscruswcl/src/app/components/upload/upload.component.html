@@ -1,0 +1,50 @@
+<!--*************************************************
+  
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'UPLOAD_FILE_XLS'" [filtroNavbar]="context">
+</app-navbar>
+
+
+<div *ngIf="loading;" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<div [style.display]='msgEsitoUpload!=null ? "block" : "none"' class="msgRitornoUpload">
+  <pre>{{msgEsitoUpload}}</pre>
+</div>
+
+<div [style.display]='msgEsitoUploadOk!=null ? "block" : "none"' class="msgRitornoUploadOk">
+  <pre>{{msgEsitoUploadOk}}</pre>
+</div>
+
+<div style="padding:2em">
+  <p>Da questa sezione è possibile inserire i dati di uno o più veicoli tramite il caricamento del Modulo compilato. Il Modulo
+    vuoto è scaricabile dalla sezione "SCARICA MODULO".
+    <br>
+    <br> Prima di procedere con la compilazione si consiglia di leggere attentamente le Raccomandazioni presenti in una sezione
+    del modulo.
+    <br>
+    <br> Selezionare il file compilato ed eseguire il caricamento.
+    <br>
+    <br> Accertarsi che i POP UP siano abilitati</p>
+</div>
+
+<div class="upload-standard">
+  <h3>Seleziona il file</h3>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <input type="file" id="uploadedFile" (change)="onFileChange($event)" #fileInput>
+    </div>
+    <button class="upload-button" mat-raised-button color="primary" type="submit">Esegui Upload</button>
+  </form>
+</div>
+
+<div class="upload-standard">
+  <file-drop headertext="Trascina qui il modulo autobus da caricare" (onFileDrop)="dropped($event)">
+
+  </file-drop>
+</div>
+<br>
+<br>

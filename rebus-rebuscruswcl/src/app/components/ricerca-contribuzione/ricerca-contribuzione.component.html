@@ -1,0 +1,76 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_CONTRIBUZIONE'" [filtroNavbar]="context">
+</app-navbar>
+
+<div *ngIf="isLoading()" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+
+<div class="container">
+  <form #searchForm="ngForm" (submit)="aggiorna()">
+
+    <div class="filterRicerca" style="height: 96.5px;">
+      <mat-form-field class="margin-top;" style=" width: 400px">
+        <mat-select placeholder="Fonte di finanziamento" name="fonte" [(ngModel)]="filtro.idFonteFinanziamento">
+          <mat-option *ngFor="let fonte of listOfFonteFinanziamento" [value]="fonte.idFonteFinanziamento">
+            {{ fonte.descBreve }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="margin-top;">
+        <mat-select placeholder="Alimentazione" [(ngModel)]="filtro.idTipoAlimentazione" name="idTipoAlimentazione">
+          <mat-option *ngFor="let alimentazione of tipiAlimentazione" [value]="alimentazione.codice">
+            {{ alimentazione.descrizione }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="margin-top;" style="max-width: 170px">
+        <input matInput placeholder="Telaio" value="" name="primoTelaio" [(ngModel)]="filtro.primoTelaio"
+          maxlength="17">
+      </mat-form-field>
+
+      <mat-form-field class="margin-top;" style="max-width: 170px" *ngIf="!isAzienda">
+        <input matInput placeholder="Azienda" value="" name="azienda" [(ngModel)]="filtro.azienda">
+      </mat-form-field>
+
+      <mat-checkbox [(ngModel)]="checkedRendicontazione" (change)="changeRendicontata($event)" name="rendicontazione"
+        class="margin-top">Rendicontazione
+        completa</mat-checkbox>
+
+    </div>
+
+
+
+    <mat-grid-list cols="12" rowHeight="50px">
+      <mat-grid-tile [colspan]="3">
+        <button mat-raised-button color="primary" type="submit">
+          <mat-icon>search</mat-icon>Cerca
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+        <button type="button" mat-raised-button (click)="pulisci();">
+          <mat-icon>clear</mat-icon>Pulisci
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+        <button mat-raised-button (click)="scaricaExcel('Ricerca_Contribuzione_');">
+          <img src="assets/excel.png"> Scarica Excel Ricerca</button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+        <button mat-raised-button (click)="scaricaZip('Scarica_Zip_');">
+          <img src="assets/zip.png"> Scarica Zip
+        </button>
+      </mat-grid-tile>
+
+    </mat-grid-list>
+  </form>
+</div>
+<div style="margin-top: 1em;margin-bottom:1em;min-height: 20em;">
+  <app-elenco-contribuzione (isLoadingEvent)="isLoadingChild($event)"></app-elenco-contribuzione>
+</div>

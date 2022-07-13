@@ -1,0 +1,13 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+
+<h1 mat-dialog-title>Attenzione</h1>
+<mat-dialog-content>
+    {{data.msg}}
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button *ngIf="data.showConferma" mat-button (click)="onConfirmClick();">Conferma</button>
+    <button mat-button (click)="onNoClick();">Chiudi</button>
+</mat-dialog-actions>

@@ -1,0 +1,70 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<div *ngIf="!isProcedimento">
+  <mat-tab-group [selectedIndex]="index" (selectedTabChange)="selectedTab($event)">
+    <mat-tab *ngFor="let item of indexMenu" label="{{item.label}}" [disabled]="item.disabled"></mat-tab>
+  </mat-tab-group>
+</div>
+
+<div *ngIf="isProcedimento">
+  <mat-tab-group [selectedIndex]="index || null" (selectedTabChange)="selectedTab($event)">
+    <mat-tab *ngFor="let item of indexMenu" [disabled]="item.disabled" id="procedimento">
+      <ng-template mat-tab-label>
+        <button *ngIf="item.indexName=='INSERIMENTO_RICHIESTA'; else noMenuBlock" style="width: 100%;" mat-icon-button
+          [matMenuTriggerFor]="menuProcedimentiNuovo" class="cloneIcon">
+          {{item.label}}
+        </button>
+      </ng-template>
+      <ng-template #noMenuBlock>
+        {{item.label}}
+      </ng-template>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>
+
+<mat-menu #menuProcedimentiNuovo="matMenu">
+  <mat-nav-list role="list">
+    <mat-list-item *ngFor="let link of links">
+      <div *ngIf="link.id!=6 && link.id!=5; else noLinkBlock">
+        <!-- id 6 uso non in linea, 7 contribuzione e 5 uso in linea -->
+        <div *ngIf="link.id !=2; else linkSostituzione">
+          <a *ngIf="link.id ==5" matLine [routerLink]="['inserisciRichiestaUsoInLinea',link.id]">{{ link.descrizione
+            }}</a>
+          <a *ngIf="link.id !=5" matLine [routerLink]="['/inserisciRichiesta',link.id]">{{ link.descrizione }}</a>
+        </div>
+        <ng-template #linkSostituzione>
+          <button style="padding-left: 0px ;" mat-menu-item [matMenuTriggerFor]="menuProcedimentiSostituzione"
+            #trigger="matMenuTrigger" (mouseenter)="trigger.openMenu()">
+            <a class="no-underline" href="#">
+              <span style="color: black;">{{ link.descrizione }}</span>
+            </a>
+          </button>
+
+        </ng-template>
+      </div>
+      <ng-template #noLinkBlock>
+        <div style="cursor: not-allowed !important;
+                          opacity: 0.5;
+                          text-decoration: none;">
+          {{ link.descrizione }}
+        </div>
+      </ng-template>
+    </mat-list-item>
+  </mat-nav-list>
+</mat-menu>
+
+<mat-menu #menuProcedimentiSostituzione="matMenu">
+  <mat-nav-list role="list" *ngIf="nuovoProcedimento1!=null && nuovoProcedimento4!=null">
+    <mat-list-item *ngIf="!loadingTipologie">
+      <a matLine [routerLink]="['/inserisciRichiestaSostituzione',nuovoProcedimento1?.id]">{{
+        nuovoProcedimento1?.descrizione }}</a>
+    </mat-list-item>
+    <mat-list-item *ngIf="!loadingTipologie">
+      <a matLine [routerLink]="['/inserisciRichiestaSostituzione',nuovoProcedimento4?.id]">{{
+        nuovoProcedimento4?.descrizione }}</a>
+    </mat-list-item>
+  </mat-nav-list>
+</mat-menu>

@@ -1,0 +1,78 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+
+@import '../../../styles.scss';
+
+.container{background-color: #f7f7f7}
+
+.rowcontainer{
+width: 30%;
+margin-right: 3em;
+}
+
+.filterCheck{
+    margin-right: 1em;
+}
+
+mat-expansion-panel  div{
+    padding: 5px;
+}
+
+.paddingleft2{
+    padding-left: 2em;
+}
+
+.paddingleft1{
+    padding-left: 1em;
+}
+
+.titolo{
+    background-color: mat-color($custom-theme-accent);
+    color:white;
+    font-weight: 500;
+}
+
+textarea{
+    font-family: Lucida Sans Unicode;
+    font-weight: bold;
+}
+p{
+    font-weight:bold;
+    white-space:pre-wrap;
+}
+
+.aTable {
+    width:100%;
+    border-collapse: collapse; 
+    border: 0.1px solid rgba(97,95,95,0.2); 
+    background-clip: padding-box; 
+    text-align: left;
+    
+    thead{
+        th{
+        padding: 10px; 
+        border: 0.1px solid rgba(97,95,95,0.2); 
+        background-clip: padding-box; 
+        font-size: larger;
+        }
+        td{
+        width: 10%;
+        }
+    }
+
+    tbody{
+        tr{
+            border: 0.1px solid rgba(97,95,95,0.2); 
+            background-clip: padding-box; 
+        }
+        td{
+            border: 0.1px solid rgba(97,95,95,0.2); 
+            background-clip: padding-box; 
+            padding: 10px;
+        }
+    }
+}
+
+

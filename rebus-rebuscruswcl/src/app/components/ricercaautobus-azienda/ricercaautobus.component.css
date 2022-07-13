@@ -1,0 +1,67 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+.container {
+  background-color: #f7f7f7;
+  margin-top: 2em;
+}
+
+.filterRicerca {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 5%;
+  margin-right: 5%;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.buttonGroup {
+  display: flex;
+  margin-left: 30%;
+  margin-right: 30%;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 3%;
+  margin-top: 3%;
+}
+
+div > hidden {
+  display: none;
+}
+
+.margin-top {
+  margin-top: 16px;
+}
+
+.mat-expansion-panel {
+  box-shadow: unset !important;
+  background: transparent !important;
+}
+
+.titoloRicerca {
+  padding-left: 0px !important;
+  width: 200px;
+  color: rgba(0, 0, 0, 0.87) !important;
+  background: none !important;
+}
+
+.mat-expansion-panel .mat-grid-tile .mat-figure {
+  align-items: unset !important;
+  justify-content: left !important;
+  padding-left: 15px !important;
+  padding-bottom: 15px !important;
+}
+
+.paddingInterno > mat-input-infix mat-form-field-infix {
+  padding-top: 3px !important;
+}
+
+.mat-expansion-panel-header-title {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.mat-expansion-indicator::after {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+

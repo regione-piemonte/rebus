@@ -1,0 +1,149 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+section {
+    margin-bottom: 50px;
+    h3 {
+        background: #03a9f4;
+        padding: 15px 10px;
+        color: #fff;
+        font-weight: 500;
+    }
+    h4 {
+        background: #6fd2ff;
+        padding: 7px 10px;
+        color: #fff;
+        font-weight: 500;
+    }
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        padding-left: 10px;
+        padding-right: 10px;
+        &.actions {
+            justify-content: center;
+            button {
+                margin: 0 20px;
+            }
+            button[type="submit"]:enabled {
+                background-color: #03a9f4;
+                color: #fff;
+            }
+        }
+        .col {
+            flex: 1;
+            padding: 10px 10px 10px 0;
+            &.vertical-center {
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
+}
+
+.alert-danger {
+    color: red;
+}
+
+.box-error {
+    font-size: 1.2em;
+}
+
+.blueIcon {
+    color: #03a9f4;
+}
+
+.mat-expansion-panel-header {
+    padding: unset !important;
+    height: 50px !important;
+}
+
+div .mat-expansion-panel-body {
+    padding: 0 !important;
+}
+
+.mat-expansion-panel:not([class*="mat-elevation-z"]) {
+    box-shadow: unset !important;
+    margin-bottom: 15px !important;
+}
+
+.titlePanel {
+    background: #03a9f4 !important;
+    padding: 10px 10px !important;
+    font-weight: 500 !important;
+}
+
+.mat-expansion-panel-header-title {
+    color: #fff !important;
+}
+
+.mat-expansion-indicator::after {
+    color: #fff !important;
+}
+
+.matGridStyle {
+
+    mat-grid-tile mat-form-field {
+        width: 100%;
+    }
+    mat-grid-tile span {
+        width: 100%;
+    }
+
+    .mat-grid-tile .mat-figure {
+        flex: 1;
+        padding: 7px 10px 10px 10px;
+        &.vertical-center {
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+.labelDocumenti{
+    padding: 7px 10px 10px 10px;
+    color: grey;
+}
+
+.colCheckbox{
+    display: flex;
+    align-items: center;
+    width: 20%;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .radio-button {
+    margin: 4px;
+  }
+
+  .matGridStyleRowRadio {
+
+    margin-top: 10px;
+    mat-grid-tile mat-form-field {
+        width: 100%;
+    }
+    mat-grid-tile span {
+        width: 100%;
+    }
+
+    .mat-grid-tile .mat-figure {
+        justify-content: flex-start !important ;
+        align-items: flex-start !important;
+        flex: 1;
+        padding: 7px 10px 10px 10px;
+        &.vertical-center {
+            display: flex;
+            align-items: center;
+        }
+    }
+    .mat-grid-tile.dataAlienazione > .mat-figure {
+        justify-content: flex-start !important ;
+        align-items: flex-end !important;
+    }
+}

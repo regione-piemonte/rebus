@@ -1,0 +1,1554 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar *ngIf="idProcedimento== null" [labelSelected]="'INSERIMENTO_CONTRIBUZIONE'" [filtroNavbar]="context">
+</app-navbar>
+<mat-card>
+    <mat-card-content>
+        <div *ngIf="feedback" class="alert-danger box-error">
+            Attenzione! Si è verificato un errore di comunicazione con il server ! Contattare l'assistenza
+            <p>{{feedback}}</p>
+            <br>
+        </div>
+        <!------------------------- RENDICONTAZIONE PARTE A ---------------------------->
+        <form #contribuzioneForm="ngForm" (ngSubmit)="mapContribuzioneToSave()" (click)="setErrorVeicoloDaSostituire()">
+            <div *ngIf="loadedPage() || isSaved || loadedContribuzioneToUpdate || loadedTransizione else page"
+                id="loader-container" class="preloader-background" style="padding-top: 50%;">
+                <div id="loader"></div>
+            </div>
+            <ng-template #page>
+                <mat-expansion-panel hideToggle [expanded]="true" disabled>
+                    <mat-expansion-panel-header class="titlePanel">
+                        <mat-panel-title>
+                            <h3 style="font-weight: initial;">
+                                Pratica di <strong>{{tipoProcedimento?.descrizione}}</strong>
+                                <label *ngIf="dettaglioRichiesta != null">
+                                    in stato <strong>{{dettaglioRichiesta.iters[0].descStato}}</strong>
+                                </label>
+                            </h3>
+                        </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                        <div class="row" *ngIf="idProcedimento== null">
+                            <mat-grid-tile colspan="4" *ngIf="disableTelaio">
+                                <mat-form-field>
+                                    <input matInput placeholder="Veicolo" [(ngModel)]="telaioSelected" disabled
+                                        [ngModelOptions]="{standalone: true}">
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile colspan="4" *ngIf="!disableTelaio">
+                                <form class="example-form" style="width: 100%;">
+                                    <mat-form-field class="example-full-width" appearance="fill">
+                                        <mat-label>Veicolo</mat-label>
+                                        <input matInput matInput [formControl]="myControl" [matAutocomplete]="auto"
+                                            required name="telaio" (blur)="checkAutoCompleteTelaio()">
+                                        <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+                                            <mat-option *ngFor="let veicolo of filteredOptions | async"
+                                                [value]="veicolo">
+                                                Telaio: {{veicolo}}
+                                            </mat-option>
+                                        </mat-autocomplete>
+                                        <mat-error *ngIf="myControl.hasError('required') && listOfTelai.length > 0">
+                                            Campo richiesto
+                                        </mat-error>
+                                        <mat-error *ngIf="listOfTelai.length <= 0">
+                                            Non ci sono veicoli che corrispondono ai criteri richiesti
+                                        </mat-error>
+                                    </mat-form-field>
+                                </form>
+                            </mat-grid-tile>
+                        </div>
+                    </mat-grid-list>
+                </mat-expansion-panel>
+                <mat-expansion-panel #panelParteA="matExpansionPanel">
+                    <mat-expansion-panel-header class="titlePanel">
+                        <mat-panel-title>
+                            <h3 style="font-weight: initial;">
+                                Rendicontazione Parte A
+                            </h3>
+                        </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <section style="margin-bottom: 50px;">
+                        <!----------------------- ASSEGNAZIONE DELLE RISORSE - CONTRIBUTI EROGATI ------------------------->
+                        <div>
+                            <h4>
+                                {{AutobusLabel.assegnazioneRisorseContributi}}
+                            </h4>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- ATTO ASSEGNAZIONE RISORSE -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field class="col">
+                                        <mat-select placeholder="{{AutobusLabel.attoAssegnazioneRisorse}}"
+                                            [(ngModel)]="idAttoAssegnazioneRisorse" name="idAttoAssegnazione"
+                                            [disabled]="isAmpOrRp || disabledParteA" #idAttoAssegnazione="ngModel"
+                                            (change)="loadFontiFinanziamento()" required>
+                                            <mat-option *ngFor="let atto of listOfAttiAssegnazioneRisorse"
+                                                [value]="atto.idAttoAssegnazione">
+                                                {{ atto?.descBreve }}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error *ngIf="listOfAttiAssegnazioneRisorse.length <= 0">
+                                            Nessun atto di assegnazione risorse valido definito
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- FONTE DI FINANZIAMENTO -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field class="col">
+                                        <mat-select placeholder="{{AutobusLabel.fonteDiFinanziamento}}"
+                                            [(ngModel)]="assegnazioneRisorse.idFonteFinanziamento"
+                                            name="fonteFinanziamento" #fonteFinanziamento="ngModel"
+                                            [disabled]="idAttoAssegnazioneRisorse == null || isAmpOrRp || disabledParteA"
+                                            [required]="idAttoAssegnazione != null">
+                                            <mat-option *ngFor="let fonte of listOfFonteFinanziamento"
+                                                [value]="fonte.idFonteFinanziamento">
+                                                {{ fonte?.descBreve }}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error
+                                            *ngIf="(idAttoAssegnazione.dirty || idAttoAssegnazione.touched) && fonteFinanziamento.invalid">
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- CONTRIBUTO PUBBLICO -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number" [min]="0" pattern="[0-9]"
+                                            placeholder="{{AutobusLabel.contributoPubblico}}"
+                                            name="contributoPubblicoContr" [(ngModel)]="contributoPubblico"
+                                            #contributoPubblicoContr="ngModel" disabled>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- CONTRIBUTO STATALE -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number" placeholder="{{AutobusLabel.contributoStatale}}"
+                                            name="contributoStatale" [(ngModel)]="assegnazioneRisorse.contributoStatale"
+                                            #contributoStatale="ngModel" (change)="calculateContributoPubblico()"
+                                            disabled>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- CONTRIBUTO REGIONALE AGGIUNTIVO -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number" placeholder="{{AutobusLabel.contributoRegionale}}"
+                                            name="contributoRegionale"
+                                            [(ngModel)]="assegnazioneRisorse.contributoRegionaleAgg"
+                                            #contributoRegionale="ngModel" (change)="calculateContributoPubblico()"
+                                            [disabled]="isAzienda || disabledParteA">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!----------------------------- ORDINE DI ACQUISTO (GARA) ----------------------------------------->
+                        <div>
+                            <h4>
+                                {{AutobusLabel.ordineAcquisto}}
+                            </h4>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- CPU MASTER -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.cupMaster}}" name="cupMaster"
+                                            [(ngModel)]="ordineAcquisto.cupMaster" #cupMaster="ngModel" maxlength="15"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                        <mat-hint align="end">{{ordineAcquisto.cupMaster?.length || 0}} / 15</mat-hint>
+                                        <mat-error
+                                            *ngIf="(cupMaster.dirty || cupMaster.touched) && cupMaster.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- CUP -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.cup}}" name="cup"
+                                            [(ngModel)]="ordineAcquisto.cup" #cup="ngModel" maxlength="15"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                        <mat-hint align="end">{{ordineAcquisto.cup?.length || 0}} / 15</mat-hint>
+                                        <mat-error *ngIf="(cup.dirty || cup.touched) && cup.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- CIG -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.cig}}" name="cig"
+                                            [(ngModel)]="ordineAcquisto.cig" #cig="ngModel" maxlength="10"
+                                            [disabled]="isAmpOrRp || disabledParteA"
+                                            [required]="ordineAcquisto.numeroOrdine != null || ordineAcquisto.dataOrdine != null"
+                                            (blur)="checkCig()">
+                                        <mat-hint align="end">{{ordineAcquisto.cig?.length || 0}} / 10</mat-hint>
+                                        <mat-error *ngIf="(cig.dirty || cig.touched) && cig.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA AGGIUDICAZIONE -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDataAggiudicazione"
+                                            placeholder="{{AutobusLabel.dataAggiudicazione}}"
+                                            [(ngModel)]="ordineAcquisto.dataAggiudicazione" name="dataAggiudicazione"
+                                            #dataAggiudicazione="ngModel"
+                                            [disabled]="config.isNullOrVoid(ordineAcquisto.cig) || isAmpOrRp || disabledParteA"
+                                            [required]="ordineAcquisto.cig != null || ordineAcquisto.dataStipula != null"
+                                            (blur)="checkData(ordineAcquisto.dataAggiudicazione,'dataAggiudicazione')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDataAggiudicazione">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDataAggiudicazione></mat-datepicker>
+                                        <mat-error
+                                            *ngIf="(dataAggiudicazione.dirty || dataAggiudicazione.touched) && dataAggiudicazione.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA STIPULA -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDataStipula"
+                                            placeholder="{{AutobusLabel.dataStipula}}"
+                                            [(ngModel)]="ordineAcquisto.dataStipula" name="dataStipula"
+                                            #dataStipula="ngModel"
+                                            [disabled]="config.isNullOrVoid(ordineAcquisto.cig) || isAmpOrRp || disabledParteA"
+                                            [required]="ordineAcquisto.cig != null || ordineAcquisto.dataAggiudicazione != null"
+                                            (blur)="checkData(ordineAcquisto.dataStipula,'dataStipula')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDataStipula">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDataStipula></mat-datepicker>
+                                        <mat-error
+                                            *ngIf="(dataStipula.dirty || dataStipula.touched) && dataStipula.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- NUMERO ORDINE -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroOrdine}}" name="numeroOrdine"
+                                            [(ngModel)]="ordineAcquisto.numeroOrdine" #numeroOrdine="ngModel"
+                                            maxlength="15"
+                                            [disabled]="config.isNullOrVoid(ordineAcquisto.cig) || isAmpOrRp || disabledParteA"
+                                            [required]="ordineAcquisto.cig != null || ordineAcquisto.dataOrdine != null">
+                                        <mat-hint align="end">{{ordineAcquisto.numeroOrdine?.length || 0}} / 15
+                                        </mat-hint>
+                                        <mat-error
+                                            *ngIf="(numeroOrdine.dirty || numeroOrdine.touched) && numeroOrdine.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA ORDINE -->
+                                <mat-grid-tile colspan="2">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDataOrdine"
+                                            placeholder="{{AutobusLabel.dataOrdine}}"
+                                            [(ngModel)]="ordineAcquisto.dataOrdine" name="dataOrdine"
+                                            #dataOrdine="ngModel"
+                                            [disabled]="config.isNullOrVoid(ordineAcquisto.cig) || isAmpOrRp || disabledParteA"
+                                            [required]="ordineAcquisto.cig != null || ordineAcquisto.numeroOrdine != null"
+                                            (blur)="checkData(ordineAcquisto.dataOrdine,'dataOrdine')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDataOrdine">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDataOrdine></mat-datepicker>
+                                        <mat-error *ngIf="(ordineAcquisto.dataOrdine == null)">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- FORNITORE -->
+                                <mat-grid-tile colspan="12">
+                                    <mat-form-field class="col">
+                                        <input matInput placeholder="{{AutobusLabel.fornitore}}" name="fornitore"
+                                            maxlength="25" [(ngModel)]="ordineAcquisto.fornitore" #fornitore="ngModel"
+                                            maxlength="200" [disabled]="isAmpOrRp || disabledParteA">
+                                        <mat-hint align="end">{{ordineAcquisto.fornitore?.length || 0}} / 200</mat-hint>
+                                        <mat-error
+                                            *ngIf="(fornitore.dirty || fornitore.touched) && fornitore.errors?.required">
+                                            Campo richiesto
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!---------------------------------- VOCI DI COSTO DELLE FORNITURE ----------------------------------->
+                        <div>
+                            <h4>
+                                {{AutobusLabel.vociCostoForniture}}
+                            </h4>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DOCUMENTAZIONE CONTRATTUALE -->
+                                <mat-grid-tile colspan="12">
+                                    <span>
+                                        <div class="col" style="display:flex; align-items: center;">
+                                            <label for="uploadFile" style="font-size: 17px;padding-right: 10px;">
+                                                {{documentoVoceCosto.label}} </label>
+                                            <input id="uploadFile" type="file" *ngIf="!documentoVoceCosto.nomeFile"
+                                                (change)="uploadDoc($event.target.files, 'voceCosto')" name="uploadFile"
+                                                accept=".pdf, .zip" [disabled]="isAmpOrRp || disabledParteA">
+                                            <label *ngIf="documentoVoceCosto.nomeFile" style="margin-right: 10px;">
+                                                {{documentoVoceCosto.nomeFile}}</label>
+                                            <!--Scarica documento -->
+                                            <a title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                                (click)="downloadDoc('voceCosto', documentoVoceCosto.idDocContribuzione)"
+                                                *ngIf="documentoVoceCosto.nomeFile">
+                                                <mat-icon>
+                                                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                </mat-icon>
+                                            </a>
+
+                                            <!--Cancella documento -->
+                                            <a title="Elimina" href="javascript:void(0)" class="no-underline"
+                                                (click)="eliminaDoc('voceCosto')"
+                                                *ngIf="documentoVoceCosto.nomeFile && !isAmpOrRp && !disabledParteA ">
+                                                <mat-icon style="color: #03a9f4 ;">
+                                                    delete
+                                                </mat-icon>
+                                            </a>
+                                        </div>
+                                        <div class="labelDocumenti" *ngIf="documentoVoceCosto.descEstesa != null">
+                                            {{documentoVoceCosto.descEstesa}}
+                                        </div>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- VOCE DI COSTO -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field class="col">
+                                        <mat-select placeholder="{{AutobusLabel.voceDiCosto}}" [(ngModel)]="idVoceCosto"
+                                            name="voceCosto" #voceCosto="ngModel"
+                                            (selectionChange)="createOggettoFattura()"
+                                            [required]="importoVoceCosto != null"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                            <mat-option *ngFor="let voce of listOfVociCostoToShow"
+                                                [value]="voce.idVoceCosto">
+                                                {{ voce?.descVoceCosto }}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error
+                                            *ngIf="(voceCosto.dirty || voceCosto.touched) && voceCosto.errors?.required && importo != null">
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- IMPORTO -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput type="number" placeholder="{{AutobusLabel.importoVoceCosto}}"
+                                            name="importo" [(ngModel)]="importoVoceCosto" #importo="ngModel"
+                                            (blur)="createOggettoFattura()" [required]="idVoceCosto != null"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                        <mat-error
+                                            *ngIf="(importo.dirty || importo.touched) && importo.errors?.required && idVoceCosto != null">
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- BOTTONE AGGIUNGI -->
+                                <mat-grid-tile colspan="5">
+                                    <span style="text-align: end; width: 100%;">
+                                        <button type="button" #bottoneInserisci="" name="bottoneInserisci"
+                                            style="display: inline-flex; align-items: center; font-size: 15px"
+                                            (click)="addToVociCostoForniturte()"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                            <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                                                style="padding-left: 10px">Aggiungi nuovo</span>
+                                        </button>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!---------------------------------- LISTA VOCI DI COSTO ----------------------------------------------->
+                        <div>
+                            <mat-divider *ngIf="listOfVoceCostoFornituraToShow.length > 0" [inset]="true"
+                                style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px"></mat-divider>
+
+                            <div *ngFor="let voce of listOfVoceCostoFornituraToShow; let i = index">
+                                <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                    <mat-grid-tile colspan="5">
+                                        <mat-form-field>
+                                            <input matInput placeholder="Voce di costo" [(ngModel)]="voce.descVoceCosto"
+                                                [ngModelOptions]="{standalone: true}" disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="5">
+                                        <mat-form-field>
+                                            <input matInput placeholder="Importo" [(ngModel)]="voce.importo"
+                                                [ngModelOptions]="{standalone: true}" disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <span style="text-align: end; width: 100%;">
+                                            <button id="del2" type="button" (click)="removeVociCostoForniturte(i)"
+                                                style="font-size: 15px; display:inline-flex; align-items:center;"
+                                                [disabled]="isAmpOrRp || disabledParteA">
+                                                <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                                                    style="padding-left: 10px;">Elimina</span>
+                                            </button>
+                                        </span>
+                                    </mat-grid-tile>
+                                </mat-grid-list>
+                                <mat-divider *ngIf="listOfVoceCostoFornituraToShow.length>0" [inset]="true"
+                                    style="border-color: #6fd2ff; border-width: 2px">
+                                </mat-divider>
+                            </div>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- COSTO COMPLESSIVO AMMISSIBILE AI SENSI DEI CRITERI REGIONALI -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number"
+                                            placeholder="{{AutobusLabel.costoCriteriRegionali}}"
+                                            name="costoCriteriRegionali"
+                                            [(ngModel)]="costoFornitura.costoAmmissibileReg"
+                                            #costoCriteriRegionali="ngModel" [disabled]="isAzienda || disabledParteA">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- COSTO COMPLESSIVO AMMISSIBILE AI SENSI DELLA FONTE DI FINANZIAMENTO -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number"
+                                            placeholder="{{AutobusLabel.costoFonteFinanziamento}}"
+                                            name="costoFonteFinanziamento"
+                                            [(ngModel)]="costoFornitura.costoAmmissibileFf"
+                                            #costoFonteFinanziamento="ngModel" [disabled]="isAzienda || disabledParteA">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!----------------------- DOCUMENTAZIONE DI SPESA ------------------->
+                        <div>
+                            <h4>
+                                {{AutobusLabel.documentazioneSpesa}}
+                            </h4>
+
+                            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                                {{AutobusLabel.aziendaFornitore}}
+                            </label>
+                            <!---------------------------------- FATTURE ----------------------------------------------->
+                            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                                {{AutobusLabel.fatture}}
+                            </label>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- NUMERO FATTURA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroFattura}}"
+                                            name="numeroFattura" [(ngModel)]="datoFattura.numero"
+                                            #numeroFattura="ngModel" maxlength="20" (blur)="createOggettoBonifico()"
+                                            [required]="!config.isNullOrVoid(datoFattura.data) || listOggettoFatturaDatoSpesa.length> 0 || !config.isNullOrVoid(datoFattura.importo) || !config.isNullOrVoid(documentoFatturaSpesa.nomeFile)"
+                                            [disabled]="enableOggettoFattura() || isAmpOrRp || disabledParteA">
+                                        <mat-hint align="end">{{datoFattura.numero?.length || 0}} / 20</mat-hint>
+                                        <mat-error *ngIf="(numeroFattura.dirty || numeroFattura.touched)">
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA FATTURA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDataFattura"
+                                            placeholder="{{AutobusLabel.dataFattura}}" [(ngModel)]="datoFattura.data"
+                                            name="dataFattura" #dataFattura="ngModel"
+                                            (blur)="createOggettoBonifico();checkData(datoFattura.data,'dataFattura')"
+                                            [disabled]="enableOggettoFattura() || isAmpOrRp || disabledParteA"
+                                            [required]="!config.isNullOrVoid(datoFattura.numero) || listOggettoFatturaDatoSpesa.length> 0 || !config.isNullOrVoid(datoFattura.importo) || !config.isNullOrVoid(documentoFatturaSpesa.nomeFile)">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDataFattura">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDataFattura></mat-datepicker>
+                                        <mat-error *ngIf="numeroFattura.touched">
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- OGGETTO FATTURA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field class="col">
+                                        <!-- [ngModelOptions]="{standalone: true}" -->
+                                        <mat-select placeholder="{{AutobusLabel.oggettoFattura}}"
+                                            [(ngModel)]="listOggettoFatturaDatoSpesa" multiple name="oggettoFattura"
+                                            #oggettoFattura="ngModel" (selectionChange)="createOggettoBonifico()"
+                                            [disabled]="enableOggettoFattura() || isAmpOrRp || disabledParteA"
+                                            [required]="!config.isNullOrVoid(datoFattura.numero) || !config.isNullOrVoid(datoFattura.data) || !config.isNullOrVoid(datoFattura.importo) || !config.isNullOrVoid(documentoFatturaSpesa.nomeFile)">
+                                            <mat-option *ngFor="let oggetto of listOfOggettoFattura" [value]="oggetto">
+                                                {{ oggetto?.descVoceCosto }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- IMPORTO FATTURA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput type="number" placeholder="{{AutobusLabel.importo}}"
+                                            name="importoFattura" (blur)="createOggettoBonifico()"
+                                            [disabled]="enableOggettoFattura() || isAmpOrRp || disabledParteA"
+                                            [(ngModel)]="datoFattura.importo" #importoFattura="ngModel"
+                                            [required]="!config.isNullOrVoid(datoFattura.numero) || !config.isNullOrVoid(datoFattura.data) || listOggettoFatturaDatoSpesa.length> 0 || !config.isNullOrVoid(documentoFatturaSpesa.nomeFile)">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="90px" class="matGridStyle">
+                                <!-- DOCUMENTAZIONE FATTURA -->
+                                <mat-grid-tile colspan="12">
+                                    <span>
+                                        <div class="col" style="display:flex; align-items: center;">
+                                            <label for="uploadFile" style="font-size: 17px;padding-right: 10px;">
+                                                {{documentoFatturaSpesa.label}}
+                                                <span
+                                                    *ngIf="!config.isNullOrVoid(datoFattura.numero) || !config.isNullOrVoid(datoFattura.data) || !config.isNullOrVoid(datoFattura.importo) || listOggettoFatturaDatoSpesa.length > 0">*</span></label>
+                                            <input id="uploadFile" type="file" *ngIf="!documentoFatturaSpesa.nomeFile"
+                                                (change)="uploadDoc($event.target.files, 'fatturaSpesa'); createOggettoBonifico()"
+                                                name="uploadFileFattura" accept=".pdf"
+                                                [disabled]="enableOggettoFattura() || isAmpOrRp || disabledParteA"
+                                                [required]="!config.isNullOrVoid(datoFattura.numero) || !config.isNullOrVoid(datoFattura.data) || !config.isNullOrVoid(datoFattura.importo) || listOggettoFatturaDatoSpesa.length > 0">
+                                            <label *ngIf="documentoFatturaSpesa.nomeFile" style="margin-right: 10px;">
+                                                {{documentoFatturaSpesa.nomeFile}}</label>
+                                            <a title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                                (click)="downloadDoc('fatturaSpesa' , documentoFatturaSpesa.idDocContribuzione)"
+                                                *ngIf="documentoFatturaSpesa.nomeFile">
+                                                <mat-icon>
+                                                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                </mat-icon>
+                                            </a>
+
+                                            <!--Cancella documento -->
+                                            <a title="Elimina" href="javascript:void(0)" class="no-underline"
+                                                (click)="eliminaDoc('fatturaSpesa')"
+                                                *ngIf="documentoFatturaSpesa.nomeFile && !disabledParteA">
+                                                <mat-icon style="color: #03a9f4 ;">
+                                                    delete
+                                                </mat-icon>
+                                            </a>
+                                        </div>
+                                        <div class="labelDocumenti" *ngIf="documentoFatturaSpesa.descEstesa != null">
+                                            {{documentoFatturaSpesa.descEstesa}}
+                                        </div>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- BOTTONE AGGIUNGI -->
+                                <mat-grid-tile colspan="12">
+                                    <span style="text-align: end; width: 100%;">
+                                        <button id="add1" type="button"
+                                            style="display: inline-flex; align-items: center; font-size: 15px"
+                                            (click)="addListaDatoFattura()"
+                                            [disabled]="isAmpOrRp || !datoFatturaValid() || disabledParteA">
+                                            <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                                                style="padding-left: 10px">Aggiungi nuovo</span>
+                                        </button>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!--------------------------------------- LISTA OGGETTO FATTURA ------------------------------------------>
+                        <div>
+                            <div *ngFor="let dato of listOfDatoFatturaToShow; let i = index">
+                                <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                    <mat-divider *ngIf="listOfDatoFatturaToShow.length > 0" [inset]="true"
+                                        style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px">
+                                    </mat-divider>
+                                    <mat-grid-tile colspan="2">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.numeroFattura}}"
+                                                [(ngModel)]="dato.numero" [ngModelOptions]="{standalone: true}"
+                                                disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <mat-form-field>
+                                            <input matInput [matDatepicker]="pickerDataOggettoFattura"
+                                                placeholder="{{AutobusLabel.dataFattura}}" [(ngModel)]="dato.data"
+                                                name="dataFattura" #pickerDataOggettoFattura="ngModel" disabled
+                                                [ngModelOptions]="{standalone: true}">
+                                            <mat-datepicker-toggle matSuffix [for]="pickerDataOggettoFattura">
+                                            </mat-datepicker-toggle>
+                                            <mat-datepicker #pickerDataOggettoFattura></mat-datepicker>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="3">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.oggettoFattura}}"
+                                                [(ngModel)]="dato.vociCosto" [ngModelOptions]="{standalone: true}"
+                                                disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.importo}}"
+                                                [(ngModel)]="dato.importo" [ngModelOptions]="{standalone: true}"
+                                                disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <span>
+                                            <div class="col"
+                                                style="display:flex; align-items: center; justify-content: flex-end;">
+                                                <label *ngIf="dato.documento" style="margin-right: 10px;">
+                                                    {{dato.documento.nomeFile}}</label>
+                                                <a title="Scarica/Visualizza" href="javascript:void(0)"
+                                                    class="no-underline"
+                                                    (click)="downloadDocOggettoFattura(i, 'fattura', dato.documento.idDocContribuzione)"
+                                                    *ngIf="dato.documento">
+                                                    <mat-icon>
+                                                        <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                    </mat-icon>
+                                                </a>
+                                            </div>
+                                        </span>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="1">
+                                        <span style="text-align: end; width: 100%;">
+                                            <button id="del2" type="button" (click)="removeListaDatoFattura(i)"
+                                                style="font-size: 15px; display:inline-flex; align-items:center;"
+                                                [disabled]="isAmpOrRp || disabledParteA">
+                                                <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                                                    style="padding-left: 10px;">Elimina</span>
+                                            </button>
+                                        </span>
+                                    </mat-grid-tile>
+                                </mat-grid-list>
+                            </div>
+                        </div>
+                        <!---------------------------------------- BONIFICI ----------------------------------------------->
+                        <mat-divider [inset]="true" style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px">
+                        </mat-divider>
+                        <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                            {{AutobusLabel.bonifici}}
+                        </label>
+                        <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                            <!-- DATA BONIFICO -->
+                            <mat-grid-tile colspan="2">
+                                <mat-form-field>
+                                    <input matInput [matDatepicker]="pickerDataBonifico"
+                                        placeholder="{{AutobusLabel.dataBonifico}}"
+                                        [(ngModel)]="datoBonifico.dataBonifico" name="dataBonifico"
+                                        #dataBonifico="ngModel"
+                                        [disabled]="enableBonifico() || isAmpOrRp || disabledParteA"
+                                        [required]="!config.isNullOrVoid(datoBonifico.importoBonifico) || listFatturaBonifico.length> 0 || !config.isNullOrVoid(datoBonifico.cro)"
+                                        (blur)="checkData(datoBonifico.dataBonifico,'dataBonifico')">
+                                    <mat-datepicker-toggle matSuffix [for]="pickerDataBonifico">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #pickerDataBonifico></mat-datepicker>
+                                    <mat-error *ngIf="numeroFattura.touched">
+                                    </mat-error>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <!-- IMPORTO BONIFICO -->
+                            <mat-grid-tile colspan="2">
+                                <mat-form-field>
+                                    <input matInput type="number" placeholder="{{AutobusLabel.importo}}"
+                                        name="importoBonifico"
+                                        [disabled]="enableBonifico() || isAmpOrRp || disabledParteA"
+                                        [(ngModel)]="datoBonifico.importoBonifico" #importoBonifico="ngModel"
+                                        [required]="!config.isNullOrVoid(datoBonifico.dataBonifico) || listFatturaBonifico.length> 0 || !config.isNullOrVoid(datoBonifico.cro)">
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <!-- OGGETTO BONIFICO -->
+                            <mat-grid-tile colspan="5">
+                                <mat-form-field class="col">
+                                    <mat-select placeholder="{{AutobusLabel.oggettoBonifico}}"
+                                        [(ngModel)]="listFatturaBonifico" multiple name="oggettoBonifico"
+                                        #oggettoBonifico="ngModel"
+                                        [disabled]="enableBonifico() || isAmpOrRp || disabledParteA"
+                                        [required]="!config.isNullOrVoid(datoBonifico.dataBonifico) || !config.isNullOrVoid(datoBonifico.importoBonifico) || !config.isNullOrVoid(datoBonifico.cro)">
+                                        <mat-option *ngFor="let oggetto of listOfOggettoBonifico" [value]="oggetto">
+                                            <strong> Fattura Nr:</strong> {{ oggetto?.numero }} - <strong>Data:</strong>
+                                            {{ oggetto?.data | date:
+                                            'dd/MM/yyyy'}} - <strong>Importo:</strong> {{ oggetto?.importo }} €
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <!-- CRO -->
+                            <mat-grid-tile colspan="3">
+                                <mat-form-field>
+                                    <input matInput placeholder="{{AutobusLabel.cro}}" name="cro"
+                                        [(ngModel)]="datoBonifico.cro" #cro="ngModel" maxlength="11"
+                                        [required]="!config.isNullOrVoid(datoBonifico.dataBonifico) || !config.isNullOrVoid(datoBonifico.importoBonifico) || listFatturaBonifico.length> 0 "
+                                        [disabled]="enableBonifico() || isAmpOrRp || disabledParteA">
+                                    <mat-hint align="end">{{datoBonifico.cro?.length || 0}} / 11</mat-hint>
+                                    <mat-error *ngIf="(cro.dirty || cro.touched)">
+                                    </mat-error>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                            <!-- BOTTONE AGGIUNGI -->
+                            <mat-grid-tile colspan="12">
+                                <span style="text-align: end; width: 100%;">
+                                    <button id="add1" type="button"
+                                        style="display: inline-flex; align-items: center; font-size: 15px"
+                                        (click)="addListaDatoBonifico()"
+                                        [disabled]="isAmpOrRp || !datoBonificoValid() || disabledParteA">
+                                        <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                                            style="padding-left: 10px">Aggiungi nuovo</span>
+                                    </button>
+                                </span>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <!---------------------------------------- LISTA BONIFICI ----------------------------------------------->
+                        <div>
+                            <div *ngFor="let dato of listOfDatoBonificoToShow; let i = index">
+                                <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                    <mat-divider *ngIf="listOfDatoBonificoToShow.length > 0" [inset]="true"
+                                        style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px">
+                                    </mat-divider>
+                                    <mat-grid-tile colspan="2">
+                                        <mat-form-field>
+                                            <input matInput [matDatepicker]="pickerDataOggettoBonifico"
+                                                placeholder="{{AutobusLabel.dataBonifico}}" [(ngModel)]="dato.data"
+                                                name="dataFattura" #pickerDataOggettoBonifico="ngModel" disabled
+                                                [ngModelOptions]="{standalone: true}">
+                                            <mat-datepicker-toggle matSuffix [for]="pickerDataOggettoBonifico">
+                                            </mat-datepicker-toggle>
+                                            <mat-datepicker #pickerDataOggettoBonifico></mat-datepicker>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.importo}}"
+                                                [(ngModel)]="dato.importo" [ngModelOptions]="{standalone: true}"
+                                                disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="5">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.oggettoBonifico}}"
+                                                [(ngModel)]="dato.numeriFatture" [ngModelOptions]="{standalone: true}"
+                                                disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.cro}}" [(ngModel)]="dato.cro"
+                                                [ngModelOptions]="{standalone: true}" disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="1">
+                                        <span style="text-align: end; width: 100%;">
+                                            <button id="del2" type="button" (click)="removeListaDatoBonifico(i)"
+                                                style="font-size: 15px; display:inline-flex; align-items:center;"
+                                                [disabled]="isAmpOrRp || disabledParteA">
+                                                <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                                                    style="padding-left: 10px;">Elimina</span>
+                                            </button>
+                                        </span>
+                                    </mat-grid-tile>
+                                </mat-grid-list>
+                            </div>
+                        </div>
+
+                        <!--------------------------------------- CONTRIBUTO EROGABILE ANTICIPO------------------------------------------>
+                        <div>
+                            <h4>
+                                {{AutobusLabel.contributiErogabili}}
+                            </h4>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number"
+                                            placeholder="{{AutobusLabel.contributoCriteriRegionali}}"
+                                            name="contributoCriteriRegionali"
+                                            [(ngModel)]="datoSpesa.contributoErogabileReg"
+                                            #contributoCriteriRegionali="ngModel"
+                                            [disabled]="isAzienda || disabledParteA">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- CONTRIBUTO EROGABILE AI SENSI DELLA FONTE DI FINANZIAMENTO -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput type="number"
+                                            placeholder="{{AutobusLabel.contributoFonteFinanziamento}}"
+                                            name="contributoFonteFinanziamento"
+                                            [(ngModel)]="datoSpesa.contributoRegionaleFf"
+                                            #contributoFonteFinanziamento="ngModel"
+                                            [disabled]="isAzienda || disabledParteA">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                            <mat-divider [inset]="true"
+                                style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px">
+                            </mat-divider>
+                            <!-- ANTICIPO -->
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput type="number" placeholder="{{AutobusLabel.anticipo}}"
+                                            name="anticipo" [(ngModel)]="datoSpesa.importoAnticipo" #anticipo="ngModel"
+                                            [disabled]="isAzienda || disabledParteA"
+                                            (change)="calculateContributoStataleErogato()">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                                {{AutobusLabel.regioneAMP}}
+                            </label>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- NUMERO DETERMINA REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroDetermina}}"
+                                            name="nrDeterminaRegioneAmpAnt" [(ngModel)]="datoSpesa.nrDeterminaRpAmpAnt"
+                                            [disabled]="isAzienda || disabledParteA" #nrDeterminaRegioneAmpAnt="ngModel"
+                                            maxlength="25">
+                                        <mat-hint align="end">{{datoSpesa.nrDeterminaRpAmpAnt?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- NUMERO ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroAttoLiquidazione}}"
+                                            name="nrAttoLiquidazioneRegioneAmpAnt"
+                                            [(ngModel)]="datoSpesa.nrAttoLiquidazioneRpAmpAnt"
+                                            #nrAttoLiquidazioneRegioneAmpAnt="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteA">
+                                        <mat-hint align="end">{{datoSpesa.nrAttoLiquidazioneRpAmpAnt?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DATA DETERMINA REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDeterminaRegioneAmpAnt"
+                                            placeholder="{{AutobusLabel.dataDetermina}}"
+                                            [(ngModel)]="datoSpesa.dataDeterminaRpAmpAnt"
+                                            name="dataDeterminaRegioneAmpAnt" #dataDeterminaRegioneAmpAnt="ngModel"
+                                            [disabled]="isAzienda || disabledParteA"
+                                            (blur)="checkData(datoSpesa.dataDeterminaRpAmpAnt,'dataDeterminaRegioneAmpAnt')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDeterminaRegioneAmpAnt">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDeterminaRegioneAmpAnt></mat-datepicker>
+                                        <mat-error *ngIf="(datoSpesa.dataDeterminaRpAmpAnt == null)">
+                                            Data non valida!
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerLiquidazioneRegioneAmpAnt"
+                                            placeholder="{{AutobusLabel.dataAttoLiquidazione}}"
+                                            [(ngModel)]="datoSpesa.dataAttoLiquidazioneRpAmpAnt"
+                                            name="dataLiquidazioneRegioneAmpAnt"
+                                            #dataLiquidazioneRegioneAmpAnt="ngModel"
+                                            [disabled]="isAzienda || disabledParteA"
+                                            (blur)="checkData(datoSpesa.dataAttoLiquidazioneRpAmpAnt,'dataLiquidazioneRegioneAmpAnt')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerLiquidazioneRegioneAmpAnt">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerLiquidazioneRegioneAmpAnt></mat-datepicker>
+                                        <mat-error *ngIf="(datoSpesa.dataAttoLiquidazioneRpAmpAnt == null)">
+                                            Data non valida!
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+
+                            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                                {{AutobusLabel.AMPAzienda}}
+                            </label>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- NUMERO DETERMINA AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroDetermina}}"
+                                            name="nrDeterminaAmpAziendaAnt" [(ngModel)]="datoSpesa.nrDeterminaAmpAzAnt"
+                                            #nrDeterminaAmpAziendaAnt="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteA">
+                                        <mat-hint align="end">{{datoSpesa.nrDeterminaAmpAzAnt?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- NUMERO ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroAttoLiquidazione}}"
+                                            name="nrLiquidazioneAMPAziendaAnt"
+                                            [(ngModel)]="datoSpesa.nrAttoLiquidazioneAmpAzAnt"
+                                            #nrLiquidazioneAMPAziendaAnt="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteA">
+                                        <mat-hint align="end">{{datoSpesa.nrAttoLiquidazioneAmpAzAnt?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DATA DETERMINA AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDeterminaAmpAziendaAnt"
+                                            placeholder="{{AutobusLabel.dataDetermina}}"
+                                            [(ngModel)]="datoSpesa.dataDeterminaAmpAzAnt"
+                                            name="dataDeterminaAmpAziendaAnt" #dataDeterminaAmpAziendaAnt="ngModel"
+                                            [disabled]="isAzienda || disabledParteA"
+                                            (blur)="checkData(datoSpesa.dataDeterminaAmpAzAnt,'dataDeterminaAmpAziendaAnt')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDeterminaAmpAziendaAnt">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDeterminaAmpAziendaAnt></mat-datepicker>
+                                        <mat-error *ngIf="(datoSpesa.dataDeterminaAmpAzAnt == null)">
+                                            Data non valida!
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerLiquidazioneAmpAziendaAnt"
+                                            placeholder="{{AutobusLabel.dataAttoLiquidazione}}"
+                                            [(ngModel)]="datoSpesa.dataAttoLiquidazioneAmpAzAnt"
+                                            name="dataLiquidazioneAmpAziendaAnt"
+                                            #dataLiquidazioneAmpAziendaAnt="ngModel"
+                                            [disabled]="isAzienda || disabledParteA"
+                                            (blur)="checkData(datoSpesa.dataAttoLiquidazioneAmpAzAnt,'dataLiquidazioneAmpAziendaAnt')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerLiquidazioneAmpAziendaAnt">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerLiquidazioneAmpAziendaAnt></mat-datepicker>
+                                        <mat-error *ngIf="(datoSpesa.dataAttoLiquidazioneAmpAzAnt == null)">
+                                            Data non valida!
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!--------------------------------------- MESSA IN SERVIZIO ------------------------------------------>
+                        <div>
+                            <h4>
+                                {{AutobusLabel.messaInServizio}}
+                            </h4>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- NUMERO CARTA DI CIRCOLAZIONE -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroCartaCircolazione}}"
+                                            name="numeroCartaCircolazione"
+                                            [(ngModel)]="datoMessaServizio.nrCartaCircolazione"
+                                            #numeroCartaCircolazione="ngModel" maxlength="11"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                        <mat-hint align="end">{{datoMessaServizio.nrCartaCircolazione?.length || 0}} /
+                                            11
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!--Scarica documento -->
+                                <mat-grid-tile colspan="1">
+                                    <div style="width: 100%;">
+                                        <a title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                            (click)="downloadCartaCircolazione()"
+                                            *ngIf="documentoCartaCircolazione.nomeFile">
+                                            <mat-icon>
+                                                <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                            </mat-icon>
+                                        </a>
+                                    </div>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                            <div class="labelDocumenti" *ngIf="documentoCartaCircolazione.descEstesa != null">
+                                {{documentoCartaCircolazione.descEstesa}}
+                            </div>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DOCUMENTO ATTO D'OBBLIGO -->
+                                <mat-grid-tile colspan="12">
+                                    <span>
+                                        <div class="col" style="display:flex; align-items: center;">
+                                            <label for="uploadFile" style="font-size: 17px;padding-right: 10px;">
+                                                {{documentoAttoObbligo.label}} </label>
+                                            <input id="uploadFile" type="file" *ngIf="!documentoAttoObbligo.nomeFile"
+                                                (change)="uploadDoc($event.target.files, 'attoObbligo')"
+                                                name="uploadFile" accept=".pdf"
+                                                [disabled]="isAmpOrRp || disabledParteA">
+                                            <label *ngIf="documentoAttoObbligo.nomeFile" style="margin-right: 10px;">
+                                                {{documentoAttoObbligo.nomeFile}}</label>
+                                            <!--Scarica documento -->
+                                            <a title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                                (click)="downloadDoc('attoObbligo', documentoAttoObbligo.idDocContribuzione)"
+                                                *ngIf="documentoAttoObbligo.nomeFile">
+                                                <mat-icon>
+                                                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                </mat-icon>
+                                            </a>
+                                            <!--Cancella documento -->
+                                            <a title="Elimina" href="javascript:void(0)" class="no-underline"
+                                                (click)="eliminaDoc('attoObbligo')"
+                                                *ngIf="documentoAttoObbligo.nomeFile && !isAmpOrRp && !disabledParteA">
+                                                <mat-icon style="color: #03a9f4 ;">
+                                                    delete
+                                                </mat-icon>
+                                            </a>
+                                        </div>
+                                        <div class="labelDocumenti" *ngIf="documentoAttoObbligo.descEstesa != null">
+                                            {{documentoAttoObbligo.descEstesa}}
+                                        </div>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DOCUMENTO GARANZIA -->
+                                <mat-grid-tile colspan="12">
+                                    <span>
+                                        <div class="col" style="display:flex; align-items: center;">
+                                            <label for="uploadFile" style="font-size: 17px;padding-right: 10px;">
+                                                {{documentoGaranzia.label}} </label>
+                                            <input id="uploadFile" type="file" *ngIf="!documentoGaranzia.nomeFile"
+                                                (change)="uploadDoc($event.target.files, 'garanzia')" name="uploadFile"
+                                                accept=".pdf" [disabled]="isAmpOrRp || disabledParteA">
+                                            <label *ngIf="documentoGaranzia.nomeFile" style="margin-right: 10px;">
+                                                {{documentoGaranzia.nomeFile}}</label>
+                                            <!--Scarica documento -->
+                                            <a title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                                (click)="downloadDoc('garanzia', documentoGaranzia.idDocContribuzione)"
+                                                *ngIf="documentoGaranzia.nomeFile">
+                                                <mat-icon>
+                                                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                </mat-icon>
+                                            </a>
+                                            <!--Cancella documento -->
+                                            <a title="Elimina" href="javascript:void(0)" class="no-underline"
+                                                (click)="eliminaDoc('garanzia')"
+                                                *ngIf="documentoGaranzia.nomeFile && !isAmpOrRp && !disabledParteA">
+                                                <mat-icon style="color: #03a9f4 ;">
+                                                    delete
+                                                </mat-icon>
+                                            </a>
+                                        </div>
+                                        <div class="labelDocumenti" *ngIf="documentoGaranzia.descEstesa != null">
+                                            {{documentoGaranzia.descEstesa}}
+                                        </div>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- PRESENZA PANNELLO PUBBLICITA' FONTE FINANZIAMENTO -->
+                                <mat-grid-tile colspan="12">
+                                    <span>
+                                        <mat-checkbox align="start" [(ngModel)]="datoMessaServizio.flgPannello"
+                                            name="presenzaPannelloPubblicita"
+                                            [indeterminate]="datoMessaServizio.flgPannello === null"
+                                            [disabled]="isAmpOrRp || disabledParteA">
+                                            {{AutobusLabel.presenzaPannelloPubblicita}}
+                                        </mat-checkbox>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- VEICOLO DA SOSTITUIRE -->
+                                <mat-grid-tile colspan="4" *ngIf="!isAmpOrRp">
+                                    <mat-form-field class="col">
+                                        <mat-select placeholder="{{AutobusLabel.veicoloDaSostituire}}"
+                                            [(ngModel)]="datoMessaServizio.primoTelaioSost" name="veicoloDaSostituire"
+                                            #veicoloDaSostituire="ngModel" [disabled]="isAmpOrRp || disabledParteA">
+                                            <mat-option *ngFor="let veicolo of listOfTelaiVeicoloDaSostituire"
+                                                [value]="veicolo">
+                                                Telaio: {{ veicolo }}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error *ngIf="listOfTelaiVeicoloDaSostituire.length <= 0">
+                                            Non ci sono veicoli che corrispondono ai criteri richiesti
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <mat-grid-tile colspan="3" *ngIf="isAmpOrRp">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.veicoloDaSostituire}}"
+                                            [(ngModel)]="datoMessaServizio.primoTelaioSost" disabled
+                                            [ngModelOptions]="{standalone: true}">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                    </section>
+                    <!---------------------------------------------------------------- SEZIONE AUTOMA PARTE A --------------------------------------------------------------------------->
+                    <section *ngIf="statoTransizioneA == 2 ">
+                        <h3 style="background: #3f51b5;">{{ transizioniAutomaA[0].titolo }}</h3>
+                        <div class="alert-danger box-error" style="display: flex; align-items: baseline; width: 100%;">
+                            Per proseguire è necessario inserire altre informazioni. Verificare in scheda del veicolo i
+                            campi contrassegnati con due asterischi (**)
+                        </div>
+                    </section>
+                    <section
+                        *ngIf="transizioniAutomaA && transizioniAutomaA[0] && transizioniAutomaA[0].idStatoIterA && idProcedimento==null && statoTransizioneA != 2 && statoTransizioneA != 3">
+                        <h3 style="background: #3f51b5;" *ngIf="statoTransizioneA != 0">{{ transizioniAutomaA[0].titolo
+                            }}
+                        </h3>
+                        <h3 style="background: #3f51b5;" *ngIf="statoTransizioneA == 0">{{ transizioneAutomaA.titolo }}
+                        </h3>
+                        <div *ngIf="isContrattoChangedA" class="row alert-danger box-error"
+                            style="display: flex; align-items: baseline; width: 100%;">
+                            <p> Per procedere con l'avanzamento dell'iter è necessario effettuare un salvataggio </p>
+                        </div>
+                        <div class="row" style="display: flex; align-items: baseline; width: 100%;">
+                            <mat-form-field class="col" style="max-width: 30%;" [formGroup]="transizioneGroupA">
+                                <mat-label>{{ transizioniAutomaA[0].label }}</mat-label>
+                                <mat-select [(value)]="transizioneAutomaA" required formControlName="transizioneForm"
+                                    required disableOptionCentering panelClass="myPanelClass">
+                                    <mat-option *ngFor="let choice of transizioniAutomaA" [value]="choice">
+                                        {{choice.testo}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="transizioneGroupA.controls['transizioneForm']?.hasError('required')">
+                                    Campo richiesto
+                                </mat-error>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <textarea type="text" name="noteAvanzamentoIterA" placeholder="Note"
+                                    [(ngModel)]="notaTransizioneA" #noteAvanzamentoIterA="ngModel" matInput #avanzaIter
+                                    matTextareaAutosize matAutosizeMinRows="1" matAutosizeMaxRows="4" rows="4"
+                                    maxlength="500" [required]="transizioneAutomaA?.flgNoteObbligatorie"
+                                    [disabled]="statoTransizioneA == 0"></textarea>
+                                <mat-hint align="end">{{notaTransizioneA?.length || 0}} / 500</mat-hint>
+                                <mat-error *ngIf="noteAvanzamentoIterA?.hasError('required')">
+                                    Campo richiesto
+                                </mat-error>
+                            </mat-form-field>
+                            <div class="col" style="max-width: 100px;">
+                                <button type="button" mat-raised-button color="primary"
+                                    [disabled]="isValidCampiRequired() || statoTransizioneA == 0"
+                                    (click)="openDialogAvanzaIter('A')">Conferma</button>
+                            </div>
+                        </div>
+                    </section>
+                </mat-expansion-panel>
+                <mat-expansion-panel #panelParteB="matExpansionPanel">
+                    <mat-expansion-panel-header class="titlePanel">
+                        <mat-panel-title>
+                            <h3 style="font-weight: initial;">
+                                Rendicontazione Parte B
+                            </h3>
+                        </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <!------------------------- RENDICONTAZIONE PARTE B ---------------------------->
+                    <section>
+                        <!----------------------- DOCUMENTAZIONE DI PAGAMENTO (QUIETANZA) ------------------->
+                        <div>
+                            <h4>
+                                {{AutobusLabel.documentazionePagamento}}
+                            </h4>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- TIPO DOCUMENTO QUIETANZA -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field class="col">
+                                        <mat-select placeholder="{{AutobusLabel.tipoDocumentoQuietanza}}"
+                                            [(ngModel)]="datoFattura.idTipoDocQuietanza" name="tipoDocumentoQuietanza"
+                                            #tipoDocumentoQuietanza="ngModel"
+                                            [required]="!config.isNullOrVoid(datoFattura.nrQuietanzaAzForn) || !config.isNullOrVoid(datoFattura.dataQuietanzaAzForn) || !config.isNullOrVoid(documentoQuietanza.nomeFile)"
+                                            [disabled]="isAmpOrRp || disabledParteB || listOfDatoQuietanzaToShow.length > 0">
+                                            <mat-option *ngFor="let tipoQuietanza of listOfTipiDocumentoQuietanza"
+                                                [value]="tipoQuietanza.idTipoDocQuietanza">
+                                                {{ tipoQuietanza?.descTipoDocQuietanza }}
+                                            </mat-option>
+                                        </mat-select>
+                                        <button *ngIf="datoFattura.idTipoDocQuietanza" matSuffix mat-icon-button
+                                            type="button" aria-label="Clear"
+                                            (click)="datoFattura.idTipoDocQuietanza = null; $event.stopPropagation()">
+                                            <mat-icon>close</mat-icon>
+                                        </button>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- NUMERO QUIETANZA -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroQuietanza}}"
+                                            name="numeroQuietanza" [(ngModel)]="datoFattura.nrQuietanzaAzForn"
+                                            #numeroQuietanza="ngModel" maxlength="25"
+                                            [disabled]="isAmpOrRp || disabledParteB || listOfDatoQuietanzaToShow.length > 0"
+                                            [required]="!config.isNullOrVoid(datoFattura.idTipoDocQuietanza) || !config.isNullOrVoid(datoFattura.dataQuietanzaAzForn) || !config.isNullOrVoid(documentoQuietanza.nomeFile)">
+                                        <mat-hint align="end">{{datoFattura.nrQuietanzaAzForn?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA QUIETANZA -->
+                                <mat-grid-tile colspan="4">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDataQuietanza"
+                                            placeholder="{{AutobusLabel.dataQuietanza}}"
+                                            [(ngModel)]="datoFattura.dataQuietanzaAzForn" name="dataQuietanza"
+                                            #dataQuietanza="ngModel"
+                                            [disabled]="isAmpOrRp  || disabledParteB || listOfDatoQuietanzaToShow.length > 0"
+                                            [required]="!config.isNullOrVoid(datoFattura.idTipoDocQuietanza) || !config.isNullOrVoid(datoFattura.nrQuietanzaAzForn) || !config.isNullOrVoid(documentoQuietanza.nomeFile)"
+                                            (blur)="checkData(datoFattura.dataQuietanzaAzForn,'dataQuietanza')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDataQuietanza">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDataQuietanza></mat-datepicker>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="90px" class="matGridStyle">
+                                <!-- DOCUMENTO DI QUIETANZA -->
+                                <mat-grid-tile colspan="12">
+                                    <span>
+                                        <div class="col" style="display:flex; align-items: center;">
+                                            <label for="uploadFile" style="font-size: 17px;padding-right: 10px;">
+                                                {{documentoQuietanza.label}}
+                                                <span
+                                                    *ngIf="!config.isNullOrVoid(datoFattura.idTipoDocQuietanza) || !config.isNullOrVoid(datoFattura.nrQuietanzaAzForn) || !config.isNullOrVoid(datoFattura.dataQuietanzaAzForn)">*</span></label>
+                                            <input id="uploadFile" type="file" *ngIf="!documentoQuietanza.nomeFile"
+                                                (change)="uploadDoc($event.target.files, 'quietanza')"
+                                                name="uploadFileQuietanza" accept=".pdf"
+                                                [disabled]="isAmpOrRp || disabledParteB || listOfDatoQuietanzaToShow.length > 0"
+                                                [required]="!config.isNullOrVoid(datoFattura.idTipoDocQuietanza) || !config.isNullOrVoid(datoFattura.nrQuietanzaAzForn) || !config.isNullOrVoid(datoFattura.dataQuietanzaAzForn)">
+                                            <label *ngIf="documentoQuietanza.nomeFile" style="margin-right: 10px;">
+                                                {{documentoQuietanza.nomeFile}}
+                                            </label>
+                                            <!--Scarica documento -->
+                                            <a title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                                (click)="downloadDoc('quietanza', documentoQuietanza.idDocContribuzione)"
+                                                *ngIf="documentoQuietanza.nomeFile">
+                                                <mat-icon>
+                                                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                </mat-icon>
+                                            </a>
+
+                                            <!--Cancella documento -->
+                                            <a title="Elimina" href="javascript:void(0)" class="no-underline"
+                                                (click)="eliminaDoc('quietanza')" *ngIf="documentoQuietanza.nomeFile">
+                                                <mat-icon style="color: #03a9f4 ;">
+                                                    delete
+                                                </mat-icon>
+                                            </a>
+                                        </div>
+                                        <div class="labelDocumenti" *ngIf="documentoQuietanza.descEstesa != null">
+                                            {{documentoQuietanza.descEstesa}}
+                                        </div>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- BOTTONE AGGIUNGI -->
+                                <mat-grid-tile colspan="12">
+                                    <span style="text-align: end; width: 100%;">
+                                        <button id="add1" type="button"
+                                            style="display: inline-flex; align-items: center; font-size: 15px"
+                                            (click)="addListQuietanza()"
+                                            [disabled]="isAmpOrRp || !datoQuietanzaValid() || disabledParteB || listOfDatoQuietanzaToShow.length > 0">
+                                            <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                                                style="padding-left: 10px">Aggiungi nuovo</span>
+                                        </button>
+                                    </span>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                        </div>
+                        <!--------------------------------------- LISTA QUIETANZA ------------------------------------------>
+                        <div>
+                            <div *ngFor="let dato of listOfDatoQuietanzaToShow; let i = index">
+                                <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                    <mat-grid-tile colspan="3">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.tipoDocumentoQuietanza}}"
+                                                [(ngModel)]="dato.tipoDoc" [ngModelOptions]="{standalone: true}"
+                                                disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="3">
+                                        <mat-form-field>
+                                            <input matInput placeholder="{{AutobusLabel.numeroQuietanza}}"
+                                                [(ngModel)]="dato.nrQuietanzaAzForn"
+                                                [ngModelOptions]="{standalone: true}" disabled>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="3">
+                                        <mat-form-field>
+                                            <input matInput [matDatepicker]="pickerDataOggettoQuietanza"
+                                                placeholder="{{AutobusLabel.dataQuietanza}}"
+                                                [(ngModel)]="dato.dataQuietanzaAzForn" name="dataQuietanza"
+                                                #pickerDataOggettoQuietanza="ngModel" disabled
+                                                [ngModelOptions]="{standalone: true}">
+                                            <mat-datepicker-toggle matSuffix [for]="pickerDataOggettoQuietanza">
+                                            </mat-datepicker-toggle>
+                                            <mat-datepicker #pickerDataOggettoQuietanza></mat-datepicker>
+                                        </mat-form-field>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="2">
+                                        <span>
+                                            <div class="col"
+                                                style="display:flex; align-items: center; justify-content: flex-end;">
+                                                <label *ngIf="dato.documento.nomeFile" style="margin-right: 10px;">
+                                                    {{dato.documento.nomeFile}}</label>
+                                                <a title="Scarica/Visualizza" href="javascript:void(0)"
+                                                    class="no-underline"
+                                                    (click)="downloadDocOggettoFattura(i,'quietanza', dato.documento.idDocContribuzione )"
+                                                    *ngIf="dato.documento.nomeFile">
+                                                    <mat-icon>
+                                                        <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                                    </mat-icon>
+                                                </a>
+                                            </div>
+                                        </span>
+                                    </mat-grid-tile>
+                                    <mat-grid-tile colspan="1">
+                                        <span style="text-align: end; width: 100%;">
+                                            <button id="del2" type="button" (click)="removeListaDatoQuietanza(i)"
+                                                style="font-size: 15px; display:inline-flex; align-items:center;"
+                                                [disabled]="isAmpOrRp || disabledParteB">
+                                                <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                                                    style="padding-left: 10px;">Elimina</span>
+                                            </button>
+                                        </span>
+                                    </mat-grid-tile>
+                                </mat-grid-list>
+                                <mat-divider *ngIf="listOfDatoFatturaToShow.length > 0" [inset]="true"
+                                    style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px"></mat-divider>
+                            </div>
+                        </div>
+                        <!--------------------------------------- CONTRIBUTO EROGABILE ANTICIPO------------------------------------------>
+                        <div>
+                            <h4>
+                                {{AutobusLabel.contributiErogabiliSaldo}}
+                            </h4>
+                            <!-- SALDO -->
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput type="number" placeholder="{{AutobusLabel.saldo}}" name="saldo"
+                                            [(ngModel)]="datoSpesa.importoSaldo" #saldo="ngModel"
+                                            [disabled]="isAzienda || disabledParteB"
+                                            (change)="calculateContributoStataleErogato()">
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+                            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                                {{AutobusLabel.regioneAMP}}
+                            </label>
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- NUMERO DETERMINA REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroDetermina}}"
+                                            name="nrDeterminaRegioneAmpSal" [(ngModel)]="datoSpesa.nrDeterminaRpAmpSal"
+                                            #nrDeterminaRegioneAmpSal="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteB">
+                                        <mat-hint align="end">{{datoSpesa.nrDeterminaRpAmpSal?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- NUMERO ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroAttoLiquidazione}}"
+                                            name="nrLiquidazioneRegioneAmpSal"
+                                            [(ngModel)]="datoSpesa.nrAttoLiquidazioneRpAmpSal"
+                                            #nrLiquidazioneRegioneAmpSal="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteB">
+                                        <mat-hint align="end">{{datoSpesa.nrAttoLiquidazioneRpAmpSal?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DATA DETERMINA REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDeterminaRegioneAmpSal"
+                                            placeholder="{{AutobusLabel.dataDetermina}}"
+                                            [(ngModel)]="datoSpesa.dataDeterminaRpAmpSal"
+                                            name="dataDeterminaRegioneAmpSal" #dataDeterminaRegioneAmpSal="ngModel"
+                                            [disabled]="isAzienda || disabledParteB">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDeterminaRegioneAmpSal">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDeterminaRegioneAmpSal></mat-datepicker>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerLiquidazioneRegioneAMPSal"
+                                            placeholder="{{AutobusLabel.dataAttoLiquidazione}}"
+                                            [(ngModel)]="datoSpesa.dataAttoLiquidazioneRpAmpSal"
+                                            name="dataLiquidazioneRegioneAmpSal"
+                                            #dataLiquidazioneRegioneAmpSal="ngModel"
+                                            [disabled]="isAzienda || disabledParteB">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerLiquidazioneRegioneAMPSal">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerLiquidazioneRegioneAMPSal></mat-datepicker>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+
+                            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+                                {{AutobusLabel.AMPAzienda}}
+                            </label>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- NUMERO DETERMINA AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroDetermina}}"
+                                            name="nrDeterminaAmpAziendaSal" [(ngModel)]="datoSpesa.nrDeterminaAmpAzSal"
+                                            #nrDeterminaAmpAziendaSal="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteB">
+                                        <mat-hint align="end">{{datoSpesa.nrDeterminaAmpAzSal?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- NUMERO ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput placeholder="{{AutobusLabel.numeroAttoLiquidazione}}"
+                                            name="nrLiquidazioneAmpAziendaSal"
+                                            [(ngModel)]="datoSpesa.nrAttoLiquidazioneAmpAzSal"
+                                            #nrLiquidazioneAmpAziendaSal="ngModel" maxlength="25"
+                                            [disabled]="isAzienda || disabledParteB">
+                                        <mat-hint align="end">{{datoSpesa.nrAttoLiquidazioneAmpAzSal?.length || 0}} / 25
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                            <mat-grid-list cols="12" rowHeight="70px" class="matGridStyle">
+                                <!-- DATA DETERMINA AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerDeterminaAmpAziendaSal"
+                                            placeholder="{{AutobusLabel.dataDetermina}}"
+                                            [(ngModel)]="datoSpesa.dataDeterminaAmpAzSal"
+                                            name="dataDeterminaAMPAziendaSaldo" #dataDeterminaAMPAziendaSaldo="ngModel"
+                                            [disabled]="isAzienda || disabledParteB"
+                                            (blur)="checkData(datoSpesa.dataDeterminaAmpAzSal,'dataDeterminaAMPAziendaSaldo')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerDeterminaAmpAziendaSal">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerDeterminaAmpAziendaSal></mat-datepicker>
+                                        <mat-error *ngIf="(datoSpesa.dataDeterminaAmpAzSal == null)">
+                                            Data non valida!
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                                <!-- DATA ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+                                <mat-grid-tile colspan="3">
+                                    <mat-form-field>
+                                        <input matInput [matDatepicker]="pickerLiquidazioneAmpAziendaSal"
+                                            placeholder="{{AutobusLabel.dataAttoLiquidazione}}"
+                                            [(ngModel)]="datoSpesa.dataAttoLiquidazioneAmpAzSal"
+                                            name="dataLiquidazioneAmpAziendaSal"
+                                            #dataLiquidazioneAmpAziendaSal="ngModel"
+                                            [disabled]="isAzienda || disabledParteB"
+                                            (blur)="checkData(datoSpesa.dataAttoLiquidazioneAmpAzSal,'dataLiquidazioneAmpAziendaSal')">
+                                        <mat-datepicker-toggle matSuffix [for]="pickerLiquidazioneAmpAziendaSal">
+                                        </mat-datepicker-toggle>
+                                        <mat-datepicker #pickerLiquidazioneAmpAziendaSal></mat-datepicker>
+                                        <mat-error *ngIf="(datoSpesa.dataAttoLiquidazioneAmpAzSal == null)">
+                                            Data non valida!
+                                        </mat-error>
+                                    </mat-form-field>
+                                </mat-grid-tile>
+                            </mat-grid-list>
+
+                        </div>
+                    </section>
+
+                    <!---------------------------------------------------------------- SEZIONE AUTOMA PARTE B --------------------------------------------------------------------------->
+                    <section *ngIf="statoTransizioneB == 2 ">
+                        <h3 style="background: #3f51b5;">{{ transizioniAutomaB[0].titolo }}</h3>
+                        <div class="alert-danger box-error" style="display: flex; align-items: baseline; width: 100%;">
+                            Attenzione sono presenti campi del veicolo ancora da compilare
+                        </div>
+                    </section>
+                    <section
+                        *ngIf="transizioniAutomaB && transizioniAutomaB[0] && transizioniAutomaB[0].idStatoIterA && idProcedimento==null && statoTransizioneB != 2 && statoTransizioneB != 3">
+                        <h3 style="background: #3f51b5;" *ngIf="statoTransizioneB != 0">{{ transizioniAutomaB[0].titolo
+                            }}
+                        </h3>
+                        <h3 style="background: #3f51b5;" *ngIf="statoTransizioneB == 0">{{ transizioneAutomaB.titolo }}
+                        </h3>
+                        <div *ngIf="isContrattoChangedB" class="row alert-danger box-error"
+                            style="display: flex; align-items: baseline; width: 100%;">
+                            <p> Per procedere con l'avanzamento dell'iter è necessario effettuare un salvataggio </p>
+                        </div>
+                        <div class="row" style="display: flex; align-items: baseline; width: 100%;">
+                            <mat-form-field class="col" style="max-width: 30%;" [formGroup]="transizioneGroupB">
+                                <mat-label>{{ transizioniAutomaB[0].label }}</mat-label>
+                                <mat-select [(value)]="transizioneAutomaB" required formControlName="transizioneForm"
+                                    required disableOptionCentering panelClass="myPanelClass">
+                                    <mat-option *ngFor="let choice of transizioniAutomaB" [value]="choice">
+                                        {{choice.testo}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="transizioneGroupB.controls['transizioneForm']?.hasError('required')">
+                                    Campo richiesto
+                                </mat-error>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <textarea type="text" name="noteAvanzamentoIterB" placeholder="Note"
+                                    [(ngModel)]="notaTransizioneB" #noteAvanzamentoIterB="ngModel" matInput #avanzaIter
+                                    matTextareaAutosize matAutosizeMinRows="1" matAutosizeMaxRows="4" rows="4"
+                                    maxlength="500" [required]="transizioneAutomaB?.flgNoteObbligatorie"
+                                    [disabled]="statoTransizioneB == 0"></textarea>
+                                <mat-hint align="end">{{notaTransizioneB?.length || 0}} / 500</mat-hint>
+                                <mat-error *ngIf="noteAvanzamentoIterB?.hasError('required')">
+                                    Campo richiesto
+                                </mat-error>
+                            </mat-form-field>
+                            <div class="col" style="max-width: 100px;">
+                                <button type="button" mat-raised-button color="primary"
+                                    (click)="openDialogAvanzaIter('B')"
+                                    [disabled]="statoTransizioneB == 0">Conferma</button>
+                            </div>
+                        </div>
+                    </section>
+
+                </mat-expansion-panel>
+                <section>
+                    <div style="margin-top:1em">
+                        <i>I campi contrassegnati da * sono obbligatori</i>
+                    </div>
+
+                    <div class="alert-danger box-error" *ngIf="isValidCampiRequired()">
+                        Prima di procedere è necessario compilare tutti i campi obbligatori!
+                        <br>
+                    </div>
+                    <br>
+
+                    <div *ngIf="false" class="alert-danger box-error">
+                        Attenzione! Sono presenti dati non coerenti
+                        <br>
+                    </div>
+                    <br>
+
+                    <div>
+                        <button type="submit" [disabled]="isValidCampiRequired() || (disabledParteA && disabledParteB)"
+                            mat-raised-button color="primary">
+                            <mat-icon>save</mat-icon><span *ngIf="idProcedimento!= null">Conferma Dati</span><span
+                                *ngIf="idProcedimento== null">Salva</span>
+                        </button>
+                        <a mat-raised-button (click)="resetFields(true)"
+                            *ngIf="!(!config.isNullOrVoid(idProcedimentoUpdate) || !config.isNullOrVoid(idContribuzioneSaved))">
+                            <mat-icon>clear</mat-icon> Pulisci
+                        </a>
+                        <a mat-raised-button (click)="goBack()"
+                            *ngIf="!config.isNullOrVoid(idProcedimentoUpdate) || !config.isNullOrVoid(idContribuzioneSaved)">
+                            <mat-icon>undo</mat-icon> Indietro
+                        </a>
+                    </div>
+                </section>
+            </ng-template>
+        </form>
+    </mat-card-content>
+</mat-card>

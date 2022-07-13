@@ -1,0 +1,143 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="presenzaAllegati">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 2%;">
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 2%;">
+      <i *ngIf="row.presenzaAllegati" class="material-icons" title="Presenza Allegati">attach_file</i>
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="oggettoRichieste">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 2%;">
+    </mat-header-cell>
+
+    <mat-cell *matCellDef="let row" style="flex: 0 0 2%;">
+      <img *ngIf="row.oggettoRichieste" src="assets/tipoProcedimento.png" title="Oggetto di richieste">
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="presenzaRendicontazione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 2%;">
+    </mat-header-cell>
+
+    <mat-cell *matCellDef="let row" style="flex: 0 0 2%;">
+      <span class="material-icons" *ngIf="row.presenzaRendicontazione" title="Presenza Rendicontazione">euro_symbol
+      </span>
+    </mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="denominazione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 15%;"> Azienda
+    </mat-header-cell>
+
+    <mat-cell *matCellDef="let row" style="flex: 0 0 15%;white-space:nowrap;"
+      [title]="row.denominazione!=null ? row.denominazione.length>22 ? row.denominazione: '' : ''">
+      {{troncaCaratteri(row.denominazione)}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="marca">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Marca </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.marca}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="modello">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Modello </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.modello}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="nTarga">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Targa </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.nTarga}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="primoTelaio">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 12%;">Primo telaio </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 12%; white-space:nowrap;"> {{row.primoTelaio}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="nMatricolaAziendale">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 7%;"> Matricola aziendale </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap; flex: 0 0 7%;"> {{row.nMatricolaAziendale}} </mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="dataPrimaImmatricolazione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Data prima immatricolazione </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.dataPrimaImmatricolazione |
+      datetostringpiperebus}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="tipoAllestimento">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Allestimento </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.tipoAllestimento}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="lunghezza">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Lunghezza (mt.) </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{replacePoint(row.lunghezza)}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="alimentazione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Alimentazione </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.alimentazione}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="omologazioneClasse">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Classe ambientale</mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.omologazioneClasse}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="contribuito">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 6%;"> Contribuito </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;flex: 0 0 6%;"> {{row.contribuito}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="flgVerificatoAzienda">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 5%;"> Verificato
+      <br> Azienda
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;flex: 0 0 5%;"> {{row.flgVerificatoAzienda}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="flgVerificatoAmp">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="flex: 0 0 5%;"> Verificato
+      <br> AMP
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;flex: 0 0 5%;"> {{row.flgVerificatoAmp}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="azioni">
+    <mat-header-cell *matHeaderCellDef> Azioni </mat-header-cell>
+    <mat-cell *matCellDef="let row">
+      <a title="Dettaglio" *ngIf="isConsultaAbilitato" href="javascript:void(0)" class="no-underline"
+        (click)="dettagliobus(row.idVa)">
+        <mat-icon class="blueIcon">visibility</mat-icon>
+      </a>
+      <input type="hidden" id="idVa" name="idVa" value={{row.idVa}}>
+      <a title="Modifica" *ngIf="isModificaAbilitata || (!(row.alienatoAzienda ==='true') && isUtenteAzienda)"
+        href="javascript:void(0)" class="no-underline" (click)="modificabus(row.idVa)">
+        <mat-icon class="blueIcon">edit</mat-icon>
+      </a>
+      <!-- eliminabile -->
+      <a *ngIf="row.eliminabile && isCancellaAbilitato" title="Elimina" href="javascript:void(0)" class="no-underline"
+        (click)="eliminabuspopup(row.idVa, row.flgVerificatoAzienda)">
+        <mat-icon class="blueIcon">delete</mat-icon>
+      </a>
+    </mat-cell>
+  </ng-container>
+
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row
+    [ngClass]="{ 'propPrec': (row.proprietaPrecedente===true && !isUtenteAzienda),'colorDarkGray': ( ((row.alienatoAzienda === true || row.alienatoAzienda==='S') && isUtenteAzienda) ||(( row.alienatoNoAzienda === true || row.alienatoNoAzienda==='S') && !isUtenteAzienda)),  'colorGray': (row.ritirato === true)}"
+    *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>
+
+<mat-paginator [pageSize]="defaultPageSize" [pageSizeOptions]="pageSizeOption"></mat-paginator>

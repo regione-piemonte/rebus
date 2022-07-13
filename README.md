@@ -3,30 +3,44 @@
 REBUS : Parco BUS TPL - Settore Mobilità e Trasporti Regione Piemonte
 
 # Descrizione del prodotto
+
 Il prodotto REBUS è costituito da due moduli applicativi (web application) per la gestione unificata e l’aggiornamento delle informazioni relative:
  
--	ai veicoli adibiti al trasporto pubblico locale (TPL) - Parco autobus TPL Piemonte;\
+-	ai veicoli adibiti al trasporto pubblico locale (TPL) - Parco autobus TPL Piemonte;
+
 -	ai contratti di servizio del TPL e ai soggetti coinvolti negli stessi contratti - Contratti e soggetti giuridici TPL.
 
 Il prodotto prevede che l’accesso sia consentito solo agli utenti abilitati, i quali, a seguito della autenticazione su una componente, possono passare all’altra senza doversi autenticare nuovamente. L’accesso alle funzionalità dipende dal profilo associato al singolo utente abilitato.
 
 Il sistema è utilizzato da personale dalle aziende di trasporto pubblico (TPL) che operano in Piemonte, dell’Agenzia per la Mobilità Piemontese (AMP) e della Regione Piemonte.
 
-Parco autobus TPL Piemonte\
+Parco autobus TPL Piemonte:
 
 Tale modulo consente il censimento delle informazioni sugli autobus adibiti al trasporto pubblico locale.
+
 L’attività di aggiornamento dei dati della propria flotta è di esclusiva competenza e responsabilità dell’azienda proprietaria, anche ai fini di specifici adempimenti previsti in Regione Piemonte (Debito Informativo Trasporti -DIT, ai sensi della Determinazione Dirigenziale n. 4292 del 18.12.2017).
+
 L’azienda, tramite il sistema, può inserire nuove schede veicolo, ricercarle, consultarle e modificarle. In particolare, l’inserimento di nuovi veicoli in anagrafica può avvenire tramite interfaccia (un veicolo alla volta), oppure tramite il caricamento di un file Excel (consigliato nel caso si vogliano inserire più veicoli contemporaneamente).
+
 La ricerca e la consultazione sono facilitate dalla presenza di numerosi filtri e dalla possibilità di esportare in file MS Excel i risultati della ricerca.
+
 L’azienda può gestire e consultare solo i dati relativi alla propria flotta, AMP e Regione Piemonte possono ricercare e consultare i dati di tutti i veicoli inseriti in anagrafica dalle aziende. 
-Il sistema include funzionalità a supporto del rilascio dei nulla osta da parte dell’Ente committente (al momento solo AMP), necessari alle aziende per procedere con le richieste di prima immatricolazione, re-immatricolazione, alienazione e sostituzione presso la Motorizzazione civile. 
+
+Il sistema include funzionalità a supporto del rilascio dei nulla osta da parte dell’Ente committente (al momento solo AMP), necessari alle aziende per procedere con le richieste di prima immatricolazione, re-immatricolazione, alienazione e sostituzione presso la Motorizzazione civile.
+
 Possibili future evoluzioni del sistema riguardano la gestione delle richieste di autorizzazione all’uso in linea e fuori linea.
 
-Contratti e soggetti giuridici TPL\
+
+Contratti e soggetti giuridici TPL:
  
-Il modulo consente il censimento e l'aggiornamento continuo e unificato delle anagrafiche dei contratti inerenti ai servizi di TPL e dei relativi soggetti giuridici coinvolti (aziende ed enti pubblici), garantendo la corrispondenza con i dati dell’Osservatorio nazionale sulle politiche del TPL tramite corrispondenza univoca dei codici identificativi. 
-I dati relativi ai contratti sono gestiti da Regione Piemonte e AMP, e consultabili da tutte le aziende. Regione Piemonte e AMP gestiscono anche l’inserimento in anagrafica dei soggetti di alcune informazioni identificative. L’aggiornamento di altre informazioni è invece a cura del singolo soggetto (rappresentante legale, indirizzo sede legale, etc.). 
-Tali anagrafiche possono essere utilizzate dagli altri sistemi del Sistema Informativo Regionale Trasporti che include i sistemi relativi al parco autobus, alla dotazione organica delle aziende, alla programmazione dei servizi del TPL. Nella versione attuale non sono disponibili servizi di esposizione per tali dati. 
+Il modulo consente il censimento e l'aggiornamento continuo e unificato delle anagrafiche dei contratti inerenti ai servizi di TPL e dei relativi soggetti giuridici coinvolti (aziende ed enti pubblici), garantendo la corrispondenza con i dati dell’Osservatorio nazionale sulle politiche del TPL tramite corrispondenza univoca dei codici identificativi.
+
+I dati relativi ai contratti sono gestiti da Regione Piemonte e AMP, e consultabili da tutte le aziende. Regione Piemonte e AMP gestiscono anche l’inserimento in anagrafica dei soggetti di alcune informazioni identificative. L’aggiornamento di altre informazioni è invece a cura del singolo soggetto (rappresentante legale, indirizzo sede legale, etc.).
+
+Tali anagrafiche possono essere utilizzate dagli altri sistemi del Sistema Informativo Regionale Trasporti che include i sistemi relativi al parco autobus, alla dotazione organica delle aziende, alla programmazione dei servizi del TPL. Nella versione attuale non sono disponibili servizi di esposizione per tali dati.
+
+
+Struttura del prodotto:
 
 Il prodotto è strutturato nelle seguenti componenti specifiche:
 - [rebusdb]( https://github.com/regione-piemonte/rebus/tree/main/rebus-rebusdb ) : 				script DDL/DML per la creazione ed il popolamento iniziale del DB (Postgresql);
@@ -36,7 +50,8 @@ Il prodotto è strutturato nelle seguenti componenti specifiche:
 - [anagraficasrv]( https://github.com/regione-piemonte/rebus/tree/main/rebus-anagraficasrv ) : 	Componente SPA con servizi REST per anagraficawcl.
 
 
-A ciascuna componente del prodotto elencata sopra corisponde una sotto-directory denominata REBUS-<nome_componente>.\
+A ciascuna componente del prodotto elencata sopra corisponde una sotto-directory denominata REBUS-<nome_componente>.
+
 In ciascuna di queste cartelle di componente si trovano ulteriori informazioni specifiche, incluso il BOM della componente di prodotto.
 
 Nella directory [csi-lib]( https://github.com/regione-piemonte/REBUS/tree/main/csi-lib ) si trovano le librerie sviluppate da CSI-Piemonte con licenza OSS, come indicato nei BOM delle singole componenti, ed usate trasversalmente nel prodotto.

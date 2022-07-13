@@ -1,0 +1,1388 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_ANAGRAFICA_BUS'" [filtroNavbar]="context"></app-navbar>
+
+
+<div>
+  <div *ngIf="!isLoading()" id="loader-container" class="preloader-background">
+    <div id="loader"></div>
+  </div>
+
+
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>
+      <span *ngIf="pagMess == null">Torna alla ricerca</span>
+      <span *ngIf="pagMess != null">Torna ai messaggi</span>
+    </button>
+  </div>
+
+
+
+  <div *ngIf="isLoading()" style="margin-top: 1em;margin-bottom:1em; margin-left:10%; margin-right:10%"
+    id="containerCenter">
+    <div style="text-align: right">Ultima modifica: <b>{{dettaglioBus.dataAggiornamento | date: 'short' }} </b></div>
+    <h3 class="titolo">Dati identificativi e d'immatricolazione</h3>
+
+    <table style="width:100%">
+      <tbody>
+        <tr>
+          <td>
+            <div>
+              <label>Azienda:</label>
+              <b>{{dettaglioBus?.azienda}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <input type="checkbox" [(ngModel)]="dettaglioBus.flgDaImmatricolare" name="flgDaImmatricolare"
+                onclick="return false">
+              <label> Autobus nuovo da immatricolare</label>
+            </div>
+          </td>
+          <td>
+            <div>
+              <input type="checkbox" [(ngModel)]="dettaglioBus.flgContribuzione" name="flgDaImmatricolare"
+                onclick="return false">
+              <label>
+                Da contribuire</label>
+            </div>
+          </td>
+          <td>
+            <div>
+              <input type="checkbox" [(ngModel)]="dettaglioBus.sostituito" name="flgSostituzione"
+                onclick="return false">
+              <label>
+                Sostituito per contribuzione</label>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div>
+              <label>Nr. telaio:</label>
+              <b>{{dettaglioBus?.telaio}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Tipo immatricolazione:</label>
+              <b>{{dettaglioBus?.tipoImmatricolazione}}</b>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div>
+              <label>N. primo telaio:</label>
+              <b>{{dettaglioBus?.primoTelaio}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Data prima immatricolazione:</label>
+              <b>{{dettaglioBus?.dataPrimaImmatricolazione | datetostringpiperebus}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div>
+              <label>Targa:</label>
+              <b>{{dettaglioBus?.targa}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Ente che ha autorizzato l'ultima immatricolazione:</label>
+              <b>{{dettaglioBus?.enteAutorizzPrimaImm}}</b>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div>
+              <label>Matricola aziendale:</label>
+              <b>{{dettaglioBus?.matricola}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Data ultima immatricolazione:</label>
+              <b>{{dettaglioBus?.dataUltimaImmatricolazione | datetostringpiperebus}}</b>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3 class="titolo">Caratteristiche Fisiche e Tecnologiche</h3>
+
+    <table style="width:100%">
+      <tbody>
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Marca:</label>
+              <b>{{dettaglioBus?.marca}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <label>Categoria Veicolo:</label>
+              <b>{{dettaglioBus?.categoriaVeicolo}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <label>Allestimento:</label>
+              <b>{{dettaglioBus?.tipoAllestimento}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Modello:</label>
+              <b>{{dettaglioBus?.modello}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <label>Alimentazione:</label>
+              <b>{{dettaglioBus?.tipoAlimentazione}}</b>
+            </div>
+          </td>
+        </tr>
+
+
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Omolog. Direttiva EU:</label>
+              <b>{{dettaglioBus?.omologazioneDirettivaEuropea}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <label>Altra alimentazione:</label>
+              <b>{{dettaglioBus?.altraAlimentazione}}</b>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Classe ambientale:</label>
+              <b>{{dettaglioBus?.classeAmbientale}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <label>Caratteristiche particolari:</label>
+              <b>{{dettaglioBus?.caratteristicheParticolari}}</b>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div>
+              <label>Classe veicolo:</label>
+              <b>{{dettaglioBus?.classeVeicolo}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Lunghezza (mt.):</label>
+              <b>{{dettaglioBus?.lunghezzaStr}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Due Piani:</label>
+              <b>{{isSelect(dettaglioBus?.flgDuePiani)}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Snodato</label>
+              <b>{{isSelect(dettaglioBus?.flgSnodato)}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Cabina Guida Isolata:</label>
+              <b>{{isChecked(dettaglioBus?.flgCabinaGuidaIsolata)}}</b>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div>
+              <label>Porte:</label>
+              <b>{{dettaglioBus?.numeroPorte}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Posti in Piedi:</label>
+              <b>{{dettaglioBus?.nPostiInPiedi}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Posti a Sedere:</label>
+              <b>{{dettaglioBus?.nPostiSedere}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Posti Riservati:</label>
+              <b>{{dettaglioBus?.nPostiRiservati}}</b>
+            </div>
+          </td>
+          <td>
+            <div class="paddingleft1">
+              <label>Posti Carrozzina:</label>
+              <b>{{dettaglioBus?.postiCarrozzina}}</b>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3 class="titolo">Dotazioni specifiche</h3>
+
+    <table style="width:100%">
+      <tbody>
+        <tr>
+          <td colspan="6">
+            <div>
+              <label>Facilitazioni Disabili:</label>
+              <b>{{dettaglioBus?.dotazioneDisabili}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="1">
+            <div>
+              <label>Dispositivi prevenzione incidenti:</label>
+              <b>{{dettaglioBus?.dispositiviPrevenzInc}}</b>
+            </div>
+          </td>
+          <td colspan="5">
+            <div>
+              <label>Altri dispositivi prevenzione incidenti:</label>
+              <b>{{dettaglioBus?.altriDispositiviPrevenzInc}}</b>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="1">
+            <div>
+              <label>Impianti visivi:</label>
+              <b>{{dettaglioBus?.impiantiVisivi}}</b>
+            </div>
+          </td>
+          <td colspan="5">
+            <div>
+              <label>Impianti audio:</label>
+              <b>{{dettaglioBus?.impiantiAudio}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div>
+              <label>Impianto Condizionamento:
+                <b>{{isSelect(dettaglioBus?.flgImpiantoCondizionamento)}}</b></label>
+              <label class="paddingleft6">Otx:
+                <b>{{isSelect(dettaglioBus?.flgOtx)}}</b></label>
+
+              <label class="paddingleft6">Filtro FAP:
+                <b>{{isSelect(dettaglioBus?.flgFiltroFap)}}</b></label>
+            </div>
+          </td>
+
+
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Avm:
+                <b>{{isSelect(dettaglioBus?.flgAvm)}}</b></label>
+
+              <label class="paddingleft6">Tipologia:
+                <b>{{dettaglioBus?.tipologiaAvm}}</b></label>
+            </div>
+          </td>
+
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Contapasseggeri:</label>
+              <b>{{isSelect(dettaglioBus?.flgContapasseggeri)}}</b>
+              <label class="paddingleft6">Integrato con bigliettazione elettronica:</label>
+              <b>{{isBoolean(dettaglioBus?.flgContapasseggeriIntegrato)}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div>
+              <label>Sistema bigliettazione elettronica (BIP):</label>
+              <b>{{isSelect(dettaglioBus?.flgRilevatoreBip)}}</b>
+
+              <label class="paddingleft6">Predisposizione cablaggio:
+                <b>{{isBoolean(dettaglioBus?.flgBipCablato)}}</b></label>
+            </div>
+          </td>
+
+
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div>
+              <label>Sistema protezione autista (anche anti-Covid):</label>
+              <b>{{isBoolean(dettaglioBus?.flgSistemiProtezioneAutista)}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <div>
+              <label>Sistema videosorveglianza a bordo:</label>
+              <b>{{dettaglioBus?.sistemaVideosorveglianza}}</b>
+            </div>
+          </td>
+          <td colspan="4">
+            <div>
+              <label>Portabici:
+              </label>
+              <b>{{dettaglioBus?.portabici}}</b>
+            </div>
+        </tr>
+        <tr>
+          <td colspan="4">
+            <div>
+              <label>Altri allestimenti:</label>
+              <b>{{isSelect(dettaglioBus?.altriAllestimenti)}}</b>
+            </div>
+          </td>
+
+        </tr>
+
+      </tbody>
+    </table>
+
+    <br>
+    <h3 class="titolo">Deposito Prevalente </h3>
+    <div *ngIf="!hasDeposito(); else deposito">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #deposito>
+      <table style="width:100%">
+        <tbody>
+          <tr>
+            <td colspan="3">
+              <div>
+                <label>Denominazione: </label>
+                <b>{{denomDeposito}}</b>
+              </div>
+            </td>
+            <td colspan="1">
+              <div>
+                <label>Deposito principale: </label>
+                <b>{{isDepositoPrevalente}}</b>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <div>
+                <label>Indirizzo: </label>
+                <b>{{indirizzoDeposito}}</b>
+              </div>
+            </td>
+            <td colspan="1">
+              <div>
+                <label>Telefono: </label>
+                <b>{{telefonoDeposito}}</b>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+    </ng-template>
+    <h3 class="titolo">Dati amministrativi ed economici</h3>
+    <mat-grid-list cols="12" rowHeight="40px">
+      <!-- PRIMA RIGA -->
+      <div class="allineamentoSinistra">
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>Proprietà/Leasing:</label>
+            <b>{{dettaglioBus?.proprietaLeasing}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>Prezzo totale d'acquisto (€):</label>
+            <b>{{dettaglioBus?.prezzoTotAcquistoStr}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div style="width: 100%;">
+            {{AutobusLabel.nuovaProceduraRendicontazione}}
+            <mat-divider [inset]="true"
+              style="border-color: #6fd2ff; border-width: 2px; width: 100%; margin-left: unset !important;">
+            </mat-divider>
+          </div>
+        </mat-grid-tile>
+      </div>
+      <!-- SECONDA RIGA -->
+      <div class="allineamentoSinistra">
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>Data ultima revisione:</label>
+            <b>{{dettaglioBus?.dataUltimaRevisione | datetostringpiperebus}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>Tipologia Dimensionale:</label>
+            <b>{{dettaglioBus?.tipologiaDimensionale}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>{{AutobusLabel.entitaContrPub}}:</label>
+            <b>{{dettaglioBus?.contributoPubblicoAcquistoStr}}</b>
+          </div>
+        </mat-grid-tile>
+      </div>
+      <!-- TERZA RIGA -->
+      <div class="allineamentoSinistra">
+        <mat-grid-tile colspan="2">
+          <div>
+            <label>Assicurato:</label>
+            <b>{{isChecked(dettaglioBus?.flgVeicoloAssicurato)}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="2">
+          <div>
+            <label>Conteggiato MIV:</label>
+            <b>{{isChecked(dettaglioBus?.flgConteggiatoMiv)}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>Anno sostit. programmata:</label>
+            <b>{{dettaglioBus?.annoSostProg}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>{{AutobusLabel.contribuito}}:</label>
+            <b>{{isChecked(dettaglioBus?.contributo)}}</b>
+          </div>
+        </mat-grid-tile>
+      </div>
+      <!-- QUARTA RIGA -->
+      <div class="allineamentoSinistra">
+        <mat-grid-tile colspan="2">
+          <div>
+            <label>Stato TPL:</label>
+            <b>{{dettaglioBus?.statoTpl}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="2">
+          <div>
+            <label>Data alienazione:</label>
+            <b>{{dettaglioBus?.dataAlienazione | datetostringpiperebus}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>Scadenza vincoli non alienabilità:</label>
+            <b>{{dettaglioBus?.dataScadVincoliNoAlien}}</b>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="4">
+          <div>
+            <label>{{AutobusLabel.contributoPubblicoAcquisto}}:</label>
+            <b>{{isChecked(dettaglioBus?.flgRichiestaContr)}}</b>
+          </div>
+        </mat-grid-tile>
+      </div>
+    </mat-grid-list>
+    <br>
+    <h3 class="titolo">Richieste</h3>
+    <div *ngIf="dettaglioBus?.procedimenti.length<1; else proc">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #proc>
+      <table class="aTable">
+        <thead>
+          <tr>
+            <th style="width:4%">
+              Codice richiesta
+            </th>
+            <th style="width:8%">
+              Tipologia
+            </th>
+            <th style="width:10%">
+              Stato
+            </th>
+            <th style="width:5%">
+              Dal
+            </th>
+            <th style="width:15%">
+              Contratto<br>(Cod. Naz. - Descrizione)
+            </th>
+            <th style="width:10%">
+              Ente committente
+            </th>
+            <th style="width:12%">
+              Esecutore titolare
+            </th>
+            <th style="width:3%;text-align: center;">
+              Richiesta
+            </th>
+            <th style="width:3%;text-align: center;">
+              Autorizzazione
+            </th>
+            <th style="width:3%;text-align: center;">
+              Dettaglio
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let procedimento of dettaglioBus.procedimenti;">
+            <td style="width:4%">
+              <div [innerHTML]="procedimento.numProc"></div>
+            </td>
+            <td style="width:8%">
+              <div [innerHTML]="procedimento.tipoProc"></div>
+            </td>
+            <td style="width:10%">
+              <div [innerHTML]="procedimento.statoProc"></div>
+            </td>
+            <td style="width:5%">
+              <div [innerHTML]="procedimento.dataStato"></div>
+            </td>
+            <td style="width:15%">
+
+              <div *ngIf="procedimento.contratto!=null" [innerHTML]="procedimento.contratto"></div>
+            </td>
+            <td style="width:10%">
+              <div [innerHTML]="procedimento.enteComm "></div>
+            </td>
+            <td style="width:12%">
+              <div [innerHTML]="procedimento.esecTit "></div>
+            </td>
+            <td style="width:3%;text-align: center; padding: 0px;">
+              <!--Scarica documento -->
+              <a class="col" title="Scarica/Visualizza PDF Richiesta" href="javascript:void(0)" class="no-underline"
+                *ngIf="procedimento.richiesta!=null"
+                (click)="scaricaPDF(procedimento.idProc, procedimento.richiesta,7, procedimento.numProc)">
+                <mat-icon class="blueIcon">picture_as_pdf</mat-icon>
+              </a>
+            </td>
+            <td style="width:3%;text-align: center; padding: 0px;">
+              <!--Scarica documento -->
+              <a class="col" title="Scarica/Visualizza PDF Autorizzazione" href="javascript:void(0)"
+                class="no-underline" *ngIf="procedimento.autorizzazione!=null"
+                (click)="scaricaPDF(procedimento.idProc, procedimento.autorizzazione,8, procedimento.numProc)">
+                <mat-icon class="blueIcon">picture_as_pdf</mat-icon>
+              </a>
+            </td>
+            <td style="width:3%;text-align: center; padding: 0px;">
+              <a title="Dettaglio" href="javascript:void(0)" class="no-underline"
+                (click)="dettaglioVeicolo(procedimento.idProc)">
+                <mat-icon class="blueIcon">visibility</mat-icon>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-template>
+    <br>
+    <h3 class="titolo">Cronologia proprietà precedenti</h3>
+    <div *ngIf="!hasCrono() || dettaglioBus?.cronologia.length<=1; else crono">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #crono>
+      <div *ngIf="dettaglioBus?.cronologia!=null">
+        <table style="width:100%">
+          <tbody>
+            <!-- non considero il primo dato che è quello attuale.  -->
+            <tr *ngFor="let crono of dettaglioBus?.cronologia | slice:1">
+              <td colspan="3">
+                <div>
+                  <label>Proprietà di:</label>
+                  <b>{{crono.denominazioneBreve}}</b>
+                </div>
+              </td>
+              <td colspan="1">
+                <div>
+                  <label>fino al:</label>
+                  <b>{{crono.dataAlienazione | datetostringpiperebus}}</b>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-template>
+    <br>
+    <h3 class="titolo">Verifica e Note</h3>
+    <table style="width:100%">
+      <tbody>
+        <tr>
+          <td valign="top">
+        <tr>
+          <td valign="top">
+            <label>Verificato azienda:</label>
+            <b>{{isChecked(dettaglioBus?.flagVerificaAzienda)}}</b>
+          </td>
+        </tr>
+        </td>
+        <td>
+          <tr>
+            <td valign="top"><label>Note:</label></td>
+            <td><textarea rows="4" cols="30" readonly>{{dettaglioBus?.note}}</textarea></td>
+          </tr>
+        </td>
+        <td *ngIf="isUtenteAzienda || isUtenteServizio">
+          <tr>
+            <td style="width: 30%" valign="top"><label>Nota azienda:</label></td>
+            <td><textarea rows="4" cols="30" readonly>{{dettaglioBus?.notaRiservataAzienda}}</textarea></td>
+          </tr>
+        </td>
+        </tr>
+        <tr>
+          <td valign="top">
+        <tr>
+          <td valign="top">
+            <label>Verificato AMP:</label> <b>{{isChecked(dettaglioBus?.flagVerificaAmp)}}</b>
+          </td>
+        </tr>
+        </td>
+        <td></td>
+        <td *ngIf="isUtenteAmp || isUtenteServizio" valign="top">
+          <tr>
+            <td style="width: 30%" valign="top"><label>Nota AMP:</label></td>
+            <td><textarea rows="4" cols="30" readonly>{{dettaglioBus?.notaRiservataAmp}}</textarea></td>
+          </tr>
+        </td>
+        </tr>
+        <tr *ngIf="dettaglioBus?.flagVerificaAmp == 'N'">
+          <td style="width: 30%" valign="top"><label>Motivazione :</label></td>
+          <td><textarea rows="4" cols="30" readonly>{{dettaglioBus?.motivazione}}</textarea></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <br>
+    <h3 class="titolo">Documenti Allegati</h3>
+    <table style="width:100%">
+      <tbody *ngFor="let documento of listOfDocVariazAutobusVO; let i = index">
+        <tr>
+          <td>
+            <div>
+              <label>Tipo Documento:</label>
+              <b>{{documento.descEstesa}}</b>
+            </div>
+          </td>
+          <td rowspan="2">
+            <div class="paddingleft2" style="display:flex">
+              <label style="margin-top:8px;">Note:</label>
+              <textarea rows="4" cols="30" style="width: 317px; height: 49px;" readonly>{{documento.note}}</textarea>
+            </div>
+          </td>
+          <td style="padding-right: 72px;">
+            <div>
+              <label>Caricato il:</label>
+              <b>{{documento.dataCaricamento | datetostringpiperebus}}</b>
+            </div>
+          </td>
+          <td>
+            <div>
+              <!--Scarica documento -->
+              <a *ngIf="(dettaglioBus.isFileUpload=='isFile')" class="col" title="Scarica/Visualizza"
+                href="javascript:void(0)" class="no-underline" (click)="download(i)">
+                <mat-icon class="blueIcon" style="padding-top: 26px;">
+                  <img src="assets/DLdoc_blu.png"
+                    style="width: 36px;width: 36px; border-bottom-style: solid;margin-bottom: 22px;border-bottom-width: 0px;height: 36px; margin-right: 0px;margin-left: -24px;">
+                </mat-icon>
+              </a>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!--Rendicontazione-->
+    <div *ngIf="dettaglioBus.flgContribuzione!=false" class="allineamentoSinistra">
+      <h3 class="titolo" #rendicontazione>
+        Pratica di Rendicontazione
+      </h3>
+      <div *ngIf="dettaglioBus.idProcedimento == null && dettaglioBus.flgContribuzione">
+        <label>Nessun dato presente</label>
+      </div>
+      <div *ngIf="dettaglioBus.idProcedimento != null ">
+        <mat-expansion-panel style="margin-top: 10px;">
+          <mat-expansion-panel-header class="titlePanel">
+            <mat-panel-title>
+              <h3 class="titolo_trasparente">
+                Rendicontazione Parte A
+              </h3>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <!----------------------- ASSEGNAZIONE DELLE RISORSE - CONTRIBUTI EROGATI ------------------------->
+          <div>
+            <h3 class="titolo">
+              {{AutobusLabel.assegnazioneRisorseContributi}}
+            </h3>
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle">
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.attoAssegnazioneRisorse}}: <b>{{this.tipoAtti}}</b></label>
+
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.fonteDiFinanziamento}}: <b>{{this.tipoFonte}}</b></label>
+
+              </mat-grid-tile>
+            </mat-grid-list>
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.datoSpesa">
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.contributoPubblico}}: <b>{{this.contributoPubblico}}</b></label>
+
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.contributoStatale}}:
+                  <b>{{contribuzione.assegnazioneRisorse.contributoStatale}}</b></label>
+
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.contributoRegionale}}:
+                  <b>{{contribuzione.assegnazioneRisorse.contributoRegionaleAgg}}</b></label>
+
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
+          <!----------------------------- ORDINE DI ACQUISTO (GARA) ----------------------------------------->
+          <div>
+            <h3 class="titolo"> {{AutobusLabel.ordineAcquisto}}</h3>
+
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.ordineAcquisto">
+              <!-- CPU MASTER -->
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.cupMaster}}: <b>{{contribuzione.ordineAcquisto.cupMaster}}</b></label>
+
+              </mat-grid-tile>
+
+            </mat-grid-list>
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.ordineAcquisto">
+              <!-- CUP -->
+              <mat-grid-tile colspan="12">
+                <label>{{AutobusLabel.cup}}: <b>{{contribuzione.ordineAcquisto.cup}}</b></label>
+
+
+              </mat-grid-tile>
+            </mat-grid-list>
+
+
+            <mat-grid-list cols="19" rowHeight="50px" class="matGridStyle" *ngIf="contribuzione.ordineAcquisto">
+              <!-- CIG -->
+              <mat-grid-tile colspan="3">
+                <label>{{AutobusLabel.cig}}: <b>{{contribuzione.ordineAcquisto.cig}}</b></label>
+              </mat-grid-tile>
+
+              <!-- DATA AGGIUDICAZIONE -->
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.dataAggiudicazione}}: <b>{{contribuzione.ordineAcquisto.dataAggiudicazione |
+                    date:
+                    'dd/MM/yyyy'}}</b></label>
+              </mat-grid-tile>
+
+              <!-- DATA STIPULA -->
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.dataStipula}}: <b>{{contribuzione.ordineAcquisto.dataStipula | date:
+                    'dd/MM/yyyy'}}</b></label>
+              </mat-grid-tile>
+
+              <!-- NUMERO ORDINE -->
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.numeroOrdine}}: <b>{{contribuzione.ordineAcquisto.numeroOrdine}}</b></label>
+              </mat-grid-tile>
+
+              <!-- DATA ORDINE -->
+              <mat-grid-tile colspan="4">
+                <label>{{AutobusLabel.dataOrdine}}: <b>{{contribuzione.ordineAcquisto.dataOrdine | date:
+                    'dd/MM/yyyy'}}</b></label>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.ordineAcquisto">
+              <!-- FORNITORE -->
+              <mat-grid-tile colspan="12">
+                <label>{{AutobusLabel.fornitore}}: <b>{{contribuzione.ordineAcquisto.fornitore}}</b></label>
+
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
+          <!---------------------------------- VOCI DI COSTO DELLE FORNITURE ----------------------------------->
+          <div>
+            <h3 class="titolo"> {{AutobusLabel.vociCostoForniture}}</h3>
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.documentoContribuzione">
+              <!-- DOCUMENTAZIONE CONTRATTUALE -->
+              <mat-grid-tile colspan="3">
+                <label>{{AutobusLabel.documentazioneContrattuale}}:</label>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="9">
+                <label>{{contribuzione.documentoContribuzione.nomeFile}}</label>
+                <!--Scarica documento -->
+                <a title="Scarica" href="javascript:void(0)" class="no-underline"
+                  (click)="downloadDoc(contribuzione.documentoContribuzione.idDocContribuzione, contribuzione.documentoContribuzione.nomeFile)">
+                  <mat-icon>
+                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                  </mat-icon>
+                </a>
+              </mat-grid-tile>
+            </mat-grid-list>
+            <!---------------------------------- LISTA VOCI DI COSTO ----------------------------------------------->
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle"
+              *ngFor="let voce of listOfVoceCostoFornituraToShow">
+              <!-- VOCE DI COSTO -->
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.voceDiCosto}}: <b>{{voce.descVoceCosto}}</b></label>
+
+              </mat-grid-tile>
+
+              <!-- IMPORTO -->
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.importo}}: <b>{{voce.importo}}</b></label>
+
+              </mat-grid-tile>
+
+            </mat-grid-list>
+
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.costoFornitura">
+              <!-- VOCE DI COSTO -->
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.costoCriteriRegionali}}:
+                  <b>{{contribuzione.costoFornitura.costoAmmissibileReg}}</b></label>
+
+
+              </mat-grid-tile>
+
+              <!-- IMPORTO -->
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.costoFonteFinanziamento}}:
+                  <b>{{contribuzione.costoFornitura.costoAmmissibileFf}}</b></label>
+
+              </mat-grid-tile>
+            </mat-grid-list>
+
+          </div>
+          <!----------------------- DOCUMENTAZIONE DI SPESA ------------------->
+          <!---------------------------- FATTURE ------------------------------>
+
+          <div>
+            <h3 class="titolo"> {{AutobusLabel.documentazioneSpesa}}</h3>
+            <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block;">
+              {{AutobusLabel.fatture}}
+            </label>
+
+            <div *ngIf="listOfDatoFatturaToShow.length>=1">
+              <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle">
+                <mat-grid-tile colspan="2">
+                  <label>{{AutobusLabel.numeroFattura}}:</label>
+
+                </mat-grid-tile>
+                <mat-grid-tile colspan="2">
+
+                  <label>{{AutobusLabel.dataFattura }}: </label>
+
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <label>{{AutobusLabel.oggettoFattura}}: </label>
+
+                </mat-grid-tile>
+                <mat-grid-tile colspan="2">
+                  <label>{{AutobusLabel.importo}}:</label>
+
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <label>{{AutobusLabel.fatturaAcquisto}}:</label>
+                </mat-grid-tile>
+              </mat-grid-list>
+              <mat-grid-list cols="12" class="matGridStyle" *ngFor="let voce of listOfDatoFatturaToShow; let i = index"
+                [rowHeight]="voce.rowHeight">
+                <mat-divider [inset]="true"
+                  style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px; margin-left: 0px;">
+                </mat-divider>
+                <mat-grid-tile colspan="2">
+                  <b>{{voce.numero}}</b>
+                </mat-grid-tile>
+                <mat-grid-tile colspan="2">
+                  <b>{{voce.data | date: 'dd/MM/yyyy' }}</b>
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <ul style="margin-top: 0px;  margin-bottom: 0px; padding-left: 10px; list-style: none;">
+                    <li *ngFor="let voceCosto of voce.vociCosto" style="padding-bottom: 10px;">
+                      <b>{{voceCosto}}</b>
+                    </li>
+                  </ul>
+                </mat-grid-tile>
+                <mat-grid-tile colspan="2">
+                  <b>{{voce.importo}}</b>
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <!-- <div> -->
+                  <b>
+                    {{voce.documento.nomeFile}}
+                  </b>
+                  <a title="Scarica" href="javascript:void(0)" class="no-underline" *ngIf="voce.documento"
+                    (click)="downloadDoc(voce.documento.idDocContribuzione, voce.documento.nomeFile)">
+                    <mat-icon>
+                      <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                    </mat-icon>
+                  </a>
+                  <!-- </div> -->
+                </mat-grid-tile>
+              </mat-grid-list>
+            </div>
+          </div>
+
+          <mat-divider [inset]="true"
+            style="border-color: #6fd2ff; border-width: 5px; margin-top: 20px; margin-left: 0px;">
+          </mat-divider>
+          <!---------------------------- BONIFICI ------------------------------>
+          <label style="font-weight: bold; margin: 20px 10px 10px 10px;  display: block; width: 100%;">
+            {{AutobusLabel.bonifici}}
+          </label>
+
+          <div *ngIf="listOfDatoBonificoToShow.length>=1">
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle">
+              <mat-grid-tile colspan="2">
+
+                <label>{{AutobusLabel.dataBonifico }}:</label>
+
+              </mat-grid-tile>
+              <mat-grid-tile colspan="2">
+                <label>{{AutobusLabel.importo}}: </label>
+
+              </mat-grid-tile>
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.oggettoBonifico}}:</label>
+
+              </mat-grid-tile>
+              <mat-grid-tile colspan="2">
+                <label>{{AutobusLabel.cro}}:</label> <!-- cerco descrizione -->
+              </mat-grid-tile>
+
+            </mat-grid-list>
+            <mat-grid-list cols="12" rowHeight="50px" class="matGridStyle" *ngFor="let voce of listOfDatoBonificoToShow"
+              [rowHeight]="voce.rowHeight">
+              <mat-divider [inset]="true"
+                style="border-color: #6fd2ff; border-width: 2px; margin-top: 20px; margin-left: 0px;">
+              </mat-divider>
+              <mat-grid-tile colspan="2">
+                <b>{{voce.data | date: 'dd/MM/yyyy' }}</b>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="2">
+                <b>{{voce.importo}}</b>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="6">
+                <ul style="margin-top: 0px;  margin-bottom: 0px; padding-left: 10px; list-style: none;">
+                  <li *ngFor="let fattura of voce.numeriFatture" style="padding-bottom: 10px;">
+                    <b>{{fattura}}</b>
+                  </li>
+                </ul>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="2">
+                <b>{{voce.cro}}</b>
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
+          <!--------------------------------------- CONTRIBUTO EROGABILE ANTICIPO------------------------------------------>
+          <div>
+            <h3 class="titolo"> {{AutobusLabel.contributiErogabili}}</h3>
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" *ngIf="contribuzione.datoSpesa">
+              <mat-grid-tile colspan="6">
+
+                <label>{{AutobusLabel.contributoCriteriRegionali}}:
+                  <b>{{contribuzione.datoSpesa.contributoErogabileReg}}</b> </label>
+              </mat-grid-tile>
+              <!-- CONTRIBUTO EROGABILE AI SENSI DELLA FONTE DI FINANZIAMENTO -->
+              <mat-grid-tile colspan="6">
+                <label>{{AutobusLabel.contributoFonteFinanziamento}}:
+                  <b>{{contribuzione.datoSpesa.contributoRegionaleFf}}</b></label>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle" style="margin-top: 20px;">
+              <mat-grid-tile colspan="12">
+                <label>{{AutobusLabel.anticipo}}: <b>{{contribuzione.datoSpesa.importoAnticipo}}</b> </label>
+              </mat-grid-tile>
+            </mat-grid-list>
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" *ngIf="contribuzione.datoSpesa"
+              style="margin-top: 20px;">
+              <mat-grid-tile colspan="12">
+                <label style="font-weight: bold; ">
+                  {{AutobusLabel.regioneAMP}}
+                </label>
+              </mat-grid-tile>
+              <!-- NUMERO DETERMINA REGIONE-AMP -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroDetermina}}: <b>{{contribuzione.datoSpesa.nrDeterminaRpAmpAnt}}</b> </label>
+              </mat-grid-tile>
+              <!-- NUMERO ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroAttoLiquidazione}}:
+                  <b>{{contribuzione.datoSpesa.nrAttoLiquidazioneRpAmpAnt}}</b>
+                </label>
+              </mat-grid-tile>
+              <!-- DATA DETERMINA REGIONE-AMP -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataDetermina}}: <b>{{contribuzione.datoSpesa.dataDeterminaRpAmpAnt | date:
+                    'dd/MM/yyyy'}}</b></label>
+              </mat-grid-tile>
+              <!-- DATA ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataAttoLiquidazione}}: <b>{{contribuzione.datoSpesa.dataAttoLiquidazioneRpAmpAnt |
+                    date: 'dd/MM/yyyy'}}</b>
+                </label>
+              </mat-grid-tile>
+            </mat-grid-list>
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" *ngIf="contribuzione.datoSpesa"
+              style="margin-top: 20px;">
+
+              <mat-grid-tile colspan="12">
+                <label style="font-weight: bold; ">
+                  {{AutobusLabel.AMPAzienda}}
+                </label>
+              </mat-grid-tile>
+
+              <!-- NUMERO DETERMINA AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroDetermina}}: <b>{{contribuzione.datoSpesa.nrDeterminaAmpAzAnt }}</b>
+                </label>
+              </mat-grid-tile>
+              <!-- NUMERO ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroAttoLiquidazione}}: <b>{{contribuzione.datoSpesa.nrAttoLiquidazioneAmpAzAnt
+                    }}</b> </label>
+              </mat-grid-tile>
+              <!-- DATA DETERMINA AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataDetermina}}: <b>{{contribuzione.datoSpesa.dataDeterminaAmpAzAnt | date:
+                    'dd/MM/yyyy'}}</b> </label>
+
+              </mat-grid-tile>
+              <!-- DATA ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataAttoLiquidazione}}: <b>{{contribuzione.datoSpesa.dataAttoLiquidazioneAmpAzAnt |
+                    date: 'dd/MM/yyyy'}}</b>
+                </label>
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
+          <!--------------------------------------- MESSA IN SERVIZIO ------------------------------------------>
+
+          <div>
+
+            <h3 class="titolo"> {{AutobusLabel.messaInServizio}}</h3>
+
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle">
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroCartaCircolazione}}:</label>
+                <label *ngIf="contribuzione.datoMessaServizio.nrCartaCircolazione != null">
+                  <b>{{contribuzione.datoMessaServizio.nrCartaCircolazione}}</b>
+                </label>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{dettaglioBus.descrizioneDocumento}}: </label>
+                <a *ngIf="(dettaglioBus.isFileUpload=='isFile')" class="col" title="Scarica/Visualizza"
+                  href="javascript:void(0)" class="no-underline" (click)="download(null, 'carta')">
+                  <mat-icon>
+                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                  </mat-icon>
+                </a>
+              </mat-grid-tile>
+            </mat-grid-list>
+            <!-- DOCUMENTO ATTO D'OBBLIGO -->
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" *ngIf="contribuzione.documentoAttoObbligo"
+              style="margin-top: 20px">
+              <mat-grid-tile colspan="6">
+                <label *ngIf="contribuzione.documentoAttoObbligo.label != null">
+                  {{contribuzione.documentoAttoObbligo.label}}
+                </label>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="6">
+                <label *ngIf="contribuzione.documentoAttoObbligo.nomeFile != null">
+                  <b> {{contribuzione.documentoAttoObbligo.nomeFile}}</b> </label>
+                <a title="Scarica" href="javascript:void(0)" class="no-underline"
+                  *ngIf="contribuzione.documentoAttoObbligo.nomeFile"
+                  (click)="downloadDoc(contribuzione.documentoAttoObbligo.idDocContribuzione,contribuzione.documentoAttoObbligo.nomeFile)">
+                  <mat-icon>
+                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                  </mat-icon>
+                </a>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="12" *ngIf="contribuzione.documentoAttoObbligo !=null" style="padding-top: 0px;">
+                <label *ngIf="contribuzione.documentoAttoObbligo.descEstesa !=null" style="font-size: small ">
+                  {{contribuzione.documentoAttoObbligo.descEstesa}}</label>
+              </mat-grid-tile>
+            </mat-grid-list>
+            <!-- DOCUMENTO GARANZIA -->
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" *ngIf="contribuzione.documentoGaranzia"
+              style="margin-top: 20px">
+              <mat-grid-tile colspan="6" *ngIf="contribuzione.documentoGaranzia.label !=null">
+                <label>
+                  {{contribuzione.documentoGaranzia.label}} </label>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="6" *ngIf="contribuzione.documentoGaranzia.nomeFile !=null">
+                <label>
+                  <b>{{contribuzione.documentoGaranzia.nomeFile}}</b> </label>
+                <a title="Scarica" href="javascript:void(0)" class="no-underline"
+                  (click)="downloadDoc(contribuzione.documentoGaranzia.idDocContribuzione,contribuzione.documentoGaranzia.nomeFile)"
+                  *ngIf="contribuzione.documentoGaranzia.nomeFile">
+                  <mat-icon>
+                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                  </mat-icon>
+                </a>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="12" *ngIf="contribuzione.documentoGaranzia != null" style="padding-top: 0px;">
+                <label *ngIf="contribuzione.documentoGaranzia.descEstesa != null" style="font-size: small ">
+                  {{contribuzione.documentoGaranzia.descEstesa}}</label>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" style="margin-top: 20px">
+              <!-- PRESENZA PANNELLO PUBBLICITA' FONTE FINANZIAMENTO -->
+              <mat-grid-tile colspan="12">
+                <label> {{AutobusLabel.presenzaPannelloPubblicita}}: <b>{{this.pannello}}</b></label>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" style="margin-top: 20px">
+              <mat-grid-tile colspan="12">
+                <label>{{AutobusLabel.veicoloDaSostituire}}:
+                  <b>{{contribuzione.datoMessaServizio.primoTelaioSost}}</b></label>
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
+        </mat-expansion-panel>
+        <mat-expansion-panel style="margin-top: 10px;">
+          <mat-expansion-panel-header class="titlePanel">
+            <mat-panel-title>
+              <h3 class="titolo_trasparente">
+                Rendicontazione Parte B
+              </h3>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div>
+            <!----------------------- DOCUMENTAZIONE DI PAGAMENTO (QUIETANZA) ------------------->
+
+            <h3 class="titolo"> {{AutobusLabel.documentazionePagamento}}</h3>
+            <div *ngIf="listOfDatoQuietanzaToShow.length>=1">
+              <mat-grid-list cols="12" rowHeight="60px" class="matGridStyle"
+                *ngFor="let voce of listOfDatoQuietanzaToShow">
+                <mat-grid-tile colspan="3">
+                  <label>{{AutobusLabel.tipoDocumentoQuietanza}}: <b>{{voce.tipoDoc}}</b>
+                  </label>
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <label>{{AutobusLabel.numeroQuietanza }}: <b>{{voce.nrQuietanzaAzForn}}</b></label>
+
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <label>{{AutobusLabel.dataQuietanza}}: <b>{{voce.dataQuietanzaAzForn | date: 'dd/MM/yyyy'}}</b>
+                  </label>
+                </mat-grid-tile>
+                <mat-grid-tile colspan="3">
+                  <label>
+                    {{voce.documento.nomeFile}}</label>
+                  <a title="Scarica" href="javascript:void(0)" class="no-underline"
+                    (click)="downloadDoc(voce.documento.idDocContribuzione,voce.documento.nomeFile)"
+                    *ngIf="voce.documento.nomeFile">
+                    <mat-icon>
+                      <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                    </mat-icon>
+                  </a>
+                </mat-grid-tile>
+              </mat-grid-list>
+            </div>
+
+          </div>
+          <!--------------------------------------- CONTRIBUTO EROGABILE ANTICIPO------------------------------------------>
+          <div>
+            <h3 class="titolo"> {{AutobusLabel.contributiErogabiliSaldo}}</h3>
+            <mat-grid-list cols="12" rowHeight="40px" class="matGridStyle">
+              <mat-grid-tile colspan="12">
+                <label>{{AutobusLabel.saldo}}: <b>{{contribuzione.datoSpesa.importoSaldo}}</b></label>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+
+
+
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" style="margin-top: 20px;">
+              <mat-grid-tile colspan="12">
+                <label style="font-weight: bold;">
+                  {{AutobusLabel.regioneAMP}}
+                </label>
+              </mat-grid-tile>
+              <!-- NUMERO DETERMINA REGIONE-AMP -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroDetermina}}: </label>
+                <label
+                  *ngIf="contribuzione.datoSpesa.nrDeterminaRpAmpSal !=null"><b>{{contribuzione.datoSpesa.nrDeterminaRpAmpSal}}</b></label>
+              </mat-grid-tile>
+              <!-- NUMERO ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroAttoLiquidazione}}: </label>
+                <label *ngIf="contribuzione.datoSpesa.nrAttoLiquidazioneRpAmpSal!=null">
+                  <b>{{contribuzione.datoSpesa.nrAttoLiquidazioneRpAmpSal}}</b>
+                </label>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataDetermina}}:
+                </label><label
+                  *ngIf="contribuzione.datoSpesa.dataDeterminaRpAmpSal"><b>{{contribuzione.datoSpesa.dataDeterminaRpAmpSal
+                    | date:
+                    'dd/MM/yyyy'}}</b> </label>
+              </mat-grid-tile>
+              <!-- DATA ATTO DI LIQUIDAZIONE REGIONE-AMP -->
+              <mat-grid-tile colspan="6" *ngIf="contribuzione.datoSpesa.dataAttoLiquidazioneRpAmpSal">
+                <label>
+                  {{AutobusLabel.dataAttoLiquidazione}}:
+
+                </label><label
+                  *ngIf="contribuzione.datoSpesa.dataAttoLiquidazioneRpAmpSal"><b>{{contribuzione.datoSpesa.dataAttoLiquidazioneRpAmpSal
+                    | date: 'dd/MM/yyyy'}}</b></label>
+              </mat-grid-tile>
+            </mat-grid-list>
+            <mat-grid-list cols="12" rowHeight="30px" class="matGridStyle" style="margin-top: 20px;">
+              <mat-grid-tile colspan="12">
+
+                <label style="font-weight: bold; ">
+                  {{AutobusLabel.AMPAzienda}}
+                </label>
+              </mat-grid-tile>
+              <!-- NUMERO DETERMINA AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroDetermina}}: </label><label
+                  *ngIf="contribuzione.datoSpesa.nrDeterminaAmpAzSal"><b>{{contribuzione.datoSpesa.nrDeterminaAmpAzSal}}</b>
+                </label>
+              </mat-grid-tile>
+              <!-- NUMERO ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.numeroAttoLiquidazione}}:
+                </label><label *ngIf="contribuzione.datoSpesa.nrAttoLiquidazioneAmpAzSal">
+                  <b>{{contribuzione.datoSpesa.nrAttoLiquidazioneAmpAzSal
+                    }}</b> </label>
+              </mat-grid-tile>
+              <!-- DATA DETERMINA AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataDetermina}}: </label><label *ngIf="contribuzione.datoSpesa.dataDeterminaAmpAzSal">
+
+                  <b>{{contribuzione.datoSpesa.dataDeterminaAmpAzSal| date:
+                    'dd/MM/yyyy'}}</b> </label>
+              </mat-grid-tile>
+              <!-- DATA ATTO DI LIQUIDAZIONE AMP-AZIENDA -->
+              <mat-grid-tile colspan="6">
+                <label>
+                  {{AutobusLabel.dataAttoLiquidazione}}:</label><label
+                  *ngIf="contribuzione.datoSpesa.dataAttoLiquidazioneAmpAzSal">
+                  <b>{{contribuzione.datoSpesa.dataAttoLiquidazioneAmpAzSal|
+                    date: 'dd/MM/yyyy'}}</b> </label>
+              </mat-grid-tile>
+            </mat-grid-list>
+          </div>
+        </mat-expansion-panel>
+        <h3 class="titolo">Iter della Pratica</h3>
+        <table class="aTable" style="font-size: x-small;">
+          <thead>
+            <tr>
+              <th style="width:25%;">
+                Stato
+              </th>
+              <th style="width:18%;">
+                Dal
+              </th>
+              <th style="width:20%;">
+                Utente
+              </th>
+              <th style="width:37%;">
+                Note
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let iter of dettaglioRichiesta.iters;">
+              <td style="width:25%;">
+                {{ iter.descStato }}
+              </td>
+              <td style="width:18%;">
+                {{ iter.dataInizioValidita | date: 'dd/MM/yyyy HH:mm:ss' }}
+              </td>
+              <td style="width:20%;">
+                {{ iter.utente }}
+              </td>
+              <td style="width:37%;">
+                {{ iter.note }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>
+      <span *ngIf="pagMess == null">Torna alla ricerca</span>
+      <span *ngIf="pagMess != null">Torna ai messaggi</span>
+    </button>
+  </div>

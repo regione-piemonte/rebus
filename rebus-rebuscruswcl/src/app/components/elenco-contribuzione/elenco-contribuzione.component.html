@@ -1,0 +1,113 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<div *ngIf="!loadedPDF" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="azienda">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 15%;"> {{AutobusLabel.azienda}}
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 15%;white-space:nowrap;"
+    [title]="row.azienda!=null ? row.azienda.length>20 ? row.azienda: '' : ''">
+    {{troncaCaratteriAzienda(row.aziendaRicerca)}}
+  </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="telaio">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 12%;"> {{AutobusLabel.telaio}}
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 12%;white-space:nowrap;"> {{row.primoTelaio}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="fonteFinanziamento">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 20%;">Fonte
+      di<br>finanziamento
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 20%;white-space:nowrap;"
+      [title]="row.fonteFinanziamento!=null ? row.fonteFinanziamento.length>35 ? row.fonteFinanziamento: '' : ''">
+      {{troncaCaratteri(row.fonteFinanziamento)}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="tipoAlimentazione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"> {{AutobusLabel.idTipoAlimentazione}}
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.tipoAlimentazione}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="tipoAllestimento">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start; "> {{AutobusLabel.idTipoAllestimento}}
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.tipoAllestimento}}</mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="trasmessaA">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"> Trasmessa<br>Parte A
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.trasmessaA}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="validataA">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"> Validata<br>Parte A
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.validataA}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="trasmessaB">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"> Trasmessa<br>Parte B
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.trasmessaB}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="validataB">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;">Validata<br>ParteB
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.validataB}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="flgVerificatoAzienda">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;"> Verificato<br>Azienda
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.flgVerificatoAzienda}}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="flgVerificatoAmp">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;">Verificato<br>AMP
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="white-space:nowrap;"> {{row.flgVerificatoAmp}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="azioni">
+    <mat-header-cell *matHeaderCellDef style="flex: 0 0 10%;"> Azioni </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;">
+
+      <input type="hidden" id="custId" name="custId" value={{row.idVa}}>
+      <a *ngIf="isConsultaAbilitato" title="Dettaglio" href="javascript:void(0)" class="no-underline" (click)="dettaglioBus(row.idVa)">
+        <mat-icon class="blueIcon">visibility</mat-icon>
+      </a>
+
+      <input type="hidden" id="custId" name="custId" value={{row.idProcedimento}}>
+      <a *ngIf="row.idProcedimento && isModificaAbilitata && !row.rendicontazioneCompleta" title="Modifica" href="javascript:void(0)"
+        class="no-underline" (click)="modificaContribuzione(row.idProcedimento, row.primoTelaio, row.idVa)">
+        <mat-icon class="blueIcon">edit</mat-icon>
+      </a>
+
+      <a *ngIf="!row.idProcedimento && isInserimentoAbilitato" title="Inserisci" href="javascript:void(0)" class="no-underline"
+        (click)="inserisciContribuzione(row.primoTelaio, row.idVa)">
+        <mat-icon class="blueIcon">edit</mat-icon>
+      </a>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row [ngClass]="{ 'boldStyle': (!isUtenteAzienda && row.idStato == 40)}"
+    *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+</mat-table>
+
+<mat-paginator [pageSize]="defaultPageSize" [pageSizeOptions]="pageSizeOption"></mat-paginator>

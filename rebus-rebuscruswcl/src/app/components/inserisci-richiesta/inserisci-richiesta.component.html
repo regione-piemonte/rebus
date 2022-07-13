@@ -1,0 +1,511 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar *ngIf="idProcedimento== null" [labelSelected]="'INSERIMENTO_RICHIESTA'" [filtroNavbar]="context">
+</app-navbar>
+<mat-card>
+    <mat-card-content>
+
+
+        <div *ngIf="feedback" class="alert-danger box-error">
+            Attenzione! Si è verificato un errore di comunicazione con il server ! Contattare l'assistenza
+            <p>{{feedback}}</p>
+            <br>
+        </div>
+
+        <form #richiestaForm="ngForm" (ngSubmit)="save()">
+            <div *ngIf="isLoading(); else page" id="loader-container" class="preloader-background"
+                style="padding-top: 50%;">
+                <div id="loader"></div>
+            </div>
+            <ng-template #page>
+                <section>
+                    <h3 *ngIf="idProcedimento==null && tipoProcedimento?.id!=7">Richiesta Nulla Osta
+                        <strong>{{tipoProcedimento?.descrizione}}</strong>
+                    </h3>
+                    <h3 *ngIf="idProcedimento!= null && idProcedimento == 3">
+                        <strong>{{tipoProcedimento?.descrizione}}</strong>
+                    </h3>
+                    <h3 *ngIf="idProcedimento!= null  && idProcedimento != 3">e contestuale
+                        <strong>{{tipoProcedimento?.descrizione}}</strong>
+                    </h3>
+                    <h3 *ngIf="idProcedimento== null && tipoProcedimento?.id==7">Richiesta
+                        <strong>{{tipoProcedimento?.descrizione}}</strong>
+                    </h3>
+
+                    <div class="row" *ngIf="idProcedimento== null">
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Codice richiesta" aria-label="Number" matInput
+                                name="numeroProgressivo" disabled [(ngModel)]="numProgressivo">
+                        </mat-form-field>
+                        <div class="col"></div>
+                    </div>
+                    <div class="row" *ngIf="tipoProcedimento?.id!=7">
+                        <mat-form-field class="col" [formGroup]="veicoloGroup">
+                            <input type="text" placeholder="Veicolo/i" aria-label="Number" matInput
+                                formControlName="veicoloForm" [matAutocomplete]="veicolo" required
+                                (blur)="check('Veicolo')">
+                            <mat-autocomplete autoActiveFirstOption #veicolo="matAutocomplete"
+                                [displayWith]="displayFnVeicolo">
+                                <mat-option *ngFor="let choice of filteredOptionsVeicolo| async"
+                                    [value]="veicoloSelected">
+                                    <div (click)="optionClickedVeicolo($event, choice)">
+                                        <mat-checkbox [checked]="choice.selected"
+                                            (change)="toggleSelectionVeicolo(choice)"
+                                            (click)="$event.stopPropagation()">
+                                            <span *ngIf="tipoProcedimento?.id==1">Telaio: {{choice.primoTelaio}}</span>
+                                            <span *ngIf="tipoProcedimento?.id!=1">Targa: {{choice.nTarga}}</span>
+                                        </mat-checkbox>
+                                    </div>
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="veicoloGroup.controls['veicoloForm']?.errors?.required && veicoli.length">
+                                Campo richiesto
+                            </mat-error>
+                            <mat-error *ngIf="veicoli.length == 0">
+                                Non ci sono veicoli che corrispondono ai criteri richiesti
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field *ngIf="idProcedimento== null" class="col" [formGroup]="motorizzazioneGroup">
+                            <input type="text" placeholder="Motorizzazione" aria-label="Number" matInput
+                                formControlName="motorizzazioneForm" [matAutocomplete]="autoMotorizzazione"
+                                (blur)="check('Motor')" required>
+                            <mat-autocomplete autoActiveFirstOption #autoMotorizzazione="matAutocomplete"
+                                [displayWith]="displayFn" (optionSelected)="click($event,'Motor')">
+                                <mat-option *ngFor="let choice of filteredOptionsMotorizzazione | async"
+                                    [value]="choice">
+                                    {{choice.descrizione}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="motorizzazioneGroup.controls['motorizzazioneForm']?.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+
+                    <div class="row" *ngIf="tipoProcedimento?.id!=7 && idProcedimento == null">
+                        <mat-form-field class="col" [formGroup]="motivazioneGroup">
+                            <input type="text" placeholder="Motivazione" aria-label="Number" matInput
+                                formControlName="motivazioneForm" [matAutocomplete]="autoMotivazione"
+                                (blur)="check('Motiv')" required>
+                            <mat-autocomplete autoActiveFirstOption #autoMotivazione="matAutocomplete"
+                                [displayWith]="displayFn" (optionSelected)="click($event,'Motiv')">
+                                <mat-option *ngFor="let choice of filteredOptionsMotivazione | async" [value]="choice">
+                                    {{choice.descrizione}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="motivazioneGroup.controls['motivazioneForm']?.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" name="noteMotivazione" placeholder="Dettaglio motivazione"
+                                [(ngModel)]="richiesta.noteMotivazione" #noteMotivazione="ngModel" maxlength="200"
+                                matInput required (change)="changeNotaMotivazione(noteMotivazione.value)"
+                                [disabled]="motivazioneGroup.controls['motivazioneForm']?.value==null || !motivazioneGroup.controls['motivazioneForm']?.value.flgMotivAltro || richiestaConfermata || disableTipoContratto" />
+                            <mat-hint align="end">{{richiesta.noteMotivazione?.length || 0}} / 200</mat-hint>
+                            <mat-error *ngIf="noteMotivazione.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row" *ngIf="tipoProcedimento?.id!=7 && idProcedimento== null">
+                        <mat-form-field class="col" [formGroup]="contrattoGroup">
+                            <input type="text" placeholder="Contratto" aria-label="Number" matInput
+                                formControlName="contrattoForm" [matAutocomplete]="autoContratto" (blur)="check('Co')"
+                                required>
+                            <button mat-button
+                                *ngIf="this.contrattoGroup.controls['contrattoForm'].value && !this.contrattoGroup.controls['contrattoForm'].disabled"
+                                matSuffix mat-icon-button aria-label="Clear" (click)="cleanContratto()"
+                                [disabled]="richiestaConfermata || disableTipoContratto">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                            <mat-autocomplete autoActiveFirstOption #autoContratto="matAutocomplete"
+                                [displayWith]="displayFnContratto" (optionSelected)="click($event,'Co')">
+                                <mat-option *ngFor="let choice of filteredOptionsContratto | async" [value]="choice">
+                                    Cod. Ident. Naz.: {{choice.codIdNazionale? choice.codIdNazionale : "- " }};
+                                    {{troncaCaratteri(choice.descrizione)}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="contrattoGroup.controls['contrattoForm']?.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <div *ngIf="1!=1; else voidBlock" class="col"
+                            style="display: flex; align-items: baseline;margin-top: 15px;">
+                            <label id="radio-group-label">Utilizzo dei veicoli come *</label>
+                            <mat-radio-group aria-labelledby="radio-group-label" class="radio-group"
+                                [(ngModel)]="idTipoContratto" name="tipoContratto{{idProcedimento}}">
+                                <mat-radio-button class="radio-button" *ngFor="let tipo of tipiContratto"
+                                    [disabled]="richiestaConfermata || disableTipoContratto" [value]="tipo.id"
+                                    (click)="!(richiestaConfermata || disableTipoContratto) && handleClick(tipo.id)">
+                                    {{tipo.descrizione}}
+                                </mat-radio-button>
+                            </mat-radio-group>
+                        </div>
+                        <ng-template #voidBlock>
+                            <div class="col"></div>
+                        </ng-template>
+                    </div>
+                    <div class="row" *ngIf="tipoProcedimento?.id!=7 && idProcedimento==null">
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Soggetto Richiedente" aria-label="Number" matInput
+                                [ngModel]="soggettoRichiedente" [ngModelOptions]="{standalone: true}" disabled>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Gestore Contratto" aria-label="Number" matInput
+                                [ngModel]="soggettoIntermediario" [ngModelOptions]="{standalone: true}" disabled>
+                        </mat-form-field>
+                    </div>
+                    <div class="row" *ngIf="idProcedimento== null ">
+                        <mat-form-field class="col">
+                            <textarea type="text" name="note" placeholder="Osservazioni destinate all'Ente committente"
+                                [(ngModel)]="richiesta.nota" [required]="isNoteRichiestaRequired()" #note="ngModel"
+                                matInput matTextareaAutosize matAutosizeMinRows="2" matAutosizeMaxRows="4" rows="4"
+                                maxlength="2000"></textarea>
+                            <mat-hint align="end">{{richiesta.nota?.length || 0}} / 2000</mat-hint>
+                            <mat-error *ngIf="note.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row" *ngIf="idProcedimento== null && isFirmaVisible">
+                        <mat-form-field class="col">
+                            <input type="text" name="nominativoFirma" placeholder="Firmato da"
+                                [(ngModel)]="richiesta.nominativoFirma" #nominativoFirma="ngModel" matInput
+                                maxlength="35" [disabled]="richiestaConfermata" required />
+                            <mat-hint align="end">{{richiesta.nominativoFirma?.length || 0}} / 35</mat-hint>
+                            <mat-error *ngIf="nominativoFirma.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" name="ruoloFirma" placeholder="in qualità di"
+                                [(ngModel)]="richiesta.ruoloFirma" #ruoloFirma="ngModel" maxlength="35" matInput
+                                [disabled]="richiestaConfermata" required />
+                            <mat-hint align="end">{{richiesta.ruoloFirma?.length || 0}} / 35</mat-hint>
+                            <mat-error *ngIf="ruoloFirma.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-checkbox [(ngModel)]="richiesta.flgFirmaDigitale" name="flgFirmaDigitale" class="col"
+                            style="margin-left:15px; max-width: 15%;">
+                            Firmato digitalmente</mat-checkbox>
+                    </div>
+
+                </section>
+
+                <section *ngIf="tipoProcedimento?.id!=7 && idProcedimento==null">
+                    <h3>Dati Contratto</h3>
+                    <div *ngIf="!datiContratto">Nessun contratto
+                        selezionato.</div>
+                    <div *ngIf="datiContratto">
+                        <div class="row">
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Codice Regionale" aria-label="Number" matInput
+                                    [ngModel]="datiContratto.codRegionale" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Codice Nazionale" aria-label="Number" matInput
+                                    [ngModel]="datiContratto.codIdNazionale" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Descrizione" aria-label="Number" matInput
+                                    [ngModel]="datiContratto.descrizione" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                        </div>
+                        <div class="row">
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Ente Committente" aria-label="Number" matInput
+                                    [ngModel]="enteComm" [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Esecutore Titolare" aria-label="Number" matInput
+                                    [ngModel]="esecTit" [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col" *ngIf="capofila">
+                                <input type="text" placeholder="Capofila Raggruppamento" aria-label="Number" matInput
+                                    [ngModel]="capofila" [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Dati Veicoli</h3>
+                    <div *ngIf="veicoloSelected==null || 1>veicoloSelected.length">Nessun veicolo
+                        selezionato.</div>
+                    <div *ngIf="!(veicoloSelected==null || 1>veicoloSelected.length)">
+                        <div *ngFor="let veicolo of veicoloSelected; let i = index">
+                            <div class="row" *ngIf="tipoProcedimento?.id!=1" style="width: 100%;">
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Targa" aria-label="Number" matInput
+                                        [ngModel]="veicolo.nTarga" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Marca" aria-label="Number" matInput
+                                        [ngModel]="veicolo.marca" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Modello" aria-label="Number" matInput
+                                        [ngModel]="veicolo.modello" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Classe" aria-label="Number" matInput
+                                        [ngModel]="veicolo.descClasseAmbEuro" [ngModelOptions]="{standalone: true}"
+                                        disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input matInput placeholder="Allestimento" [ngModel]="veicolo.descTipoAllestimento"
+                                        [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="max-width: 5%;">
+                                    <input type="text" placeholder="Lunghezza (mt.)" matInput
+                                        [ngModelOptions]="{standalone: true}" [ngModel]="veicolo.lunghezza" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="max-width: 6%;">
+                                    <input type="text" placeholder="Data prima imm." aria-label="Number" matInput
+                                        [ngModel]="veicolo.dataPrimaImmatricolazione | date: 'dd/MM/yyyy'"
+                                        [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                            </div>
+                            <div class="row" *ngIf="tipoProcedimento?.id==1" style="width: 100%;">
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Telaio" aria-label="Number" matInput
+                                        [ngModel]="veicolo.primoTelaio" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Marca" aria-label="Number" matInput
+                                        [ngModel]="veicolo.marca" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Modello" aria-label="Number" matInput
+                                        [ngModel]="veicolo.modello" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input type="text" placeholder="Classe" aria-label="Number" matInput
+                                        [ngModel]="veicolo.descClasseAmbEuro" [ngModelOptions]="{standalone: true}"
+                                        disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col">
+                                    <input matInput placeholder="Allestimento" [ngModel]="veicolo.descTipoAllestimento"
+                                        [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="max-width: 5%;">
+                                    <input type="text" placeholder="Lunghezza (mt.)" matInput
+                                        [ngModelOptions]="{standalone: true}" [ngModel]="veicolo.lunghezza" disabled>
+                                </mat-form-field>
+                            </div>
+
+                            <mat-divider *ngIf="veicoloSelected.length>1  && i!=veicoloSelected.length-1" [inset]="true"
+                                style="border-color: #03A9F4; border-width: 2px; padding-top: 10px">
+                            </mat-divider>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Documenti Veicoli</h3>
+                    <div *ngIf="veicoloSelected==null || 1>veicoloSelected.length">Nessun veicolo
+                        selezionato.</div>
+                    <div *ngIf="!haveAllegati && !(veicoloSelected==null || 1>veicoloSelected.length)">Nessun documento
+                        presente.</div>
+                    <div *ngIf="!(veicoloSelected==null || 1>veicoloSelected.length) && haveAllegati">
+                        <div *ngFor="let file of allegatiVeicoli; let i = index">
+                            <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+                                <mat-form-field class="col" style="padding-bottom: 0px; max-width: 300px;"
+                                    *ngIf="tipoProcedimento?.id==1">
+                                    <input type="text" placeholder="Telaio" aria-label="Number" matInput
+                                        [ngModel]="file.primoTelaioVeicolo" [ngModelOptions]="{standalone: true}"
+                                        disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="padding-bottom: 0px; max-width: 300px;"
+                                    *ngIf="tipoProcedimento?.id!=1">
+                                    <input type="text" placeholder="Targa" aria-label="Number" matInput
+                                        [ngModel]="file.nTargaVeicolo" [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="padding-bottom: 0px; max-width: 250px;">
+                                    <input type="text" placeholder="Tipo documento" aria-label="Number" matInput
+                                        [ngModel]="file.tipoDocumento.descrizione" [ngModelOptions]="{standalone: true}"
+                                        disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 600px;">
+                                    <input matInput placeholder="Note" [ngModel]="file.note"
+                                        [ngModelOptions]="{standalone: true}" disabled>
+                                </mat-form-field>
+                                <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 200px;">
+                                    <input type="text" placeholder="Data caricamento" matInput
+                                        [ngModelOptions]="{standalone: true}" disabled
+                                        [ngModel]="file.dataCaricamento | date: 'dd/MM/yyyy'" disabled>
+                                </mat-form-field>
+                                <a title="Scarica" href="javascript:void(0)" class="no-underline"
+                                    (click)="download(file)" style="font-size: 15px;">
+                                    <mat-icon class="blueIcon">
+                                        <img src="assets/DLdoc_blu.png" style="width: 35px; ">
+                                    </mat-icon>
+                                </a>
+                            </div>
+                            <mat-divider *ngIf="allegatiVeicoli.length>1  && i!=allegatiVeicoli.length-1" [inset]="true"
+                                style="border-color: #03A9F4; border-width: 2px; padding-top: 10px">
+                            </mat-divider>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section *ngIf="tipoProcedimento?.id==7">
+                    <h3>Voci di Costo</h3>
+                    <i class="alert-danger"
+                        *ngIf="richiesta.vociDiCosto.length==0 && !(voce.id != null && importoVoce != null)">E'
+                        necessario inserire almeno una voce di costo per proseguire con il salvataggio</i>
+                    <div class="row" style="width: 100%; display: flex; align-items: center;">
+                        <mat-form-field class="col">
+                            <mat-label>Voce di costo</mat-label>
+                            <mat-select [(value)]="voce" name="voceDiCosto" disableOptionCentering
+                                panelClass="myPanelClass">
+                                <mat-option *ngFor="let choice of vociDiCostoFiltrate" [value]="choice">
+                                    {{choice.descrizione}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                        <mat-form-field class="col" [formGroup]="importoVoceGroup">
+                            <input type="number" step="0.01" min="0" formControlName="importoVoceForm"
+                                placeholder="Importo" [(ngModel)]="importoVoce" matInput
+                                onkeypress="return event.charCode != 45" />
+                            <mat-error *ngIf="importoVoceGroup.controls['importoVoceForm'].errors?.min">
+                                Il valore deve essere maggiore di zero
+                            </mat-error>
+                        </mat-form-field>
+                        <div class="col" style="max-width: 170px;">
+                            <button id="add" type="button"
+                                style="display: inline-flex; align-items: center; font-size: 15px"
+                                (click)="addVociDiCosto()" [disabled]="isAddVociDiCostoDisabled()">
+                                <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                                    style="padding-left: 10px">Aggiungi nuovo</span>
+                            </button>
+                        </div>
+                    </div>
+                    <mat-divider *ngIf="richiesta.vociDiCosto.length>0" [inset]="true"
+                        style="border-color: #03A9F4; border-width: 2px; margin-top: 20px"></mat-divider>
+
+                    <div *ngFor="let voce of richiesta.vociDiCosto; let i = index">
+                        <div class="row" style="width: 100%; display: flex; align-items: center;">
+                            <mat-form-field class="col">
+                                <input matInput placeholder="Voce di costo" [(ngModel)]="voce.descrizione"
+                                    name="voce{{i}}" disabled />
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input matInput placeholder="Importo" [(ngModel)]="voce.importo" name="importoVoce{{i}}"
+                                    disabled />
+                            </mat-form-field>
+                            <div class="col" style="max-width: 170px; display: flex; justify-content: center;">
+                                <button id="del" type="button" (click)="removeVociDiCosto(i)"
+                                    style="font-size: 15px; display:flex;justify-content:center;align-items:center;">
+                                    <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                                        style="padding-left: 10px;">Elimina</span>
+                                </button>
+                            </div>
+                        </div>
+                        <mat-divider *ngIf="richiesta.vociDiCosto.length>1  && i!=richiesta.vociDiCosto.length-1"
+                            [inset]="true" style="border-color: #03A9F4; border-width: 2px"></mat-divider>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Documentazione pratica</h3>
+                    <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+                        <mat-form-field class="col" style="max-width: 350px;">
+                            <mat-select placeholder="Tipo documento" [(ngModel)]="tipoDoc" name="tipoDocumento"
+                                #tipoDocumento="ngModel">
+                                <mat-option *ngFor="let choice of arrayAllegatiFiltrati" [value]="choice">
+                                    {{ choice.descrizione}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                        <mat-form-field class="col" style="max-width: 650px;">
+                            <input matInput placeholder="Note" [(ngModel)]="noteFile" name="noteF" #noteF="ngModel"
+                                [disabled]="richiestaConfermata" maxlength="200">
+                            <mat-hint align="end">{{noteFile?.length || 0}} / 200</mat-hint>
+                        </mat-form-field>
+                        <div class="col" style="display:flex; align-items: center; max-width: 350px;">
+                            <label for="uploadFile" style="font-size: 17px;padding-right: 10px;"> Carica: </label>
+                            <input id="uploadFile" type="file" (change)="handleFileInput($event.target.files)"
+                                name="uploadFile" [disabled]="!tipoDoc || !tipoDoc.id" #fileInput accept=".pdf"
+                                multiple>
+                        </div>
+                    </div>
+                    <mat-divider *ngIf="richiesta.files.length>0" [inset]="true"
+                        style="border-color: #03A9F4; border-width: 2px"></mat-divider>
+                    <div *ngFor="let file of richiesta.files; let i = index">
+                        <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+                            <mat-form-field class="col" style="padding-bottom: 0px; max-width: 350px;">
+                                <input type="text" placeholder="Tipo documento" aria-label="Number" matInput
+                                    [ngModel]="file.tipoDocumento.descrizione" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 650px;">
+                                <input matInput placeholder="Note" [ngModel]="file.note"
+                                    [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 350px;">
+                                <input type="text" placeholder="Data caricamento" matInput
+                                    [ngModelOptions]="{standalone: true}" disabled [ngModel]="dataOggi" disabled>
+                            </mat-form-field>
+                            <!--Scarica documento appena inserito non salvato su db-->
+                            <a class="col" title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                                (click)="downloadRichiestaNotDb(file)">
+                                <mat-icon class="blueIcon">
+                                    <img src="assets/DLdoc_blu.png" style="width: 24px; ">
+                                </mat-icon>
+                            </a>
+                            <a title="Elimina" href="javascript:void(0)" class="no-underline"
+                                *ngIf="!richiestaConfermata" (click)="elimina(file.tipoDocumento.id)">
+                                <mat-icon style="color: #03A9F4">delete</mat-icon>
+                            </a>
+                        </div>
+
+                        <mat-divider *ngIf="richiesta.files.length>1  && i!=richiesta.files.length-1" [inset]="true"
+                            style="border-color: #03A9F4; border-width: 2px; padding-top: 10px"></mat-divider>
+                    </div>
+                </section>
+
+                <section>
+                    <div style="margin-top:1em">
+                        <i>I campi contrassegnati da * sono obbligatori</i>
+                    </div>
+
+                    <div *ngIf="isValidCampiRequired()" class="alert-danger box-error">
+                        Prima di procedere è necessario compilare tutti i campi obbligatori!
+                        <br>
+                    </div>
+                    <br>
+
+                    <div *ngIf="isCampiInvalid()" class="alert-danger box-error">
+                        Attenzione! Sono presenti dati non coerenti
+                        <br>
+                    </div>
+                    <br>
+
+                    <button type="submit" [disabled]="isValidCampiRequired() || isCampiInvalid() || richiestaConfermata"
+                        mat-raised-button color="primary">
+                        <mat-icon>save</mat-icon><span *ngIf="idProcedimento!= null">Conferma Dati</span><span
+                            *ngIf="idProcedimento== null">Salva</span>
+                    </button>
+                    <a mat-raised-button (click)="abilita()" *ngIf="richiestaConfermata && idProcedimento!=null">
+                        <mat-icon>lock_open</mat-icon> Abilita modifica
+                    </a>
+                    <a mat-raised-button
+                        *ngIf="idProcedimento==null || (idProcedimento !=null && richiestaMaiConfermata)"
+                        (click)="reset()">
+                        <mat-icon>clear</mat-icon> Pulisci
+                    </a>
+                </section>
+            </ng-template>
+        </form>
+
+    </mat-card-content>
+</mat-card>

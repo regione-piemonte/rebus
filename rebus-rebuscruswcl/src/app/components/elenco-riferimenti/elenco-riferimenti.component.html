@@ -1,0 +1,67 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<div *ngIf="dataSource==null || !loadedPDF" id="loader-container" class="preloader-background">
+  <div id="loader" style="display: flex !important; position: fixed !important;"></div>
+</div>
+<section style="margin-bottom: 10px !important;">
+<div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+  <mat-form-field class="col">
+  <input matInput placeholder="Descrizione" [(ngModel)]="filtraDescrizione" maxlength="200" >
+  </mat-form-field>
+  <div class="col" style="padding-left:20px; padding-right:20px">
+<button class="upload-button" [disabled] = "!filtraDescrizione?.length" mat-raised-button color="primary" (click)= "filtraElenco(filtraDescrizione)" >Ricerca</button>
+<a mat-raised-button (click)="filtraElenco('')">
+  <mat-icon>clear</mat-icon> Pulisci
+</a>
+  </div>
+</div>
+</section>
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="tipologia">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 10%;"> Tipologia
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;"> 
+      <img *ngIf="row.tipo == 1 " src="assets/word_icon.png" title="Documento Word">
+      <img *ngIf="row.tipo == 2 " src="assets/pdfAdobe.png" title="Documento PDF">
+      <img *ngIf="row.tipo == 3 " src="assets/txt_icon.png" title="Documento Txt">
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="descrizione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 45%;"> Descrizione
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 45%;white-space:nowrap;"> {{troncaCaratteri(row.descrizione)}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="dataCaricamento">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 30%;"> Data Caricamento
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 30%;white-space:nowrap;">{{row.dataCaricamento | date: 'dd/MM/yyyy'}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="azioni">
+    <mat-header-cell *matHeaderCellDef style="text-align: start;flex: 0 0 15%;"> Azioni </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 15%;white-space:nowrap;">
+      <input type="hidden" id="custId" name="custId" value={{row.idDocumento}}>
+      <a title="Download" *ngIf= "isDownloadAblita"
+        href="javascript:void(0)" class="no-underline" (click)="scaricaPDF(row.idDocumento)">
+        <mat-icon class="blueIcon">file_download</mat-icon>
+      </a>
+      <a title="Elimina" href="javascript:void(0)" *ngIf="isModificaAbilita"
+        class="no-underline" (click)="eliminaProcedimentopopup(row.idDocumento)">
+        <mat-icon class="blueIcon">delete</mat-icon>
+      </a>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+</mat-table>
+
+<mat-paginator [pageSize]="defaultPageSize" [pageSizeOptions]="pageSizeOption"></mat-paginator>

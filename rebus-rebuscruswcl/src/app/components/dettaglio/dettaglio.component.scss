@@ -1,0 +1,144 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+@import "../../../styles.scss";
+
+.container {
+  background-color: #f7f7f7;
+}
+
+.rowcontainer {
+  width: 30%;
+  margin-right: 3em;
+}
+
+.filterCheck {
+  margin-right: 1em;
+}
+
+.paddingleft2 {
+  padding-left: 2em;
+}
+
+.paddingleft1 {
+  padding-left: 1em;
+}
+
+.paddingleft6 {
+  padding-left: 6em;
+}
+
+.titolo {
+  background-color: mat-color($custom-theme-accent);
+  color: white;
+  font-family: Lucida Sans Unicode !important;
+  font-size: 18.72px !important;
+}
+
+.titolo_trasparente {
+  background-color: transparent !important;
+  color: white;
+  font-family: Lucida Sans Unicode !important;
+  font-size: 18.72px !important;
+}
+
+textarea {
+  font-family: Lucida Sans Unicode;
+  font-weight: bold;
+}
+
+.blueIcon {
+  color: #03a9f4 !important;
+}
+.aTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 0.1px solid rgba(97, 95, 95, 0.2);
+  background-clip: padding-box;
+  text-align: left;
+  font-size: x-small;
+
+  thead {
+    th {
+      padding: 10px;
+      border: 0.1px solid rgba(97, 95, 95, 0.2);
+      background-clip: padding-box;
+      font-size: larger;
+    }
+    td {
+      width: 10%;
+    }
+  }
+
+  tbody {
+    tr {
+      border: 0.1px solid rgba(97, 95, 95, 0.2);
+      background-clip: padding-box;
+    }
+    td {
+      border: 0.1px solid rgba(97, 95, 95, 0.2);
+      background-clip: padding-box;
+      padding-left: 10px;
+      width: 10%;
+    }
+  }
+}
+
+.mat-expansion-panel-header {
+  padding: unset !important;
+  height: 32px !important;
+}
+
+div .mat-expansion-panel-body {
+  padding: 0 !important;
+}
+
+.mat-expansion-panel:not([class*="mat-elevation-z"]) {
+  box-shadow: unset !important;
+  margin-bottom: 15px !important;
+}
+
+.titlePanel {
+  background: #03a9f4 !important;
+  height: 20px !important;
+}
+
+.mat-expansion-panel-header-title {
+  color: #fff !important;
+}
+
+.mat-expansion-indicator::after {
+  color: #fff !important;
+}
+
+.mat-expansion-indicator {
+  margin-right: 15px !important;
+}
+
+.matGridStyle {
+  mat-grid-tile mat-form-field {
+    width: 100%;
+  }
+  mat-grid-tile span {
+    width: 100%;
+  }
+
+  .mat-grid-tile .mat-figure {
+    flex: 1;
+    padding: 7px 10px 10px 10px;
+    &.vertical-center {
+      display: flex;
+      align-items: center;
+      justify-content: left !important;
+    }
+  }
+}
+
+.allineamentoSinistra .mat-grid-tile .mat-figure {
+  justify-content: left !important;
+}
+
+.mat-expansion-panel-content {
+  font: 16px/20px Lucida Sans Unicode;
+}

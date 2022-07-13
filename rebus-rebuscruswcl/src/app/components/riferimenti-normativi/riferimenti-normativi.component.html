@@ -1,0 +1,48 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RIFERIMENTI'" [filtroNavbar]="context"></app-navbar>
+
+
+<div *ngIf="loading;" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<div [style.display]='msgEsitoUpload!=null ? "block" : "none"' class="msgRitornoUpload">
+  <pre>{{msgEsitoUpload}}</pre>
+</div>
+
+<mat-card>
+  <mat-card-content>
+
+    <form #riferimentiform="ngForm" (ngSubmit)="onSubmit()">
+      <section>
+        <h3>Riferimenti Normativi</h3>
+        <div *ngIf="isModificaAbilita">
+          <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+            <mat-form-field class="col">
+              <input matInput placeholder="Descrizione" [(ngModel)]="descrizione" name="descrizioneF"
+                #descrizioneF="ngModel" maxlength="200" required>
+              <mat-hint align="end">{{descrizioneF?.length || 0}} / 200</mat-hint>
+              <mat-error *ngIf="descrizioneF.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <div class="col" style="display:flex; align-items: center;">
+
+              <input id="uploadFile" type="file" [disabled]="!descrizione?.length"
+                (change)="handleFileInput($event.target.files)" name="uploadFile" #fileInput accept=".pdf,.doc,.docx">
+            </div>
+
+          </div>
+          <button [disabled]="isValidCampiRequired()" mat-raised-button color="primary" type="submit">Carica</button>
+          <mat-divider [inset]="true" class="styleDivider" style="margin-top: 10px;">
+          </mat-divider>
+        </div>
+
+      </section>
+    </form>
+    <app-elenco-riferimenti></app-elenco-riferimenti>
+  </mat-card-content>
+</mat-card>

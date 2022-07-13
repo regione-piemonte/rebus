@@ -1,0 +1,309 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_PROCEDIMENTI'"></app-navbar>
+
+<div *ngIf="downloadPDF" id="loader-container" class="preloader-background">
+    <div id="loader"></div>
+</div>
+
+
+<mat-card style="box-shadow: 0 0 0 0;">
+    <div style="margin-top: 1em;margin-bottom:1em;">
+        <button mat-button (click)="goBack()" color="primary">
+            <mat-icon>undo</mat-icon>
+
+            <span *ngIf="azione?.startsWith('procedimento')">Torna al veicolo</span>
+            <span *ngIf="azione==='ricerca'">Torna alla ricerca</span>
+            <span *ngIf="azione?.startsWith('messaggio')">Torna al messaggio</span>
+        </button>
+    </div>
+    <mat-card-content style="padding-left: 100px; padding-right: 100px;">
+        <div *ngIf="isLoading(); else page" id="loader-container" class="preloader-background">
+            <div id="loader"></div>
+        </div>
+
+        <ng-template #page style="margin-top: 1em;margin-bottom:1em; margin-left:10%; margin-right:10%">
+
+            <h3 class="titolo">Richiesta Nulla Osta <strong>{{tipoProcedimento?.descrizione}}</strong></h3>
+            <table style="width:100%; padding-bottom: 20px;">
+                <tbody>
+                    <tr>
+                        <td colspan="2">
+                            <label>Codice richiesta: </label>
+                            <b>{{ dettaglioRichiesta?.numProgressivo }}</b>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <mat-card *ngFor="let value of idSubProcedimenti"
+                style="margin-left: 100px; margin-right: 100px; margin-bottom: 50px">
+                <mat-card-content>
+                    <app-dettaglio-richiesta [idProcedimento]="value"></app-dettaglio-richiesta>
+                </mat-card-content>
+            </mat-card>
+            <table style="width:100%;">
+                <!--border-collapse: collapse; border: 1px solid;-->
+                <tbody>
+                    <tr>
+                        <td colspan="2">
+                            <label>Motorizzazione: </label>
+                            <b>{{ motorizzazione?.descrizione }}</b>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: baseline;">
+                        <td style="width: 50%">
+                            <label>Motivazione: </label>
+                            <b>{{ motivazione?.descrizione }}</b>
+                        </td>
+                        <td style="width: 50%">
+                            <label>Dettaglio motivazione: </label>
+                            <b>{{ dettaglioRichiesta?.noteMotivazione }}</b>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="2">
+                            <label>Contratto: </label>
+                            <b>Codice Nazionale:
+                                {{ dettaglioRichiesta?.contratto.codIdNazionale?
+                                dettaglioRichiesta?.contratto.codIdNazionale : '- ' }};
+                                {{ dettaglioRichiesta?.contratto.descrizione }}</b>
+                        </td>
+                    </tr>
+
+                    <tr style="vertical-align: baseline;">
+                        <td style="width: 50%">
+                            <label>Soggetto Richiedente: </label>
+                            <b>{{ datiContratto.soggRichiedente?.codiceOss }} -
+                                {{datiContratto.soggRichiedente?.denomBreve}}</b>
+                        </td>
+                        <td style="width: 50%">
+                            <label>Gestore Contratto: </label>
+                            <b *ngIf="datiContratto.soggIntermediario &&  datiContratto.soggIntermediario.codiceOss">{{
+                                datiContratto.soggIntermediario?.codiceOss }}
+                                - {{datiContratto.soggIntermediario?.denomBreve}}</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <label>Osservazioni destinate all'Ente committente: </label>
+                            <b>{{ dettaglioRichiesta?.nota }}</b>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: baseline;">
+                        <td colspan="2" style="padding-left: 0px;">
+
+                            <table style="width:100%; padding:0px">
+                                <td style="width: 40%; ">
+                                    <label>Firmato da: </label>
+                                    <b>{{ dettaglioRichiesta?.nominativoFirma }}</b>
+                                </td>
+                                <td style="width: 40%">
+                                    <label>in qualità di: </label>
+                                    <b>{{ dettaglioRichiesta?.ruoloFirma }}</b>
+                                </td>
+                                <td style="width: 15%">
+                                    <input type="checkbox" [(ngModel)]="dettaglioRichiesta.flgFirmaDigitale"
+                                        name="flgFirmaDigitale" onclick="return false">
+                                    <label>Firmato digitalmente</label>
+                                </td>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="titolo">Dati Contratto</h3>
+            <table style="width:100%;">
+                <tbody>
+                    <tr style="vertical-align: baseline;">
+                        <td style="width: 50%">
+                            <label>Codice Nazionale: </label>
+                            <b>{{ datiContratto.codIdNazionale }}</b>
+                        </td>
+                        <td style="width: 50%">
+                            <label>Cod. Regionale: </label>
+                            <b>{{ datiContratto.codRegionale }}</b>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: baseline;">
+                        <td style="width: 50%">
+                            <label>Descrizione: </label>
+                            <b>{{ datiContratto.descrizione }}</b>
+                        </td>
+                        <td style="width: 50%">
+                            <label>Ente Committente: </label>
+                            <b>{{ datiContratto.enteComm.codiceOss }} - {{ datiContratto.enteComm.denomBreve }}</b>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: baseline;">
+                        <td style="width: 50%">
+                            <label>Esecutore Titolare: </label>
+                            <b>{{ datiContratto.esecTit.codiceOss }} - {{ datiContratto.esecTit.denomBreve }}<span
+                                    *ngIf="datiContratto.idTipoRaggruppamento">
+                                    ({{datiContratto.descTipoRaggruppamento}})</span></b>
+                        </td>
+                        <td style="width: 50%" *ngIf="datiContratto.capofila">
+                            <label>Capofila Raggruppamento: </label>
+                            <b>{{ datiContratto.capofila.codiceOss }} - {{ datiContratto.capofila.denomBreve }}</b>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="titolo">Documentazione pratica</h3>
+            <div *ngIf="dettaglioRichiesta?.files==null || dettaglioRichiesta?.files.length==0">Nessun documento
+                presente.</div>
+            <div *ngFor="let file of dettaglioRichiesta?.files; let i = index">
+                <table style="width:100%">
+                    <tbody>
+                        <tr style="display: flex; align-items: flex-start;">
+                            <td style="width: 28%; padding-right: 10px;">
+                                <label>Tipo documento: </label>
+                                <b>{{ file.tipoDocumento?.descrizione }}</b>
+                            </td>
+                            <td style="width: 52%; padding-right: 10px;">
+                                <label>Note: </label>
+                                <b>{{ file.note }}</b>
+                            </td>
+                            <td style="width: 17%; padding-right: 10px;">
+                                <label>Caricato il: </label>
+                                <b>{{ file.dataCaricamento | date: "dd/MM/yyyy" }}</b>
+                            </td>
+                            <td style="width: 5%; margin-top: -5px;">
+                                <!--Scarica documento -->
+                                <a *ngIf="isScaricaPDFAbilitato" class="col" title="Scarica/Visualizza"
+                                    href="javascript:void(0)" class="no-underline" (click)="downloadRichiesta(id,file)">
+                                    <mat-icon class="blueIcon">
+                                        <img src="assets/DLdoc_blu.png" style="width: 35px; ">
+                                    </mat-icon>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <mat-divider *ngIf="dettaglioRichiesta?.files.length>1  && i!=dettaglioRichiesta?.files.length-1"
+                    [inset]="true"
+                    style="border-color: #03A9F4; border-width: 2px; padding-top: 10px; margin-left: 0px;">
+                </mat-divider>
+            </div>
+
+            <div *ngIf="dettaglioRichiesta?.isACaricoEnteVisible">
+                <h3 class="titolo">A carico dell'Ente</h3>
+                <table style="width:100%;">
+                    <tbody>
+                        <tr style="display: flex; align-items: flex-start;">
+                            <td style="width: 28%;padding-right: 10px;">
+                                <label>Ruolo firma Ente: </label>
+                                <b>{{ dettaglioRichiesta?.ruoloFirmaEnte }}</b>
+                            </td>
+                            <td style="width: 52%;padding-right: 10px;">
+                                <label>Nominativo firma Ente: </label>
+                                <b>{{ dettaglioRichiesta?.nominativoFirmaEnte }}</b>
+                            </td>
+                            <td style="width: 5%;padding-right: 10px;">
+
+                            </td>
+                            <td style="width: 17%;">
+                                <input type="checkbox" [(ngModel)]="dettaglioRichiesta.flgFirmaDigitaleEnte"
+                                    name="flgFirmaDigitaleEnte" onclick="return false">
+                                <label>Firmato digitalmente</label>
+                            </td>
+                        </tr>
+                        <tr style="display: flex; align-items: flex-start;padding-top: 10px;">
+                            <td style="width: 50%; padding-right: 10px;">
+                                <label>Premesse: </label>
+                                <p style="text-align: justify; white-space: pre-line;">{{ dettaglioRichiesta?.premesse
+                                    }}</p>
+                            </td>
+                            <td style="width: 50%; padding-right: 10px;">
+                                <label>Prescrizioni: </label>
+                                <p style="text-align: justify; white-space: pre-line;">{{
+                                    dettaglioRichiesta?.prescrizioni }}</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="titolo">Iter della Pratica</h3>
+            <table class="aTable" style="font-size: x-small;">
+                <thead>
+                    <tr>
+                        <th style="width:25%;">
+                            Stato
+                        </th>
+                        <th style="width:18%;">
+                            Dal
+                        </th>
+                        <th style="width:20%;">
+                            Utente
+                        </th>
+                        <th style="width:37%;">
+                            Note
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let iter of dettaglioRichiesta.iters;" >
+                        <td style="width:25%;">
+                            {{ iter.descStato }}
+                        </td>
+                        <td style="width:18%;">
+                            {{ iter.dataInizioValidita | date: 'dd/MM/yyyy HH:mm:ss' }}
+                        </td>
+                        <td style="width:20%;">
+                            {{ iter.utente }}
+                        </td>
+                        <td style="width:37%;">
+                            {{ iter.note }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div *ngIf="documentoAutorizzazione">
+                <h3 class="titolo">Documento di autorizzazione</h3>
+                <div>
+                    <table style="width:100%">
+                        <tbody>
+                            <tr style="display: flex; align-items: flex-start;">
+                                <td style="width: 28%; padding-right: 10px;">
+                                    <label>Tipo documento: </label>
+                                    <b>{{ documentoAutorizzazione.tipoDocumento?.descrizione }}</b>
+                                </td>
+                                <td style="width: 52%; padding-right: 10px;">
+                                    <label>Note: </label>
+                                    <b>{{ documentoAutorizzazione.note }}</b>
+                                </td>
+                                <td style="width: 17%; padding-right: 10px;">
+                                    <label>Caricato il: </label>
+                                    <b>{{ documentoAutorizzazione.dataCaricamento | date: "dd/MM/yyyy" }}</b>
+                                </td>
+                                <td style="width: 5%; margin-top: -5px;">
+                                    <!--Scarica documento -->
+                                    <a class="col" title="Scarica/Visualizza" href="javascript:void(0)"
+                                        class="no-underline" (click)="downloadRichiesta(id,documentoAutorizzazione)">
+                                        <mat-icon class="blueIcon">
+                                            <img src="assets/DLdoc_blu.png" style="width: 35px; ">
+                                        </mat-icon>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </ng-template>
+    </mat-card-content>
+    <div style="margin-top: 1em;margin-bottom:1em;">
+        <button mat-button (click)="goBack()" color="primary">
+            <mat-icon>undo</mat-icon>
+
+            <span *ngIf="azione?.startsWith('procedimento')">Torna al veicolo</span>
+            <span *ngIf="azione==='ricerca'">Torna alla ricerca</span>
+            <span *ngIf="azione?.startsWith('messaggio')">Torna al messaggio</span>
+        </button>
+    </div>
+</mat-card>

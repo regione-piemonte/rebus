@@ -1,0 +1,360 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar *ngIf="azione==='ricerca' || azione.startsWith('messaggio')" [filtroNavbar]="context">
+</app-navbar>
+<app-navbar *ngIf="azione==='inserisci'" [labelSelected]="'INSERIMENTO_RICHIESTA'" [filtroNavbar]="context">
+</app-navbar>
+<div *ngIf="!loadedDoc" id="loader-container" class="preloader-background">
+    <div id="loader"></div>
+</div>
+<mat-card>
+    <mat-card-content>
+        <div *ngIf="feedback" class="alert-danger box-error">
+            Attenzione! Si è verificato un errore di comunicazione con il server ! Contattare l'assistenza
+            <p>{{feedback}}</p>
+            <br>
+        </div>
+        <div style="margin-top: 1em;margin-bottom:1em;">
+            <button mat-button (click)="goBack()" color="primary">
+                <mat-icon>undo</mat-icon><span *ngIf="azione==='ricerca'">Torna alla ricerca</span>
+                <span *ngIf="azione==='inserisci'">Nuovo inserimento</span>
+                <span *ngIf="azione.startsWith('messaggio')">Torna al messaggio</span>
+            </button>
+        </div>
+        <form #richiestaParentForm="ngForm" (ngSubmit)="save(false,false)">
+            <div *ngIf="isLoading(); else page" id="loader-container" class="preloader-background"
+                style="padding-top: 50%;">
+                <div id="loader"></div>
+            </div>
+            <ng-template #page>
+                <section>
+                    <h3>Richiesta Nulla Osta <strong>{{tipoProcedimento?.descrizione}}</strong>
+                        in stato <strong>{{dettaglioRichiesta.iters[0].descStato}}</strong>
+                    </h3>
+                    <div class="row">
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Codice richiesta" aria-label="Number" matInput
+                                name="numeroProgressivo" disabled [(ngModel)]="dettaglioRichiesta.numProgressivo">
+                        </mat-form-field>
+                        <div class="col"></div>
+                    </div>
+                    <mat-card-content *ngFor="let value of idSubProcedimenti">
+                        <app-modifica-richiesta [idProcedimento]="value"
+                            (outputToParent)="getRichiestaFromChild($event)"
+                            (outputToParentPulisci)="pulisciRichiestaFromChild($event)">
+                        </app-modifica-richiesta>
+                    </mat-card-content>
+                </section>
+                <section>
+                    <div class="row" style="max-width:50%">
+
+                        <mat-form-field class="col" [formGroup]="motorizzazioneGroup">
+                            <input type="text" placeholder="Motorizzazione" aria-label="Number" matInput
+                                formControlName="motorizzazioneForm" [matAutocomplete]="autoMotorizzazione"
+                                (blur)="check('Motor')" required>
+                            <mat-autocomplete autoActiveFirstOption #autoMotorizzazione="matAutocomplete"
+                                [displayWith]="displayFn" (optionSelected)="click($event,'Motor')">
+                                <mat-option *ngFor="let choice of filteredOptionsMotorizzazione | async"
+                                    [value]="choice">
+                                    {{choice.descrizione}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="motorizzazioneGroup.controls['motorizzazioneForm']?.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+
+                    <div class="row">
+                        <mat-form-field class="col" [formGroup]="motivazioneGroup">
+                            <input type="text" placeholder="Motivazione" aria-label="Number" matInput
+                                formControlName="motivazioneForm" [matAutocomplete]="autoMotivazione"
+                                (blur)="check('Motiv')" required>
+                            <mat-autocomplete autoActiveFirstOption #autoMotivazione="matAutocomplete"
+                                [displayWith]="displayFn" (optionSelected)="click($event,'Motiv')">
+                                <mat-option *ngFor="let choice of filteredOptionsMotivazione | async" [value]="choice">
+                                    {{choice.descrizione}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="motivazioneGroup.controls['motivazioneForm']?.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" name="noteMotivazione" placeholder="Dettaglio motivazione"
+                                [(ngModel)]="dettaglioRichiesta.noteMotivazione" #noteMotivazione="ngModel"
+                                maxlength="200" matInput required
+                                [disabled]="((motivazioneGroup.controls['motivazioneForm']?.value==null) || (!motivazioneGroup.controls['motivazioneForm']?.value.flgMotivAltro )) || (iter?.idStato != 10 && iter?.idStato != 50)" />
+                            <mat-hint align="end">{{dettaglioRichiesta.noteMotivazione?.length || 0}} / 200</mat-hint>
+                            <mat-error *ngIf="noteMotivazione.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field class="col" [formGroup]="contrattoGroup">
+                            <input type="text" placeholder="Contratto" aria-label="Number" matInput
+                                formControlName="contrattoForm" [matAutocomplete]="autoContratto" (blur)="check('Co')"
+                                required>
+                            <button mat-button
+                                *ngIf="this.contrattoGroup.controls['contrattoForm'].value && !this.contrattoGroup.controls['contrattoForm'].disabled"
+                                matSuffix mat-icon-button aria-label="Clear" (click)="cleanContratto()"
+                                [disabled]="allDisabled">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                            <mat-autocomplete autoActiveFirstOption #autoContratto="matAutocomplete"
+                                [displayWith]="displayFnContratto" (optionSelected)="click($event,'Co')">
+                                <mat-option *ngFor="let choice of filteredOptionsContratto | async" [value]="choice">
+                                    Cod. Ident. Naz.: {{choice.codIdNazionale? choice.codIdNazionale : "- " }};
+                                    {{troncaCaratteri(choice.descrizione)}}
+                                </mat-option>
+                            </mat-autocomplete>
+                            <mat-error *ngIf="contrattoGroup.controls['contrattoForm']?.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Soggetto Richiedente" aria-label="Number" matInput
+                                [ngModel]="soggettoRichiedente" [ngModelOptions]="{standalone: true}" disabled>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Gestore Contratto" aria-label="Number" matInput
+                                [ngModel]="soggettoIntermediario" [ngModelOptions]="{standalone: true}" disabled>
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field class="col">
+                            <textarea type="text" name="note" placeholder="Osservazioni destinate all'Ente committente"
+                                [(ngModel)]="dettaglioRichiesta.nota" #note="ngModel" matInput matTextareaAutosize
+                                matAutosizeMinRows="2"
+                                [disabled]="(idStatoIterCorrente != 10 && idStatoIterCorrente != 30 && idStatoIterCorrente != 50)"
+                                matAutosizeMaxRows="4" rows="4" maxlength="2000"></textarea>
+                            <mat-hint align="end">{{dettaglioRichiesta.nota?.length || 0}} / 2000</mat-hint>
+                        </mat-form-field>
+                    </div>
+                    <div class="row"
+                        *ngIf="isFirmaVisible || (transizioniAutoma && transizioniAutoma[0] && transizioniAutoma[0].idStatoIterDa >= 30)">
+                        <mat-form-field class="col">
+                            <input type="text" name="nominativoFirma" placeholder="Firmato da"
+                                [(ngModel)]="dettaglioRichiesta.nominativoFirma" #nominativoFirma="ngModel" matInput
+                                (change)="changeFirma()" maxlength="35"
+                                [disabled]="(idStatoIterCorrente != 10 && idStatoIterCorrente != 30 && idStatoIterCorrente != 50)"
+                                required />
+                            <mat-hint align="end">{{dettaglioRichiesta.nominativoFirma?.length || 0}} / 35</mat-hint>
+                            <mat-error *ngIf="nominativoFirma.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" name="ruoloFirma" placeholder="in qualità di"
+                                [(ngModel)]="dettaglioRichiesta.ruoloFirma" #ruoloFirma="ngModel" maxlength="35"
+                                matInput
+                                [disabled]="(idStatoIterCorrente != 10 && idStatoIterCorrente != 30 && idStatoIterCorrente != 50)"
+                                (change)="changeFirma()" required />
+                            <mat-hint align="end">{{dettaglioRichiesta.ruoloFirma?.length || 0}} / 35</mat-hint>
+                            <mat-error *ngIf="ruoloFirma.errors?.required">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-checkbox [(ngModel)]="dettaglioRichiesta.flgFirmaDigitale" name="flgFirmaDigitale"
+                            class="col" style="margin-left:15px; max-width: 15%;"
+                            [disabled]="(idStatoIterCorrente != 10 && idStatoIterCorrente != 30 && idStatoIterCorrente != 50)">
+                            Firmato digitalmente</mat-checkbox>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Dati Contratto</h3>
+                    <div *ngIf="!datiContratto">Nessun contratto
+                        selezionato.</div>
+                    <div *ngIf="datiContratto">
+                        <div class="row">
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Codice Regionale" aria-label="Number" matInput
+                                    [ngModel]="datiContratto.codRegionale" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Codice Nazionale" aria-label="Number" matInput
+                                    [ngModel]="datiContratto.codIdNazionale" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Descrizione" aria-label="Number" matInput
+                                    [ngModel]="datiContratto.descrizione" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                        </div>
+                        <div class="row">
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Ente Committente" aria-label="Number" matInput
+                                    [ngModel]="enteComm" [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col">
+                                <input type="text" placeholder="Esecutore Titolare" aria-label="Number" matInput
+                                    [ngModel]="esecTit" [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col" *ngIf="capofila">
+                                <input type="text" placeholder="Capofila Raggruppamento" aria-label="Number" matInput
+                                    [ngModel]="capofila" [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Documentazione pratica</h3>
+                    <div *ngIf="dettaglioRichiesta?.files==null || dettaglioRichiesta?.files.length==0">Nessun
+                        documento
+                        presente.</div>
+                    <div *ngFor="let file of dettaglioRichiesta.files; let i = index">
+                        <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+                            <mat-form-field class="col" style="padding-bottom: 0px; max-width: 350px;">
+                                <input type="text" placeholder="Tipo documento" aria-label="Number" matInput
+                                    [ngModel]="file.tipoDocumento.descrizione" [ngModelOptions]="{standalone: true}"
+                                    disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 650px;">
+                                <input matInput placeholder="Note" [ngModel]="file.note"
+                                    [ngModelOptions]="{standalone: true}" disabled>
+                            </mat-form-field>
+                            <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 350px;">
+                                <input type="text" placeholder="Data caricamento" matInput
+                                    [ngModelOptions]="{standalone: true}" disabled
+                                    [ngModel]="file.dataCaricamento | date: 'dd/MM/yyyy'" disabled>
+                            </mat-form-field>
+                            <a *ngIf="isScaricaPDFAbilitato" title="Scarica" href="javascript:void(0)"
+                                class="no-underline" (click)="downloadRichiesta(id,file)" style="font-size: 15px;">
+                                <mat-icon class="blueIcon">
+                                    <img src="assets/DLdoc_blu.png" style="width: 35px; ">
+                                </mat-icon>
+                            </a>
+                        </div>
+
+                        <mat-divider *ngIf="dettaglioRichiesta.files?.length>1  && i!=dettaglioRichiesta.files.length-1"
+                            [inset]="true" style="border-color: #03A9F4; border-width: 2px; padding-top: 10px">
+                        </mat-divider>
+                    </div>
+                </section>
+
+                <section *ngIf="dettaglioRichiesta?.isACaricoEnteVisible || this.visualizza ">
+                    <h3>A carico dell'Ente</h3>
+                    <div class="row" style="display:flex;align-items:baseline; justify-content: flex-start;">
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Ruolo firma Ente" name="ruoloFirmaEnte"
+                                #ruoloFirmaEnte="ngModel" aria-label="Number" matInput (change)="changeFirma()" required
+                                [(ngModel)]="dettaglioRichiesta.ruoloFirmaEnte" maxlength="35">
+                            <mat-hint align="end">{{dettaglioRichiesta.ruoloFirmaEnte?.length || 0}} / 35</mat-hint>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <input type="text" placeholder="Nominativo firma Ente" name="nominativoFirmaEnte"
+                                #nominativoFirmaEnte="ngModel" aria-label="Number" matInput (change)="changeFirma()"
+                                required [(ngModel)]="dettaglioRichiesta.nominativoFirmaEnte" maxlength="35">
+                            <mat-hint align="end">{{dettaglioRichiesta.nominativoFirmaEnte?.length || 0}} / 35
+                            </mat-hint>
+                        </mat-form-field>
+                        <mat-checkbox [(ngModel)]="dettaglioRichiesta.flgFirmaDigitaleEnte" name="flgFirmaDigitaleEnte"
+                            class="col" style="margin-left:15px; max-width: 15%;">
+                            Firmato digitalmente</mat-checkbox>
+
+                    </div>
+                    <div class="row" style="display:flex;align-items:baseline; justify-content: flex-start;">
+                        <div class="col" style="max-width: 80px;">
+                            <input style="width: 73px;" type="file" accept=".txt"
+                                (change)="handleFileInputTxt($event.target.files[0],'PREMESSE')"
+                                (click)="$event.target.value=''" name="premesseFile" #premesseFile />
+                        </div>
+                        <mat-form-field class="col">
+                            <textarea type="text" name="premesse" placeholder="Premesse" required
+                                [(ngModel)]="dettaglioRichiesta.premesse" #premesse="ngModel" matInput
+                                matTextareaAutosize matAutosizeMinRows="1" matAutosizeMaxRows="10"
+                                style="text-align: justify; "></textarea>
+                        </mat-form-field>
+                        <div class="col" style="max-width: 80px;">
+                            <input style="width: 73px;" type="file" accept=".txt"
+                                (change)="handleFileInputTxt($event.target.files[0],'PRESCRIZIONI')"
+                                (click)="$event.target.value=''" name="prescrizioniFile" #prescrizioniFile />
+                        </div>
+                        <mat-form-field class="col">
+                            <textarea type="text" name="prescrizioni" placeholder="Prescrizioni" required
+                                [(ngModel)]="dettaglioRichiesta.prescrizioni" #prescrizioni="ngModel" matInput
+                                matTextareaAutosize matAutosizeMinRows="1" matAutosizeMaxRows="10"
+                                style="text-align: justify;"></textarea>
+                        </mat-form-field>
+                    </div>
+                </section>
+
+                <section
+                    *ngIf="transizioniAutoma && transizioniAutoma[0] && transizioniAutoma[0].idStatoIterA">
+                    <h3 style="background: #3f51b5;">{{ transizioniAutoma[0].titolo }}</h3>
+                    <div *ngIf="isContrattoChanged" class="row alert-danger box-error"
+                        style="display: flex; align-items: baseline; width: 100%;">
+                        <p> Per procedere con l'avanzamento dell'iter è necessario effettuare un salvataggio </p>
+                    </div>
+                    <div class="row" style="display: flex; align-items: baseline; width: 100%;">
+                        <mat-form-field class="col" style="max-width: 30%;" [formGroup]="transizioneGroup">
+                            <mat-label>{{ transizioniAutoma[0].label }}</mat-label>
+                            <mat-select [(value)]="transizioneAutoma" required formControlName="transizioneForm"
+                                required disableOptionCentering panelClass="myPanelClass">
+                                <mat-option *ngFor="let choice of transizioniAutoma" [value]="choice">
+                                    {{choice.testo}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="transizioneGroup.controls['transizioneForm']?.hasError('required')">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <mat-form-field class="col">
+                            <textarea type="text" name="noteAvanzamentoIter" placeholder="Note"
+                                [(ngModel)]="notaTransizione" #noteAvanzamentoIter="ngModel" matInput #avanzaIter
+                                matTextareaAutosize matAutosizeMinRows="1" matAutosizeMaxRows="4" rows="4"
+                                maxlength="500" [required]="transizioneAutoma?.flgNoteObbligatorie"></textarea>
+                            <mat-hint align="end">{{notaTransizione?.length || 0}} / 500</mat-hint>
+                            <mat-error *ngIf="noteAvanzamentoIter?.hasError('required')">
+                                Campo richiesto
+                            </mat-error>
+                        </mat-form-field>
+                        <div class="col" style="max-width: 100px;">
+                            <button type="button" mat-raised-button color="primary" (click)="openDialogAvanzaIter()"
+                                [disabled]="isValidCampiRequired() || isAvanzaIterDisabled() || isContrattoChanged">Conferma</button>
+                        </div>
+                    </div>
+                </section>
+                <div style="margin-top:1em">
+                    <i>I campi contrassegnati da * sono obbligatori</i>
+                </div>
+                <div *ngIf="isValidCampiRequired()" class="alert-danger box-error">
+                    Prima di procedere è necessario compilare tutti i campi obbligatori!
+                    <br>
+                </div>
+                <br>
+                <div style="display: flex; justify-content: flex-start;">
+                    <button type="submit" [disabled]="isTrasmettiDisabled() || isValidCampiRequired()" mat-raised-button
+                        color="primary">
+                        <mat-icon>save</mat-icon>Salva
+                    </button>
+                    <a mat-raised-button (click)="goBack()">
+                        <mat-icon>undo</mat-icon> Indietro
+                    </a>
+                    <div *ngIf="isTrasmettiDisabled() && loadedSave && !isValidCampiRequired()"
+                        style="display: flex;justify-content: center;flex-grow: 1 ;color:red">
+                        Per salvare eventuali modifiche o visualizzare l'anteprima del documento, è necessario prima
+                        confermare i dati dei singoli sottoprocedimenti
+                    </div>
+                    <div *ngIf="idStatoIterCorrente == 10 || idStatoIterCorrente == 20 || idStatoIterCorrente == 30 || this.idStatoIterCorrente == 40 || this.idStatoIterCorrente == 50"
+                        style="display: flex; justify-content: flex-end; flex-grow: 1">
+                        <button type="button" mat-raised-button (click)="openDialogAnteprimaPdf()"
+                            [disabled]="isAnteprimaDisabled()">
+                            <img src="assets/pdf.png" style="width: 24px; padding-right: 5px;">Anteprima
+                        </button>
+                    </div>
+                </div>
+            </ng-template>
+        </form>
+    </mat-card-content>
+</mat-card>
