@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    					http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+    					http://www.springframework.org/schema/tx  http://www.springframework.org/schema/tx/spring-tx.xsd
+    					http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
+   
+
+   <jee:jndi-lookup id="anagraficasrvDS" jndi-name="java:jboss/jdbc/anagraficasrvDS"/>
+  
+    <!-- Transaction manager -->
+  	<bean id="txManager"
+		class="org.springframework.transaction.jta.JtaTransactionManager">
+		<!-- Abilitazione dei livelli personalizzati di isolamento delle transazioni: Isolation.SERIALZABLE ad esempio -->
+		<property name="allowCustomIsolationLevels" value="true" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="txManager" />
+   
+   <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		 <property name="dataSource" ref="anagraficasrvDS" />
+		 <property name="transactionFactory">
+			<bean class="org.apache.ibatis.transaction.managed.ManagedTransactionFactory"/>
+		</property>
+		 <property name="configLocation" value="/WEB-INF/mybatis-config.xml"/> 
+   </bean>
+	
+	
+	
+	<!-- DAO MyBatis -->
+	<bean id="rebusDTipoDocumentoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.RebusDTipoDocumentoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="RebusTVariazAutobusDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.RebusTVariazAutobusDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaDNaturaGiuridicaDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaDNaturaGiuridicaDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaDTipoEnteDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaDTipoEnteDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaDTipoSogGiuridicoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaDTipoSogGiuridicoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaDRuoloSogGiuridicoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaDRuoloSogGiuridicoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaRSogGiuridDepositoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaRSogGiuridDepositoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaTDatoBancarioDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaTDatoBancarioDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaTDepositoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaTDepositoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplaTSoggettoGiuridicoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplaTSoggettoGiuridicoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDAmbitoServizioDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDAmbitoServizioDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDBacinoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDBacinoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDModalitaAffidamentoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDModalitaAffidamentoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDTipoAffidamentoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDTipoAffidamentoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDTipologiaServizioDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDTipologiaServizioDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDTipoPercorenzaDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDTipoPercorenzaDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDTipoRaggruppamentoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDTipoRaggruppamentoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDTipoSostituzioneDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDTipoSostituzioneDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcDVincoloDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcDVincoloDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcRAmbTipServizioDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcRAmbTipServizioDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcRContrAmbTipServDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcRContrAmbTipServDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcRContrattoRaggruppDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcRContrattoRaggruppDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcRContrattoVincoloDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcRContrattoVincoloDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcRSostSogContrDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcRSostSogContrDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcRSostSogContrRaggrDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcRSostSogContrRaggrDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcTContrattoAllegatoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcTContrattoAllegatoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcTContrattoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcTContrattoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcTPercorrenzaDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcTPercorrenzaDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplcTProrogaContrattoDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplcTProrogaContrattoDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplDComuneDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplDComuneDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplDProvinciaDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplDProvinciaDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplRUtenteSogGiuridDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplRUtenteSogGiuridDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="sirtplTUtenteDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.SirtplTUtenteDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="vExportRicercaContrattiDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.VExportRicercaContrattiDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="vExportRicercaSoggGiurDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.VExportRicercaSoggGiurDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	
+	<bean id="vSoggettiCoinvoltiDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.VSoggettiCoinvoltiDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	
+	<bean id="vContrattiSoggettiDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.VContrattiSoggettiDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	
+	<bean id="vSoggettiCoinvoltiPeriodiDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.VSoggettiCoinvoltiPeriodiDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	
+	
+	<!-- DAO Custom -->
+	<bean id="excelDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.custom.ExcelDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	<bean id="ricercaDAO" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="it.csi.rebus.anagraficasrv.integration.dao.custom.RicercaDAO"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>	
+
+</beans>
+	

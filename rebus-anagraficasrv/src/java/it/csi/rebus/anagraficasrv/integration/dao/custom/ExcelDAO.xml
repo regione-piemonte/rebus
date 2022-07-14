@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="it.csi.rebus.anagraficasrv.integration.dao.custom.ExcelDAO" >
+  
+  <select id="getExcelContrattoReport" parameterType="it.csi.rebus.anagraficasrv.vo.FiltroContrattoVO" resultType="it.csi.rebus.anagraficasrv.integration.dto.VExportRicercaContrattiDTO">
+    select contratto.*
+    from v_export_ricerca_contratti AS contratto
+    <if test="idAzienda != null" >
+			LEFT OUTER JOIN sirtpl_contratti.sirtplc_r_contratto_raggrupp AS cr ON cr.id_contratto = contratto.id_contratto
+	        LEFT OUTER JOIN sirtpl_contratti.sirtplc_t_proroga_contratto AS pc ON pc.id_contratto = contratto.id_contratto
+	        LEFT OUTER JOIN sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr ON sr.id_contratto_raggrupp = cr.id_contratto_raggrupp
+	        LEFT OUTER JOIN sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc ON sc.id_contratto = contratto.id_contratto
+	        </if>
+   <where>
+  		<if test="idAzienda != null" >
+			AND (contratto.data_inizio_validita <![CDATA[ < ]]> NOW() AND (contratto.data_fine_validita IS NULL OR contratto.data_fine_validita <![CDATA[ > ]]> NOW() OR pc.data_fine_proroga <![CDATA[ > ]]> NOW()))
+		  	AND   (contratto.id_sog_giurid_esecutore = #{idAzienda} OR cr.id_soggetto_giuridico = #{idAzienda} OR sr.id_soggetto_giuridico = #{idAzienda} OR sc.id_sog_giurid_esecutore = #{idAzienda})
+	      	AND   NOT EXISTS (SELECT 1
+	                        FROM sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc2
+	                        WHERE sc2.id_tipo_sostituzione = 2
+	                        AND   sc2.id_contratto = contratto.id_contratto
+	                        AND   (contratto.id_sog_giurid_esecutore = #{idAzienda} OR contratto.id_sog_giurid_committente = #{idAzienda}))
+	      	AND   NOT EXISTS (SELECT 1
+	                        FROM sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr2
+	                          INNER JOIN sirtplc_r_contratto_raggrupp AS cr2 ON cr2.id_contratto_raggrupp = sr2.id_contratto_raggrupp
+	                        WHERE sr2.id_tipo_sostituzione = 2
+	                        AND   cr2.id_contratto = contratto.id_contratto
+	                        AND   cr2.id_soggetto_giuridico = #{idAzienda})
+		   </if>
+		  <if test="codIdentificativo != null" >
+		  and (upper(cod_id_nazionale) like upper(#{codIdentificativo})
+		  or  upper(codregionale) like upper(#{codIdentificativo}))
+		  </if>
+		  <if test="numRepertorio != null" >
+		  and (upper(num_repertorio) like upper(#{numRepertorio}))
+		  
+		  </if>
+		  <if test="enteCommittente != null" >
+		  and ((upper(sog_giurid_committente) like upper(#{enteCommittente})) 
+		  	or (upper(sog_giurid_committente_breve) like upper(#{enteCommittente})) 
+		  	or (upper(sog_giurid_committente_aaep) like upper(#{enteCommittente})))
+		  
+		  </if>
+		  <if test="soggEsecutore != null" >
+		  and ((upper(sog_giurid_esecutore) like upper(#{soggEsecutore})) 
+		  	or (upper(sog_giurid_esecutore_breve) like upper(#{soggEsecutore}))
+		  	or (upper(sog_giurid_esecutore_aaep) like upper(#{soggEsecutore})))
+		  </if>	  
+		  <if test="dataStipulaDa != null" >
+		  and contratto.data_stipula <![CDATA[ >= ]]> #{dataStipulaDa}
+		  </if>
+		  <if test="dataStipulaA != null" >
+		  and contratto.data_stipula <![CDATA[ <= ]]> #{dataStipulaA}
+		  </if>
+		  <if test='flagIncludiCessate == null or "N".equals(flagIncludiCessate)' >
+		and (contratto.data_fine_validita is NULL or contratto.data_fine_validita <![CDATA[ >= ]]> now()::DATE or contratto.data_fine_proroga <![CDATA[ >= ]]> now()::DATE)
+	</if>
+		</where>
+  </select>
+  
+  <select id="getExcelSoggettoReport" parameterType="it.csi.rebus.anagraficasrv.vo.FiltroSoggettoVO" resultType="it.csi.rebus.anagraficasrv.integration.dto.VExportRicercaSoggGiurDTO">
+    select
+	   export.id_soggetto_giuridico,
+	   export.tipo_soggetto_giuridico,
+	   export.natura_giuridica,
+	   export.denominazione_breve,
+	   export.denominazione_aaep,
+	   export.denom_soggetto_giuridico,
+	   export.partita_iva,
+	   export.codice_fiscale,
+	   export.cod_osservatorio_naz,
+	   export.codregionale,
+	   export.rappresentante_legale,
+	   export.indirizzo_sede_legale,
+	   export.telefono_sede_legale,
+	   export.fax_sede_legale,
+	   export.email_sede_legale,
+	   export.pec_sede_legale,
+	   export.indirizzo_web,
+	   export.numero_verde,
+	   export.note,
+	   export.tipo_ente,
+	   export.data_inizio_attivita,
+	   export.data_cessazione,
+	   export.id_utente_aggiornamento,
+	   export.data_aggiornamento,
+  	   export.bacino_appart_ente,
+  	   export.cod_csr_bip,
+  	   export.attivo_tpl,
+  	   export.cessato
+	from
+	  v_export_ricerca_sogg_giur as export 
+	<where>
+	  <if test="idTipoSoggGiurid != null" >
+	  and export.id_tipo_soggetto_giuridico = #{idTipoSoggGiurid}
+	  </if>
+	  <if test="idSoggettoGiuridico != null" >
+	  and export.id_soggetto_giuridico = #{idSoggettoGiuridico}
+	  </if>
+	  <if test="codOssNaz != null and codOssNaz != ''">
+	  and (upper(export.cod_osservatorio_naz) like upper(#{codOssNaz})
+	  or  upper(export.codregionale) like upper(#{codOssNaz}))
+	  </if>
+	  <if test="descrizione != null and descrizione != ''">
+	  and ((upper(export.denominazione_aaep) like upper(#{descrizione}))
+	  		 or (upper(export.denom_soggetto_giuridico) like upper(#{descrizione})) 
+	  		 or (upper(export.denominazione_breve) like upper(#{descrizione})))
+	  </if>
+	  <if test="codFiscale != null and codFiscale != ''">
+	  and ((upper(export.partita_iva)=UPPER(#{codFiscale})) or ((upper(export.codice_fiscale)=UPPER(#{codFiscale}))))
+	  </if>
+	  <if
+				test='"S".equals(flagIncludiAttive) or "S".equals(flagIncludiNonAttive) or "S".equals(flagIncludiCessate)'>
+				AND (
+
+				<if test='"S".equals(flagIncludiAttive)'>export.attivo_tpl IS TRUE</if>
+				<if
+					test='"S".equals(flagIncludiNonAttive) and "S".equals(flagIncludiAttive)'>OR (export.attivo_tpl IS FALSE and export.cessato IS
+					FALSE)
+				</if>
+				<if
+					test='"S".equals(flagIncludiNonAttive) and "N".equals(flagIncludiAttive)'> (export.attivo_tpl IS FALSE and export.cessato IS
+					FALSE)
+				</if>
+				<if
+					test='"S".equals(flagIncludiCessate) and ("S".equals(flagIncludiAttive) or "S".equals(flagIncludiNonAttive)) '>
+					OR export.cessato IS TRUE
+				</if>
+				<if
+					test='"S".equals(flagIncludiCessate) and ("N".equals(flagIncludiAttive) and "N".equals(flagIncludiNonAttive)) '>
+					export.cessato IS TRUE
+				</if>
+				)
+
+			</if>
+			<if
+				test='"N".equals(flagIncludiAttive) and "N".equals(flagIncludiNonAttive) and "N".equals(flagIncludiCessate)'>
+			AND	1=2
+			</if>
+	</where>
+	ORDER BY export.denominazione_breve
+  </select>
+  
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

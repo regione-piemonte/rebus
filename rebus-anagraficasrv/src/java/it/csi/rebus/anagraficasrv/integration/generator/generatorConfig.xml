@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+
+  <context id="rebusDB" targetRuntime="MyBatis3">
+
+	<!--
+		PLUGINS
+	 -->
+	<plugin type="org.mybatis.generator.plugins.CaseInsensitiveLikePlugin" />
+	<plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
+	<plugin type="org.mybatis.generator.plugins.ToStringPlugin" />
+	<plugin type="org.mybatis.generator.plugins.RenameExampleClassPlugin">
+		<property name="searchString" value="Example$" />
+		<property name="replaceString" value="Selector" />
+	</plugin>
+
+	<plugin type="it.csi.rebus.anagraficasrv.integration.generator.plugin.RenameClassesPlugin">
+		<property name="searchStringMapper" value="Mapper$" />
+		<property name="replaceStringMapper" value="DAO" />
+		<property name="searchStringDto" value="$" />
+		<property name="replaceStringDto" value="DTO" />
+		<property name="searchStringXml" value="Mapper" />
+		<property name="replaceStringXml" value="DAO" />
+	</plugin>
+
+	<plugin type="it.csi.rebus.anagraficasrv.integration.generator.plugin.ForceNumericToLongPlugin" />
+	<plugin type="it.csi.rebus.anagraficasrv.integration.generator.plugin.ForceDecimalToDoublePlugin" />
+
+    <jdbcConnection driverClass="org.postgresql.Driver"
+        connectionURL="jdbc:postgresql://"
+        userId="sirtpl_trasv_rw"
+        password="">
+    </jdbcConnection>
+
+    <javaTypeResolver >
+      <property name="forceBigDecimals" value="false" />
+    </javaTypeResolver>
+
+    <javaModelGenerator
+    	targetPackage="it.csi.rebus.anagraficasrv.integration.dto"
+    	targetProject="anagraficasrv"
+   	>
+      	<property name="trimStrings" value="true" />
+    	<property name="rootClass" value="it.csi.rebus.anagraficasrv.integration.dto.ParentDTO" />
+		<property name="enableSubPackages" value="false" />
+    </javaModelGenerator>
+
+    <sqlMapGenerator
+    	targetPackage="it.csi.rebus.anagraficasrv.integration.dao"
+    	targetProject="anagraficasrv"
+   	>
+   		<property name="enableSubPackages" value="false" />
+   	</sqlMapGenerator>
+
+    <javaClientGenerator type="XMLMAPPER"
+    	targetPackage="it.csi.rebus.anagraficasrv.integration.dao"
+    	targetProject="anagraficasrv"
+   	>
+   		<property name="rootInterface" value="it.csi.rebus.anagraficasrv.integration.dao.ParentDAO" />
+		<property name="enableSubPackages" value="false" />
+    </javaClientGenerator>
+<!-- 
+    <table tableName="rebus_r_utente_az_ente" />
+    <table tableName="rebus_t_aziende">
+        <generatedKey column="id_azienda" sqlStatement="JDBC" />
+    </table>
+    <table tableName="rebus_t_enti">
+        <generatedKey column="id_ente" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtpla_d_tipo_ente" />
+    
+    
+    <table tableName="sirtpla_d_tipo_sog_giuridico" />
+    
+     <table tableName="sirtpla_d_ruolo_sog_giuridico" />
+    -->
+    
+    <!--  
+    <table tableName="sirtpla_r_sog_giurid_deposito"></table>
+    
+    <table tableName="sirtpla_t_dato_bancario">
+        <generatedKey column="id_dato_bancario" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtpla_t_deposito">
+        <generatedKey column="id_deposito" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtpla_t_soggetto_giuridico">
+        <generatedKey column="id_soggetto_giuridico" sqlStatement="JDBC" />
+    </table>
+    
+     
+    <table tableName="sirtpl_d_comune"></table>
+    <table tableName="sirtpl_d_provincia"></table>
+    
+    <table tableName="sirtplc_d_ambito_servizio"></table>
+    <table tableName="sirtplc_d_bacino"></table>
+    <table tableName="sirtplc_d_modalita_affidamento"></table>
+    <table tableName="sirtplc_d_tipo_affidamento"></table>  
+    <table tableName="sirtplc_d_tipo_percorenza"></table>  
+    <table tableName="sirtplc_d_tipo_raggruppamento"></table>
+    <table tableName="sirtplc_d_tipo_sostituzione"></table>
+    
+    
+    <table tableName="sirtplc_d_tipologia_servizio"></table>
+    <table tableName="sirtplc_d_vincolo"></table>
+    <table tableName="sirtplc_r_amb_tip_servizio"></table>
+     
+     <table tableName="sirtplc_r_contratto_raggrupp">
+        <generatedKey column="id_contratto_raggrupp" sqlStatement="JDBC" />
+    </table>
+    <table tableName="sirtplc_r_contratto_vincolo">
+        <generatedKey column="id_contratto_vincolo" sqlStatement="JDBC" />
+    </table>
+   
+     <table tableName="sirtplc_r_sost_sog_contr">
+        <generatedKey column="id_sost_sog_contr" sqlStatement="JDBC" />
+    </table>
+    <table tableName="sirtplc_r_sost_sog_contr_raggr">
+        <generatedKey column="id_sost_sog_contr_raggr" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="v_soggetti_coinvolti" schema="sirtpl_trasv"></table>
+     
+    
+    <table tableName="v_contratti_soggetti" schema="sirtpl_trasv"></table>
+    
+     <table tableName="sirtpla_t_soggetto_giuridico">
+        <generatedKey column="id_soggetto_giuridico" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtplc_t_contratto">
+        <generatedKey column="id_contratto" sqlStatement="JDBC" />
+    </table>
+
+    <table tableName="rebus_d_tipo_documento" schema="rebus"></table>
+     -->
+   
+    <!-- <table tableName="v_soggetti_coinvolti_periodi" schema="sirtpl_trasv"></table>
+      
+    <table tableName="v_soggetti_coinvolti" schema="sirtpl_trasv"></table>
+    
+    <table tableName="v_contratti_soggetti" schema="sirtpl_trasv"></table>
+  
+    <table tableName="sirtplc_r_contr_amb_tip_serv"></table>
+     
+      <table tableName="sirtplc_t_contratto_allegato">
+        <generatedKey column="id_contratto_allegato" sqlStatement="JDBC" />
+    </table>
+    
+    <table tableName="sirtplc_t_percorrenza">
+        <generatedKey column="id_percorrenza" sqlStatement="JDBC" />
+    </table>
+    <table tableName="sirtplc_t_proroga_contratto">
+        <generatedKey column="id_proroga_contratto" sqlStatement="JDBC" />
+    </table>     
+    <table tableName="sirtpl_t_utente"></table>
+    <table tableName="sirtpl_r_utente_ente"></table>     
+    <table tableName="v_export_ricerca_sogg_giur" schema="sirtpl_trasv"></table>
+    <table tableName="v_export_ricerca_contratti" schema="sirtpl_trasv"></table>
+    <table tableName="sirtpl_r_utente_sog_giurid"></table>
+    <table tableName="sirtpla_d_natura_giuridica" /> 
+   
+     
+     
+     <table tableName="rebus_t_variaz_autobus" schema="rebus" />
+     -->
+       <table tableName="v_export_ricerca_contratti" schema="sirtpl_trasv"></table>
+     
+  </context>
+</generatorConfiguration>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte
+SPDX-License-Identifier: EUPL-1.2
+-->

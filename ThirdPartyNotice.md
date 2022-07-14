@@ -144,9 +144,9 @@ uglify-es@3.3.9\
 uglify-js@2.8.29\
 uglify-js@3.4.10\
 update-notifier@2.5.0\
-uri-js@4.2.2\
+uri-js@4.2.2
 
-[(BSD-2-Clause OR MIT OR Apache-2.0)](https://opensource.org/licenses/BSD-2-Clause )\ 
+[(BSD-2-Clause OR MIT OR Apache-2.0)](https://opensource.org/licenses/BSD-2-Clause )\
 rc@1.2.7\
 rc@1.2.8\
 

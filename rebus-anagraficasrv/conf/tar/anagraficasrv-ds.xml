@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasources>
+  <datasource jta="true"
+    jndi-name="java:jboss/jdbc/anagraficasrvDS" pool-name="anagraficasrvDS" enabled="true" use-ccm="true">
+    <connection-url>@@CONNECTION_URL@@</connection-url>
+    <driver-class>org.postgresql.Driver</driver-class>
+    <driver>postgresql</driver>
+    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+    <pool>
+      <min-pool-size>0</min-pool-size>
+      <max-pool-size>25</max-pool-size>
+    </pool>
+    <security>
+      <user-name>@@DB_USER@@</user-name>
+      <password>@@DB_PWD@@</password>
+    </security>
+    <validation>
+      <validate-on-match>true</validate-on-match>
+      <background-validation>false</background-validation>
+	  <check-valid-connection-sql>SELECT 1</check-valid-connection-sql>
+    </validation>
+    <statement>
+      <track-statements>true</track-statements>
+      <share-prepared-statements>false</share-prepared-statements>
+    </statement>
+	 <timeout>
+      <set-tx-query-timeout>true</set-tx-query-timeout>
+      <query-timeout>30</query-timeout>
+    </timeout>
+  </datasource>
+</datasources>

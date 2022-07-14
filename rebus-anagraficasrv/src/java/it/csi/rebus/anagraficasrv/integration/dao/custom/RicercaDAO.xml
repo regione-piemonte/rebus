@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="it.csi.rebus.anagraficasrv.integration.dao.custom.RicercaDAO">
+
+	<select id="getElencoSoggetto"
+		parameterType="it.csi.rebus.anagraficasrv.vo.FiltroSoggettoVO"
+		resultType="it.csi.rebus.anagraficasrv.integration.dto.custom.SoggettoGiuridicoDTO">
+		SELECT export.id_soggetto_giuridico,
+		export.tipo_soggetto_giuridico,
+		export.codregionale as cod_id_regionale,
+		export.cod_osservatorio_naz,
+		export.partita_iva,
+		export.denominazione_ricerca,
+		export.data_aggiornamento,
+		export.id_tipo_soggetto_giuridico as
+		id_tipo_sog_giuridico,
+		export.attivo_tpl,
+		export.cessato
+		FROM
+		v_export_ricerca_sogg_giur AS export
+		<where>
+			1=1
+			<if test="idTipoSoggGiurid != null">
+				and export.id_tipo_soggetto_giuridico =
+				#{idTipoSoggGiurid}
+			</if>
+			<if test="idSoggettoGiuridico != null">
+				and export.id_soggetto_giuridico = #{idSoggettoGiuridico}
+
+			</if>
+			<if test="descrizione != null">
+				and ((upper(export.denominazione_aaep) like
+				upper(#{descrizione}))
+				or (upper(export.denom_soggetto_giuridico)
+				like
+				upper(#{descrizione}))
+				or (upper(export.denominazione_ricerca)
+				like
+				upper(#{descrizione}))
+				or (upper(export.denominazione_breve) like
+				upper(#{descrizione})))
+			</if>
+			<if test="codFiscale != null">
+				and ((upper(export.partita_iva) like
+				UPPER(#{codFiscale})) or
+				((upper(export.codice_fiscale) like
+				UPPER(#{codFiscale}))))
+			</if>
+
+			<if
+				test='"S".equals(flagIncludiAttive) or "S".equals(flagIncludiNonAttive) or "S".equals(flagIncludiCessate)'>
+				AND (
+
+				<if test='"S".equals(flagIncludiAttive)'>export.attivo_tpl IS TRUE</if>
+				<if
+					test='"S".equals(flagIncludiNonAttive) and "S".equals(flagIncludiAttive)'>OR (export.attivo_tpl IS FALSE and export.cessato IS
+					FALSE)
+				</if>
+				<if
+					test='"S".equals(flagIncludiNonAttive) and "N".equals(flagIncludiAttive)'> (export.attivo_tpl IS FALSE and export.cessato IS
+					FALSE)
+				</if>
+				<if
+					test='"S".equals(flagIncludiCessate) and ("S".equals(flagIncludiAttive) or "S".equals(flagIncludiNonAttive)) '>
+					OR export.cessato IS TRUE
+				</if>
+				<if
+					test='"S".equals(flagIncludiCessate) and ("N".equals(flagIncludiAttive) and "N".equals(flagIncludiNonAttive)) '>
+					export.cessato IS TRUE
+				</if>
+				)
+
+			</if>
+			<if
+				test='"N".equals(flagIncludiAttive) and "N".equals(flagIncludiNonAttive) and "N".equals(flagIncludiCessate)'>
+				AND 1=2
+			</if>
+		</where>
+		order by export.denominazione_ricerca
+
+	</select>
+
+	<select id="getElencoContratto"
+		parameterType="it.csi.rebus.anagraficasrv.vo.FiltroContrattoVO"
+		resultType="it.csi.rebus.anagraficasrv.integration.dto.SirtplcTContrattoDTO">
+		WITH proroga AS
+		(
+		SELECT sirtplc_t_proroga_contratto.id_contratto,
+		MAX(sirtplc_t_proroga_contratto.data_fine_proroga) AS dfp
+		FROM
+		sirtplc_t_proroga_contratto
+		GROUP BY
+		sirtplc_t_proroga_contratto.id_contratto
+		)
+		SELECT DISTINCT *
+		FROM (SELECT
+		contratto.id_contratto,
+		contratto.cod_id_nazionale,
+		contratto.num_repertorio,
+		sg_comm.id_soggetto_giuridico AS
+		id_sog_giurid_committente,
+		sg_comm.denominazione_breve AS
+		sog_giurid_committente,
+		sg_esec.id_soggetto_giuridico AS
+		id_sog_giurid_esecutore,
+		sg_esec.denominazione_breve AS
+		sog_giurid_esecutore,
+		contratto.data_fine_validita,
+		contratto.data_inizio_validita,
+		contratto.data_stipula,
+		proroga.dfp,
+		contratto.desc_contratto,
+		contratto.data_aggiornamento,
+		contratto.cod_id_regionale
+		FROM sirtplc_t_contratto AS contratto
+		LEFT JOIN proroga ON
+		contratto.id_contratto = proroga.id_contratto
+		INNER JOIN
+		sirtpl_trasv.v_soggetti_coinvolti AS sgc_comm ON sgc_comm.idc =
+		contratto.id_contratto
+		INNER JOIN
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico AS sg_comm ON
+		sg_comm.id_soggetto_giuridico = sgc_comm.id_sg
+		AND sgc_comm.ruolo <![CDATA[  =]]>
+		'Ente committente'
+		AND ( (NOW ()::DATE <![CDATA[ <=]]>
+		COALESCE (proroga.dfp,contratto.data_fine_validita)
+		AND NOW ()::DATE
+		BETWEEN sgc_comm.d_ini
+		AND sgc_comm.d_fin)
+		OR (NOW ()::DATE  <![CDATA[ > ]]>COALESCE
+		(proroga.dfp,contratto.data_fine_validita)
+		AND sgc_comm.d_fin =
+		COALESCE
+		(proroga.dfp,contratto.data_fine_validita)))
+		INNER JOIN
+		sirtpl_trasv.v_soggetti_coinvolti AS sgc_esec ON sgc_esec.idc =
+		contratto.id_contratto
+		INNER JOIN
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico AS sg_esec
+		ON
+		sg_esec.id_soggetto_giuridico = sgc_esec.id_sg
+		AND sgc_esec.ruolo  <![CDATA[ =]]>
+		'Esecutore titolare'
+		AND ( (NOW ()::DATE <![CDATA[ <=]]>
+		COALESCE (proroga.dfp,contratto.data_fine_validita)
+		AND NOW ()::DATE
+		BETWEEN sgc_esec.d_ini
+		AND sgc_esec.d_fin)
+		OR (NOW ()::DATE>COALESCE
+		(proroga.dfp,contratto.data_fine_validita)
+		AND sgc_esec.d_fin =
+		COALESCE
+		(proroga.dfp,contratto.data_fine_validita)))
+		LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_contratto_raggrupp AS cr ON
+		cr.id_contratto
+		= contratto.id_contratto
+		LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr ON
+		sr.id_contratto_raggrupp = cr.id_contratto_raggrupp
+		LEFT OUTER JOIN
+		sirtpl_contratti.sirtplc_r_sost_sog_contr AS sc ON
+		sc.id_contratto =
+		contratto.id_contratto
+		LEFT JOIN
+		sirtpl_aziende.sirtpla_t_soggetto_giuridico AS sg_sost
+		ON
+		sg_sost.id_soggetto_giuridico = cr.id_soggetto_giuridico
+		OR
+		sg_sost.id_soggetto_giuridico = sr.id_soggetto_giuridico
+		OR
+		sg_sost.id_soggetto_giuridico = sc.id_sog_giurid_esecutore
+		<where>
+			<if test="idAzienda != null">
+				AND (contratto.data_inizio_validita <![CDATA[ < ]]>
+				NOW()
+				<if
+					test='flagIncludiCessate != null and "N".equals(flagIncludiCessate)'>
+					AND (contratto.data_fine_validita IS NULL OR
+					contratto.data_fine_validita <![CDATA[ > ]]>
+					NOW() OR dfp <![CDATA[ > ]]>
+					NOW())
+				</if>
+				)
+				AND (contratto.id_sog_giurid_esecutore = #{idAzienda} OR
+				cr.id_soggetto_giuridico = #{idAzienda} OR sr.id_soggetto_giuridico
+				= #{idAzienda} OR sc.id_sog_giurid_esecutore = #{idAzienda})
+
+				AND NOT
+				EXISTS (SELECT 1
+				FROM sirtpl_contratti.sirtplc_r_sost_sog_contr
+				AS
+				sc2
+				WHERE sc2.id_tipo_sostituzione = 2
+				AND sc2.id_contratto =
+				contratto.id_contratto
+				AND
+				((contratto.id_sog_giurid_esecutore =
+				#{idAzienda} and
+				sc2.id_sog_giurid_esecutore is not null)
+				OR
+				(contratto.id_sog_giurid_committente = #{idAzienda} and
+				sc2.id_sog_giurid_committente is not null)
+				))
+
+				AND NOT EXISTS (SELECT 1
+				FROM
+				sirtpl_contratti.sirtplc_r_sost_sog_contr_raggr AS sr2
+				INNER JOIN
+				sirtplc_r_contratto_raggrupp AS cr2 ON
+				cr2.id_contratto_raggrupp =
+				sr2.id_contratto_raggrupp
+				WHERE sr2.id_tipo_sostituzione = 2
+				AND
+				cr2.id_contratto = contratto.id_contratto
+				AND
+				cr2.id_soggetto_giuridico = #{idAzienda})
+			</if>
+			<if test="numRepertorio != null">
+				and upper(contratto.num_repertorio) like
+				upper(#{numRepertorio})
+			</if>
+			<if test="enteCommittente != null">
+				and ((upper(sg_comm.denom_soggetto_giuridico) like
+				upper(#{enteCommittente}))
+				or (upper(sg_comm.denominazione_breve)
+				like upper(#{enteCommittente}))
+				or (upper(sg_comm.denominazione_aaep)
+				like
+				upper(#{enteCommittente})))
+			</if>
+			<if test="soggEsecutore != null">
+				and ((upper(sg_esec.denom_soggetto_giuridico) like
+				upper(#{soggEsecutore}))
+				or (upper(sg_esec.denominazione_breve) like
+				upper(#{soggEsecutore}))
+				or (upper(sg_esec.denominazione_aaep) like
+				upper(#{soggEsecutore}))
+				or (upper(sg_sost.denom_soggetto_giuridico)
+				like
+				upper(#{soggEsecutore}))
+				or (upper(sg_sost.denominazione_breve)
+				like upper(#{soggEsecutore}))
+				or (upper(sg_sost.denominazione_aaep)
+				like upper(#{soggEsecutore})))
+			</if>
+
+			<if test="dataStipulaDa != null">
+				and contratto.data_stipula <![CDATA[ >= ]]>
+				#{dataStipulaDa}
+			</if>
+			<if test="dataStipulaA != null">
+				and contratto.data_stipula <![CDATA[ <= ]]>
+				#{dataStipulaA}
+			</if>
+		</where>
+		) AS contratti
+		<if
+			test='flagIncludiCessate == null or "N".equals(flagIncludiCessate)'>
+			where now()::DATE <![CDATA[ <= ]]>
+			COALESCE(contratti.dfp, contratti.data_fine_validita)
+			<if test="descrizione != null">
+
+				and (upper(contratti.desc_contratto) like
+				upper(#{descrizione}))
+			</if>
+		</if>
+
+	</select>
+
+	<select id="isAziendaAttiva" parameterType="java.lang.Long"
+		resultType="java.lang.Long">
+		select distinct(contratto.id_sog_giurid_committente) as id_soggetto
+		from sirtplc_t_contratto as contratto
+		left join (select
+		distinct(proroga.id_contratto)
+		from sirtplc_t_proroga_contratto as
+		proroga
+		where proroga.data_fine_proroga <![CDATA[ >= ]]>
+		now()::DATE
+		) as ultima_proroga on contratto.id_contratto =
+		ultima_proroga.id_contratto
+		where (ultima_proroga.id_contratto is not
+		null or
+		contratto.data_fine_validita is null or
+		contratto.data_fine_validita <![CDATA[ >= ]]>
+		now()::DATE) and contratto.id_sog_giurid_committente = #{idSoggetto}
+		union
+		select distinct(contratto.id_sog_giurid_esecutore) as id_soggetto
+		from sirtplc_t_contratto as contratto
+		left join (select
+		distinct(proroga.id_contratto)
+		from sirtplc_t_proroga_contratto as
+		proroga
+		where proroga.data_fine_proroga <![CDATA[ >= ]]>
+		now()::DATE
+		) as ultima_proroga on contratto.id_contratto =
+		ultima_proroga.id_contratto
+		where (ultima_proroga.id_contratto is not
+		null or
+		contratto.data_fine_validita is null or
+		contratto.data_fine_validita <![CDATA[ >= ]]>
+		now()::DATE ) and contratto.id_sog_giurid_esecutore = #{idSoggetto}
+		union
+		select distinct(raggrupp.id_soggetto_giuridico) as id_soggetto
+		from sirtplc_t_contratto as contratto
+		left join (select
+		distinct(proroga.id_contratto)
+		from sirtplc_t_proroga_contratto as
+		proroga
+		where proroga.data_fine_proroga <![CDATA[ >= ]]>
+		now()::DATE
+		) as ultima_proroga on contratto.id_contratto =
+		ultima_proroga.id_contratto
+		join sirtplc_r_contratto_raggrupp as
+		raggrupp on raggrupp.id_contratto =
+		contratto.id_contratto
+		where
+		(ultima_proroga.id_contratto is not null or
+		contratto.data_fine_validita is null or contratto.data_fine_validita <![CDATA[ >= ]]>
+		now()::DATE ) and raggrupp.id_soggetto_giuridico = #{idSoggetto}
+		UNION
+		SELECT DISTINCT (sost.id_sog_giurid_committente) AS id_soggetto
+		FROM
+		sirtplc_t_contratto AS contratto
+		LEFT JOIN (SELECT DISTINCT
+		(proroga.id_contratto)
+		FROM sirtplc_t_proroga_contratto AS proroga
+		WHERE proroga.data_fine_proroga <![CDATA[ >= ]]>
+		NOW()::DATE) AS ultima_proroga ON contratto.id_contratto =
+		ultima_proroga.id_contratto
+		JOIN sirtplc_r_sost_sog_contr sost ON
+		sost.id_contratto =
+		contratto.id_contratto
+		WHERE
+		(ultima_proroga.id_contratto IS NOT NULL OR
+		contratto.data_fine_validita IS NULL OR contratto.data_fine_validita <![CDATA[ >= ]]>
+		NOW()::DATE)
+		AND sost.id_sog_giurid_committente = #{idSoggetto}
+		UNION
+		SELECT DISTINCT (sost.id_sog_giurid_esecutore) AS id_soggetto
+		FROM
+		sirtplc_t_contratto AS contratto
+		LEFT JOIN (SELECT DISTINCT
+		(proroga.id_contratto)
+		FROM sirtplc_t_proroga_contratto AS proroga
+		WHERE proroga.data_fine_proroga <![CDATA[ >= ]]>
+		NOW()::DATE) AS ultima_proroga ON contratto.id_contratto =
+		ultima_proroga.id_contratto
+		JOIN sirtplc_r_sost_sog_contr sost ON
+		sost.id_contratto =
+		contratto.id_contratto
+		WHERE
+		(ultima_proroga.id_contratto IS NOT NULL OR
+		contratto.data_fine_validita IS NULL OR contratto.data_fine_validita <![CDATA[ >= ]]>
+		NOW()::DATE)
+		AND sost.id_sog_giurid_esecutore = #{idSoggetto}
+		UNION
+		SELECT DISTINCT (sost.id_soggetto_giuridico) AS id_soggetto
+		FROM
+		sirtplc_t_contratto AS contratto
+		LEFT JOIN (SELECT DISTINCT
+		(proroga.id_contratto)
+		FROM sirtplc_t_proroga_contratto AS proroga
+		WHERE proroga.data_fine_proroga <![CDATA[ >= ]]>
+		NOW()::DATE) AS ultima_proroga ON contratto.id_contratto =
+		ultima_proroga.id_contratto
+		JOIN sirtplc_r_contratto_raggrupp AS
+		raggrupp ON raggrupp.id_contratto =
+		contratto.id_contratto
+		JOIN
+		sirtplc_r_sost_sog_contr_raggr sost ON sost.id_contratto_raggrupp =
+		raggrupp.id_contratto_raggrupp
+		WHERE (ultima_proroga.id_contratto IS
+		NOT NULL OR
+		contratto.data_fine_validita IS NULL OR
+		contratto.data_fine_validita <![CDATA[ >= ]]>
+		NOW()::DATE)
+		AND sost.id_soggetto_giuridico = #{idSoggetto}
+
+	</select>
+
+	<select id="getAziendaMandataria"
+		resultType="it.csi.rebus.anagraficasrv.vo.AziendaMandatariaVO">
+		SELECT sogg.id_soggetto_giuridico AS id,
+		sogg.denom_soggetto_giuridico
+		AS descrizione,
+		tipo.id_ruolo_sog_giuridico AS idRuolo
+		FROM
+		sirtpla_t_soggetto_giuridico sogg
+		INNER JOIN
+		sirtpla_d_tipo_sog_giuridico tipo ON tipo.id_tipo_sog_giuridico
+		=
+		sogg.id_tipo_sog_giuridico
+		INNER JOIN sirtpla_d_ruolo_sog_giuridico
+		ruolo ON
+		ruolo.id_ruolo_sog_giuridico = tipo.id_ruolo_sog_giuridico
+		WHERE ruolo.cod_ruolo_sog_giuridico = 'E'
+		AND
+		COALESCE(sogg.data_inizio_attivita,CURRENT_DATE) <![CDATA[ <= ]]>
+		NOW()::DATE
+		AND (sogg.data_cessazione IS NULL OR sogg.data_cessazione <![CDATA[ > ]]>
+		NOW()::DATE)
+		<if test="idContratto!=null">
+			UNION
+			SELECT sogg.id_soggetto_giuridico AS id,
+			sogg.denom_soggetto_giuridico AS descrizione,
+			tipo.id_ruolo_sog_giuridico AS idRuolo
+			FROM
+			sirtpla_t_soggetto_giuridico sogg
+			INNER JOIN
+			sirtpla_d_tipo_sog_giuridico tipo ON tipo.id_tipo_sog_giuridico
+			=
+			sogg.id_tipo_sog_giuridico
+			INNER JOIN sirtplc_r_contratto_raggrupp rag
+			ON rag.id_soggetto_giuridico =
+			sogg.id_soggetto_giuridico
+			WHERE
+			rag.id_contratto = #{idContratto}
+		</if>
+		ORDER BY descrizione
+
+	</select>
+
+	<select id="getSoggettoEsecutore" parameterType="map"
+		resultType="it.csi.rebus.anagraficasrv.vo.SoggettoEsecutoreVO">
+		SELECT sogg.id_soggetto_giuridico AS id,
+		sogg.id_tipo_sog_giuridico AS
+		idTipoSoggettoEsecutore,
+		COALESCE(sogg.denom_soggetto_giuridico,sogg.denominazione_breve) AS
+		denominazione,
+		sogg.denominazione_breve AS denomBreve,
+		sogg.denominazione_aaep AS denomAaep,
+		tipo.id_ruolo_sog_giuridico AS
+		idRuolo
+		FROM sirtpla_t_soggetto_giuridico sogg
+		INNER JOIN
+		sirtpla_d_tipo_sog_giuridico tipo ON tipo.id_tipo_sog_giuridico
+		=
+		sogg.id_tipo_sog_giuridico
+		INNER JOIN sirtpla_d_ruolo_sog_giuridico
+		ruolo ON
+		ruolo.id_ruolo_sog_giuridico = tipo.id_ruolo_sog_giuridico
+		WHERE ruolo.cod_ruolo_sog_giuridico = 'E'
+		<if test="bool != null">
+			AND sogg.data_inizio_attivita <![CDATA[ < ]]>
+			NOW()::DATE
+			AND (sogg.data_cessazione IS NULL OR sogg.data_cessazione <![CDATA[ > ]]>
+			NOW()::DATE)
+		</if>
+		<if test="idSoggettoGiuridico!=null">
+			UNION
+			SELECT sogg.id_soggetto_giuridico AS id,
+			sogg.id_tipo_sog_giuridico AS idTipoSoggettoEsecutore,
+			COALESCE(sogg.denom_soggetto_giuridico,sogg.denominazione_breve) AS
+			denominazione,
+			sogg.denominazione_breve AS denomBreve,
+			sogg.denominazione_aaep AS denomAaep,
+			tipo.id_ruolo_sog_giuridico AS
+			idRuolo
+			FROM sirtpla_t_soggetto_giuridico sogg INNER JOIN
+			sirtpla_d_tipo_sog_giuridico tipo ON tipo.id_tipo_sog_giuridico =
+			sogg.id_tipo_sog_giuridico
+			WHERE sogg.id_soggetto_giuridico=
+			#{idSoggettoGiuridico}
+		</if>
+		ORDER BY denominazione
+
+	</select>
+
+</mapper>
+<!-- SPDX-FileCopyrightText: (C) Copyright 2022 Regione Piemonte SPDX-License-Identifier: 
+	EUPL-1.2 -->
