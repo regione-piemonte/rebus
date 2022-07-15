@@ -81,7 +81,7 @@ Questo stesso elenco dei titolari del software è anche riportato in Copyrights.
 # License
 Il prodotto software è sottoposto alla licenza EUPL-1.2 o versioni successive.\
 SPDX-License-Identifier: EUPL-1.2-or-later\
-Vedere il file EUPL v1_2 IT-LICENSE.txt per i dettagli.
+Vedere il file [EUPL v1_2 IT-LICENSE.txt](https://github.com/regione-piemonte/rebus/blob/main/EUPL%20v1_2%20IT-LICENSE.txt) per i dettagli.
 
 # Community site
 Per avere ulteriori informazioni sull'utilizzo di Angular CLI si può usare il comando `ng help` o consultare il [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
