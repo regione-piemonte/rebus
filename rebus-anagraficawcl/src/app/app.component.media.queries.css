@@ -1,0 +1,50 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+@media all and (min-width: 960px) {
+    .titleToolbar{
+        font-size: 20px;
+    }
+  }
+  
+@media all and (max-width: 959px) and (min-width: 600px) {
+    .titleToolbar{
+        font-size: 18px;
+    }
+    .hide{
+        display: none;
+      }
+  }
+  
+@media all and (max-width: 599px) and (min-width: 321px) {
+    .titleToolbar{
+        font-size: 12px;
+    }
+    .hide{
+      display: none;
+    }
+    .textMin{
+        font-size: 8px; 
+        flex-direction: column;
+      }
+    img.responsive{
+      width:50px;  
+    }
+  }
+
+  @media all and (max-width: 320px) and (min-width: 0px) {
+      .titleToolbar{
+          font-size: 10px;
+      }   
+      .hide{
+        display: none;
+      }
+      .textMin{
+        font-size: 8px; 
+        flex-direction: column;
+      } 
+      img.responsive{
+        width:50px;  
+      }    
+    }

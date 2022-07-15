@@ -1,0 +1,374 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'INSERIMENTO_CONTRATTO'"></app-navbar>
+
+<mat-card>
+  <mat-card-content>
+    <div *ngIf="feedback" class="alert-danger box-error">
+      <p>{{feedback}}</p>
+      <br>
+    </div>
+    <form #contrattoForm="ngForm" (ngSubmit)="save()">
+      <div *ngIf="isLoading(); else page" id="loader-container" class="preloader-background" style="padding-top: 50%;">
+        <div id="loader"></div>
+      </div>
+      <ng-template #page>
+        <section>
+          <h3>Dati Generali</h3>
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Descrizione" [(ngModel)]="contratto.descrizione" name="descrizione"
+                #descrizione="ngModel" maxlength="2000" required>
+              <mat-hint align="end">{{contratto.descrizione?.length || 0}} / 2000</mat-hint>
+              <mat-error *ngIf="(descrizione.dirty || descrizione.touched) && descrizione.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="CIG" [(ngModel)]="contratto.cig" name="cig" #cig="ngModel" maxlength="20">
+              <mat-hint align="end">{{contratto.cig?.length || 0}} / 20</mat-hint>
+              <!--<mat-error *ngIf="cig.errors?.required">
+                Campo richiesto
+              </mat-error>-->
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Codice Nazionale" [(ngModel)]="contratto.codiceIdentificativoNazionale"
+                name="CodIdentNazionale" #CodIdentNazionale="ngModel" maxlength="15">
+              <mat-hint align="end">{{contratto.codiceIdentificativoNazionale?.length || 0}} / 15</mat-hint>
+              <mat-error *ngIf="CodIdentNazionale.errors?.duplicato">
+                Codice nazionale duplicato
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Num. Repertorio" [(ngModel)]="contratto.numeroRepertorio"
+                name="NumRepertorio" #NumRepertorio="ngModel" maxlength="15">
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="bacinoGroup">
+              <input type="text" placeholder="Bacino" aria-label="Number" matInput formControlName="bacinoForm"
+                [matAutocomplete]="autoBacino" (blur)="check('Ba')" required>
+              <mat-autocomplete autoActiveFirstOption #autoBacino="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'Ba')">
+                <mat-option *ngFor="let choice of filteredOptionsBacino | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="bacinoGroup.controls['bacinoForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="tipoAffidamentoGroup">
+              <input type="text" placeholder="Tipo Affidamento" aria-label="Number" matInput
+                formControlName="tipoAffidamentoForm" [matAutocomplete]="autoTipoAffidamento" (blur)="check('Ta')">
+              <mat-autocomplete autoActiveFirstOption #autoTipoAffidamento="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'Ta')">
+                <mat-option *ngFor="let choice of filteredOptionsTipoAffidamento | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="modalitaAffidamentoGroup">
+              <input type="text" placeholder="Modalita Affidamento" aria-label="Number" matInput
+                formControlName="modalitaAffidamentoForm" [matAutocomplete]="autoModalitaAffidamento"
+                (blur)="check('Ma')">
+              <mat-autocomplete autoActiveFirstOption #autoModalitaAffidamento="matAutocomplete"
+                [displayWith]="displayFn" (optionSelected)="click($event,'Ma')">
+                <mat-option *ngFor="let choice of filteredOptionsModalitaAffidamento | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="ambTipoServizioGroup">
+              <input type="text" placeholder="Tipologia / Ambito di servizio" aria-label="Number" matInput
+                formControlName="ambTipoServizioForm" [matAutocomplete]="ambTipoServizio" required
+                (blur)="check('AmbTip')">
+              <mat-autocomplete autoActiveFirstOption #ambTipoServizio="matAutocomplete" [displayWith]="displayFnats">
+                <mat-option *ngFor="let choice of filteredOptionsAmbitoTipoServizio| async"
+                  [value]="ambitotipoServizioSelected">
+                  <div (click)="optionClickedAmbTipoServizio($event, choice)">
+                    <mat-checkbox [checked]="choice.selected" (change)="toggleSelectionAmbTipServizio(choice)"
+                      (click)="$event.stopPropagation()">
+                      {{choice.tipologiaServizio.descrizione}} - {{choice.ambitoServizio.descrizione}}
+                    </mat-checkbox>
+                  </div>
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="ambTipoServizioGroup.controls['ambTipoServizioForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Accordo di Programma" [(ngModel)]="contratto.accordoDiProgramma"
+                name="accordoDiProgramma" #accordoDiProgramma="ngModel" maxlength="2000">
+              <mat-hint align="end">{{contratto.accordoDiProgramma?.length || 0}} / 2000</mat-hint>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <div class="col vertical-center">
+              <mat-checkbox [(ngModel)]="contratto.grossCost" name="grossCost">
+                Gross Cost
+              </mat-checkbox>
+            </div>
+            <mat-form-field class="col">
+              <input matInput [matDatepicker]="pickerDataStipula" placeholder="Data Stipula" [max]="dataToday"
+                [(ngModel)]="dataSt" name="dataStipula" #dataStipula="ngModel"
+                (blur)="checkData(dataSt, 'dataStipula')">
+              <mat-datepicker-toggle [for]="pickerDataStipula" matSuffix></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataStipula></mat-datepicker>
+              <mat-error *ngIf="(dataStipula.dirty || dataStipula.touched) && dataStipula.errors?.matDatepickerParse">
+                Data non valida
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput [matDatepicker]="pickerDataInizio" placeholder="Data Inizio Validità" [(ngModel)]="dataIn"
+                name="dataInizio" #dataInizio="ngModel" required (blur)="checkData(dataIn, 'dataInizio')">
+              <mat-datepicker-toggle [for]="pickerDataInizio" matSuffix></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataInizio></mat-datepicker>
+              <mat-error *ngIf="(dataInizio.dirty || dataInizio.touched) && dataInizio.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="(dataInizio.dirty || dataInizio.touched) && dataInizio.errors?.matDatepickerParse">
+                Data non valida
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput [matDatepicker]="pickerDataFine" [min]="dataIn" placeholder="Data Fine Validità"
+                [(ngModel)]="dataFin" name="dataFine" #dataFine="ngModel" required
+                (blur)="checkData(dataFin, 'dataFine')">
+              <mat-datepicker-toggle [for]="pickerDataFine" matSuffix></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataFine></mat-datepicker>
+              <mat-error *ngIf="(dataFine.dirty || dataFine.touched) && dataFine.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="(dataFine.dirty || dataFine.touched) && dataFine.errors?.matDatepickerParse">
+                Data non valida
+              </mat-error>
+              <mat-error *ngIf="(dataFine.dirty || dataFine.touched) && dataFine.errors?.matDatepickerMin">
+                Data antecedente a "data inizio validità"
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section>
+          <h3>Contraenti</h3>
+
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="enteCommittenteGroup">
+              <input type="text" placeholder="Ente Committente" aria-label="Number" matInput
+                formControlName="enteCommittenteForm" [matAutocomplete]="autoEnteCommittente" required
+                (blur)="check('Ec')">
+              <mat-autocomplete autoActiveFirstOption #autoEnteCommittente="matAutocomplete" [displayWith]="displayFne"
+                (optionSelected)="click($event,'Ec')">
+                <mat-option *ngFor="let choice of filteredOptionsEnteCommittente | async" [value]="choice">
+                  {{choice.denominazione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="enteCommittenteGroup.controls['enteCommittenteForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="soggettoEsecutoreGroup">
+              <input type="text" placeholder="Esecutore titolare" aria-label="Number" matInput
+                formControlName="soggettoEsecutoreForm" [matAutocomplete]="autoSoggettoEsecutore" required
+                (blur)="check('Se')">
+              <mat-autocomplete autoActiveFirstOption #autoSoggettoEsecutore="matAutocomplete"
+                [displayWith]="displayFne" (optionSelected)="click($event,'Se')">
+                <mat-option *ngFor="let choice of filteredOptionsSoggettoEsecutore | async" [value]="choice">
+                  {{choice.denominazione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="soggettoEsecutoreGroup.controls['soggettoEsecutoreForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="tipoSoggGroup">
+              <input type="text" placeholder="Tipo esecutore titolare" aria-label="Number" matInput
+                formControlName="tipoSogg" [matAutocomplete]="autoTipo" required (blur)="check('T')">
+              <mat-autocomplete autoActiveFirstOption #autoTipo="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'T')">
+                <mat-option *ngFor="let choice of filteredOptionsTipo | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="tipoSoggGroup.controls['tipoSogg']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="tipoRaggruppamentoGroup">
+              <input type="text" placeholder="Tipo raggruppamento" aria-label="Number" matInput
+                formControlName="tipoRaggForm" [matAutocomplete]="autoTipoRagg" required (blur)="check('Tr')">
+              <mat-autocomplete autoActiveFirstOption #autoTipoRagg="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'Tr')">
+                <mat-option *ngFor="let choice of filteredOptionsTipoRaggruppamento | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="tipoRaggruppamentoGroup.controls['tipoRaggForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="aziendaMandatariaGroup">
+              <input type="text" placeholder="Azienda mandataria" aria-label="Number" matInput
+                formControlName="aziendaMandatariaForm" [matAutocomplete]="autoAziendaMandataria" required
+                (blur)="check('Am')">
+              <mat-autocomplete autoActiveFirstOption #autoAziendaMandataria="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'Am')">
+                <mat-option *ngFor="let choice of filteredOptionsAziendaMandataria | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="aziendaMandatariaGroup.controls['aziendaMandatariaForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="composizioneRaggGroup">
+              <input type="text" placeholder="Composizione raggruppamento" aria-label="Number" matInput
+                formControlName="composizioneRaggForm" [matAutocomplete]="autoComposizioneRagg" required
+                (blur)="check('Cr')">
+              <mat-autocomplete autoActiveFirstOption #autoComposizioneRagg="matAutocomplete"
+                [displayWith]="displayFncr">
+                <mat-option *ngFor="let choice of filteredOptionsComposizioneRagg | async"
+                  [value]="composizioneRaggSelected">
+                  <div (click)="optionClicked($event, choice)">
+                    <mat-checkbox [checked]="choice.selected" (change)="toggleSelection(choice)"
+                      (click)="$event.stopPropagation()">
+                      {{choice.descrizione}}
+                    </mat-checkbox>
+                  </div>
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="composizioneRaggGroup.controls['composizioneRaggForm']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </section>
+        <section>
+          <h3>Allegati</h3>
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="tipoDocumentoGroup" style="max-width:35%;">
+              <input type="text" name="tipoDocumentoinput" placeholder="Tipo documento" aria-label="Number" matInput
+                formControlName="tipoDocumentoForm" [matAutocomplete]="autoTipoDocumento"
+                (blur)="check('Td')">
+              <button mat-button *ngIf="this.tipoDocumentoGroup.controls['tipoDocumentoForm'].value" matSuffix
+                mat-icon-button aria-label="Clear"
+                (click)="this.tipoDocumentoGroup.controls['tipoDocumentoForm'].setValue('')">
+                <mat-icon>close</mat-icon>
+              </button>
+              <mat-autocomplete autoActiveFirstOption #autoTipoDocumento="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'Td')">
+                <mat-option *ngFor="let choice of filteredOptionsTipoDocumento | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="col" style="max-width: 45%;">
+              <input matInput placeholder="Note" [(ngModel)]="noteFile" name="note" #note="ngModel" maxlength="200">
+              <mat-hint align="end">{{noteFile?.length || 0}} / 200</mat-hint>
+            </mat-form-field>
+            <div class="col" style="display:flex; align-items: center; max-width: 20%;">
+              <label for="uploadFile" style="font-size: 17px;padding-right: 10px;"> Carica: </label>
+              <input id="uploadFile" type="file" (change)="handleFileInput($event.target.files)" name="uploadFile"
+                [disabled]="!tipoDocumentoGroup.controls['tipoDocumentoForm'] || tipoDocumentoGroup.controls['tipoDocumentoForm']?.value==null "
+                #fileInput accept=".pdf" multiple>
+            </div>
+          </div>
+          <div class="row">
+            <mat-form-field class="col">
+              <textarea type="text" placeholder="Descrizione" [(ngModel)]="descrEstesaTipoDocSelected"
+                [ngModelOptions]="{standalone: true}" matInput style="overflow:hidden" matTextareaAutosize
+                disabled></textarea>
+            </mat-form-field>
+          </div>
+          <mat-divider *ngIf="contratto.files.length>0" [inset]="true"
+            style="border-color: rgb(241, 170, 87); border-width: 2px"></mat-divider>
+          <div *ngFor="let file of contratto.files; let i = index">
+            <div class="row" style="display:flex;align-items:center; justify-content: flex-start;">
+              <mat-form-field class="col" style="padding-bottom: 0px; max-width: 35%;">
+                <input type="text" placeholder="Tipo documento" aria-label="Number" matInput
+                  [ngModel]="file.descrizioneTipoDocumento" [ngModelOptions]="{standalone: true}" disabled>
+              </mat-form-field>
+              <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 48%;">
+                <input matInput placeholder="Note" [ngModel]="file.noteFile" [ngModelOptions]="{standalone: true}"
+                  disabled>
+              </mat-form-field>
+              <mat-form-field class="col" style="padding-bottom: 0px;  max-width: 12%;">
+                <input type="text" placeholder="Data caricamento" matInput [ngModelOptions]="{standalone: true}"
+                  disabled [ngModel]="dataOggi" disabled>
+              </mat-form-field>
+              <!--Scarica documento -->
+              <a class="col" title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                (click)="download(file.idTipoDocumento)">
+                <mat-icon class="blueIcon">
+                  <img src="assets/DLdoc_orange.png" style="width: 24px; ">
+                </mat-icon>
+              </a>
+              <!--Elimina documento-->
+              <a class="col" title="Elimina" href="javascript:void(0)" class="no-underline"
+                (click)="elimina(file.idTipoDocumento)">
+                <mat-icon style="color: rgb(214,87,42) ;">delete</mat-icon>
+              </a>
+            </div>
+            <mat-divider *ngIf="contratto.files.length>1  && i!=contratto.files.length-1" [inset]="true"
+              style="border-color: rgb(241, 170, 87); border-width: 2px; padding-top: 10px"></mat-divider>
+          </div>
+        </section>
+
+        <section>
+          <div style="margin-top:1em">
+            <i>I campi contrassegnati da * sono obbligatori</i>
+          </div>
+
+          <div *ngIf="isValidCampiRequired()" class="alert-danger box-error">
+            Prima di procedere è necessario compilare tutti i campi obbligatori!
+            <br>
+          </div>
+          <br>
+
+          <div *ngIf="isCampiInvalid()" class="alert-danger box-error">
+            Attenzione! Sono presenti dati non coerenti
+            <br>
+          </div>
+          <br>
+
+          <button type="submit" [disabled]="isValidCampiRequired()" mat-raised-button
+            [ngStyle]="{'color': getStyle(),'background-color': getBackground()}">
+            <mat-icon>save</mat-icon>Salva
+          </button>
+          <a mat-raised-button (click)="reset()">
+            <mat-icon>clear</mat-icon> Pulisci
+          </a>
+        </section>
+      </ng-template>
+    </form>
+  </mat-card-content>
+</mat-card>

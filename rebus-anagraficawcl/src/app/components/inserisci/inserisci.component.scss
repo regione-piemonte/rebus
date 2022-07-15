@@ -1,0 +1,68 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+section {
+    margin-bottom: 50px;
+    h3 {
+        background: rgb(241, 170, 87);
+        padding: 15px 10px;
+        color: #fff;
+        font-weight: 500;
+    }
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        padding-left: 10px;
+        padding-right: 10px;
+        &.actions {
+            justify-content: center;
+            button {
+                margin: 0 20px;
+            }
+            button[type=submit]:enabled {
+                background-color: rgb(241, 170, 87);
+                color: #fff;
+            }
+        }
+        .col {
+            flex: 1;
+            padding: 10px 10px 10px 0;
+            &.vertical-center {
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
+}
+
+.feedback{
+    margin-bottom: 50px;
+    padding-left: 10px;
+    color: #dd0000;
+}
+
+.no-underline{
+    text-decoration: none !important;
+}
+
+.alert-danger{
+    color: red;
+  }
+
+  .box-error{
+      font-size: 1.2em;
+  }
+
+  ::ng-deep .mat-checkbox .mat-checkbox-frame {
+    border-color: rgb(150, 150, 150);    
+  }
+
+button:disabled .add1 .add2 .del1 .del2 {
+    background-color:  rgb(192, 192, 192);
+    color:  rgb(99, 97, 97)
+}
+button:enabled .add1 .add2 .del1 .del2 {
+    background-color: white;
+    color: rgb(241, 170, 87);
+}

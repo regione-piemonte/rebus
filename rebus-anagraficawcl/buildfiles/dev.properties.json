@@ -1,0 +1,9 @@
+{
+    "beServer": "",
+    "shibbolethSSOLogoutURL": "",
+    "otherParam": "production_param_value",
+    "publicPath": "",
+    "timeout": 1000,
+    "srcEnviroment": "",
+    "rebusPath": ""
+}

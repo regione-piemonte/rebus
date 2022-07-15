@@ -1,0 +1,42 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<mat-card class="matCard">
+    <mat-card-header>
+        <mat-card-title class="titleHeaderCard">Logout</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+        <div *ngIf="isLoading" id="loader-container" class="preloader-background">
+            <div id="loader"></div>
+        </div>
+        <div *ngIf="!isLoading">
+            <mat-icon class="orangeIcon">warning</mat-icon>
+            <div *ngIf="!aziende || 1 > aziende.length">
+                <span>Si sta per essere disconnessi</span>
+
+                <div class="button-row">
+                    <a mat-raised-button routerLink="home">Annulla</a>
+                    <button mat-raised-button style="float:right" (click)="logOut()">Conferma</button>
+                </div>
+            </div>
+            <div *ngIf="aziende && aziende.length > 0">
+                <span>Selezionare se ci si vuole</span>
+                <div>
+                    <mat-radio-group [(ngModel)]="idAziendaSelected"
+                        style="display: inline-flex; flex-direction: column;">
+                        <mat-radio-button style="padding-top:10px" [value]="0">disconnettere</mat-radio-button>
+                        <span style="padding-top: 10px;">oppure continuare ad operare come</span>
+                        <mat-radio-button *ngFor="let azienda of aziende" style="padding-top:10px" [value]="azienda.id">
+                            {{azienda.descrizione}}
+                        </mat-radio-button>
+                    </mat-radio-group>
+                </div>
+                <div class="button-row">
+                    <a mat-raised-button routerLink="home">Annulla</a>
+                    <button mat-raised-button style="float:right" (click)="conferma()" [disabled]="idAziendaSelected==null">Conferma</button>
+                </div>
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

@@ -1,0 +1,94 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_CONTRATTO'"></app-navbar>
+
+<div *ngIf="downloadInCorso || ricercaInCorso" id="loader-container" class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<div class="container">
+  <div *ngIf="feedback" class="alert-danger box-error">
+    <p>{{feedback}}</p>
+    <br>
+  </div>
+  <form #searchForm="ngForm" (submit)="aggiorna()">
+
+    <div class="filterRicerca" style="width: 1278px;margin-left: 4%;margin-right: 4%; padding-top: 15px;">
+      <mat-form-field class="margin-top" style="margin-bottom: 15px; max-width: 10%;">
+        <input matInput placeholder="Codice Contratto" value="" name="codIdentificativo"
+          [(ngModel)]="filtro.codIdentificativo">
+      </mat-form-field>
+      <mat-form-field class="margin-top" style="margin-bottom: 15px;  max-width: 10%;">
+        <input matInput placeholder="Num. Repertorio" value="" name="numRepertorio" size="10" maxlength="10"
+          [(ngModel)]="filtro.numRepertorio">
+      </mat-form-field>
+      <mat-form-field class="margin-top;  max-width: 10%;">
+        <input matInput placeholder="Ente Committente" value="" name="enteCommittente" size="10" maxlength="10"
+          [(ngModel)]="filtro.enteCommittente">
+      </mat-form-field>
+      <mat-form-field class="margin-top;">
+        <input matInput placeholder="Soggetto esecutore" value="" name="soggEsecutore" size="20" maxlength="20"
+          [(ngModel)]="filtro.soggEsecutore">
+      </mat-form-field>
+      <mat-form-field class="margin-top;">
+        <input matInput placeholder="Descrizione" value="" name="desc" size="20" maxlength="20"
+          [(ngModel)]="filtro.descrizione">
+      </mat-form-field>
+      <div style="text-align: left;">
+        <label
+          style="margin-left:auto;margin-right:auto;color: rgba(0,0,0,.42);font-family: Roboto, 'Helvetica Neue', sans-serif;">Data
+          Stipula</label>
+        <div style="display:flex;justify-content:center;align-items:flex-end; margin-bottom:30px">
+          <mat-form-field class="margin-top;" style="margin-right:30px; max-width: 140px;">
+            <input matInput [matDatepicker]="pickerDataInizio" placeholder="Da" [max]="dataFin" [(ngModel)]="dataIn"
+              name="dataInizio" #dataInizio="ngModel" (blur)="checkDataStipula(dataIn,dataFin)">
+            <mat-datepicker-toggle [for]="pickerDataInizio" matSuffix></mat-datepicker-toggle>
+            <mat-datepicker #pickerDataInizio></mat-datepicker>
+            <mat-error *ngIf="dataInizio.invalid && dataInizio?.hasError('daMaggioreA')">
+              Data successiva a "Data Stipula A"
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="margin-top;" style="max-width: 140px;">
+            <input matInput [matDatepicker]="pickerDataFine" [min]="dataIn" placeholder="A" [(ngModel)]="dataFin"
+              name="dataFine" #dataFine="ngModel" (blur)="checkDataStipula(dataIn,dataFin)">
+            <mat-datepicker-toggle [for]="pickerDataFine" matSuffix></mat-datepicker-toggle>
+            <mat-datepicker #pickerDataFine></mat-datepicker>
+            <mat-error *ngIf="dataFine.invalid && dataFine?.hasError('aMinoreDa')">
+              Data antecedente a "Data Stipula Da"
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <mat-checkbox [(ngModel)]="checkedIncludiCessate" name="includiCessate"
+        (change)="changeIncludiCessateFilter($event)">Includi Scaduti</mat-checkbox>
+    </div>
+
+    <mat-grid-list cols="12" rowHeight="50px">
+      <mat-grid-tile [colspan]="2">
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+        <button mat-raised-button type="submit" [ngStyle]="{'color': getStyle(),'background-color': getBackground()}"
+          [disabled]="dataInizio.invalid && dataInizio?.hasError('daMaggioreA') && dataFine.invalid && dataFine?.hasError('aMinoreDa')">
+          <mat-icon>search</mat-icon>Cerca
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button type="button" mat-raised-button (click)="pulisci();">
+          <mat-icon>clear</mat-icon>Pulisci
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+        <button type="button" mat-raised-button *ngIf="enableExcel" (click)="scaricaExcel('Scarica_Excel_Ricerca');">
+          <img src="assets/excel.png"> Scarica Excel Ricerca</button>
+        <mat-checkbox style="margin-left: 10px;"> Includi linee</mat-checkbox>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+      </mat-grid-tile>
+    </mat-grid-list>
+  </form>
+</div>
+<div style="margin-top: 1em;margin-bottom:1em;min-height: 20em;">
+  <app-elenco-contratto (isLoadingEvent)="isLoading($event)"></app-elenco-contratto>
+</div>

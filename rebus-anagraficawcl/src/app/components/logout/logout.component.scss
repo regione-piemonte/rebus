@@ -1,0 +1,32 @@
+/*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/
+.matCard{
+    margin-left:20%;
+    margin-right:20%;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.titleHeaderCard{
+    font-size: 20px;
+    
+}
+.mat-card-content{
+    border: 1px solid #e8b100;
+    background: #fcf8e5;
+    color: #000;   
+    padding:20px;
+}
+
+.button-row{
+    padding-top:30px;
+    padding-bottom: 20px;
+    margin-left:10%;
+    margin-right:10%;
+}
+
+.orangeIcon{
+    color: #e8b100;
+}

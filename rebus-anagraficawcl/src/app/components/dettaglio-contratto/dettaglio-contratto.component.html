@@ -1,0 +1,348 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_CONTRATTO'"></app-navbar>
+
+<div>
+
+  <div *ngIf="!loadComplete" id="loader-container" class="preloader-background">
+    <div id="loader"></div>
+  </div>
+
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>
+      <span *ngIf="azione==null">Torna alla ricerca</span>
+      <span *ngIf="azione!=null">Torna al soggetto</span>
+    </button>
+  </div>
+
+  <div *ngIf="loadComplete" style="margin-top: 1em;margin-bottom:1em; margin-left:10%; margin-right:10%"
+    id="containerCenter">
+
+    <h3 class="titolo">Dati Generali</h3>
+    <mat-grid-list cols="12" rowHeight="27px">
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Codice regionale: </label>
+          <strong>{{dettaglioContratto?.codRegionale}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Codice nazionale: </label>
+          <strong>{{dettaglioContratto?.codIdNazionale}}</strong>
+        </div>
+
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="12">
+        <div>
+          <label>Numero Repertorio: </label>
+          <strong>{{dettaglioContratto?.numRepertorio}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="12">
+        <div>
+          <label>Descrizione: </label>
+          <strong>{{dettaglioContratto?.descContratto}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="12">
+        <div>
+          <label>Bacino: </label>
+          <strong>{{descBacino}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3" [rowspan]="contrattoAmbtipoServizioArray.length">
+        <div>
+          <label>Tipologia / Ambito di servizio: </label>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="9" [rowspan]="contrattoAmbtipoServizioArray.length">
+        <div>
+          <span *ngFor="let item of contrattoAmbtipoServizioArray">
+            <strong>{{item}}</strong><br>
+          </span>
+        </div>
+      </mat-grid-tile>
+
+      <mat-grid-tile [colspan]="12">
+        <div>
+          <label>Tipo affidamento: </label>
+          <strong>{{descTipoAffidamento}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Modalità affidamento: </label>
+          <strong>{{descModalitaAffidamento}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>CIG: </label>
+          <strong>{{dettaglioContratto?.CIG}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Accordo di programma: </label>
+          <strong>{{dettaglioContratto?.accordoProgramma}}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Gross Cost: </label>
+          <strong><span *ngIf="dettaglioContratto?.grossCost">Sì</span><span
+              *ngIf="!dettaglioContratto?.grossCost">No</span></strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="12">
+        <div>
+          <label>Data stipula: </label>
+          <strong>{{dettaglioContratto?.dataStipula | date: 'dd/MM/yyyy' }}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Data inizio validità: </label>
+          <strong>{{dettaglioContratto?.dataInizioValidita | date: 'dd/MM/yyyy' }}</strong>
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="6">
+        <div>
+          <label>Data fine validità: </label>
+          <strong>{{dettaglioContratto?.dataFineValidita | date: 'dd/MM/yyyy' }}</strong>
+        </div>
+      </mat-grid-tile>
+    </mat-grid-list>
+    <div *ngIf="dettaglioContratto?.dataFineValidita!=null">
+      <h3 class="titolo"
+        *ngIf="dettaglioContratto?.proroghe.length>1 || dettaglioContratto?.proroghe.length==0; else prTitolo">Proroghe
+      </h3>
+      <ng-template #prTitolo>
+        <h3 class="titolo">Proroghe</h3>
+      </ng-template>
+      <div *ngIf="dettaglioContratto?.proroghe==null || dettaglioContratto?.proroghe.length==0; else proroghe">
+        <label>Nessun dato presente</label>
+      </div>
+      <ng-template #proroghe>
+        <table style="width:100%">
+          <tbody>
+            <tr *ngFor="let pror of dettaglioContratto.proroghe"
+              style="display:flex; align-items:top; padding-bottom: 10px;">
+              <td style="width: 50%;">
+                <div>
+                  <label>Estremi atto di proroga: </label>
+                  <strong>{{pror.attoProroga}}</strong>
+                </div>
+              </td>
+              <td style="width: 50%;">
+                <div>
+                  <label>Data fine proroga: </label>
+                  <strong>{{pror.dataFineProroga | date: 'dd/MM/yyyy' }}</strong>
+                </div>
+
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </div>
+
+    <h3 class="titolo">Soggetti Coinvolti</h3>
+    <div
+      *ngIf="dettaglioContratto?.soggettiCoinvolti==null || dettaglioContratto?.soggettiCoinvolti.length==0; else soggettiCoinvoltiTable">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #soggettiCoinvoltiTable>
+      <div style="display: flex;">
+        <mat-form-field>
+          <input matInput [matDatepicker]="pickerDataFiltro" placeholder="Situazione al" [min]="dataFiltroMin"
+            [max]="dataFiltro" [(ngModel)]="dataFiltroLocal" name="dataFiltroName" #dataFiltroName="ngModel">
+          <mat-datepicker-toggle [for]="pickerDataFiltro" matSuffix></mat-datepicker-toggle>
+          <mat-datepicker #pickerDataFiltro></mat-datepicker>
+          <mat-error *ngIf="dataFiltroName.invalid">
+            Data non valida
+          </mat-error>
+        </mat-form-field>
+        <div class="buttonGroup">
+          <!--style da cancellare quando si toglie il commento dal button scarica excel-->
+          <button mat-raised-button type="submit" [disabled]="dataFiltroName.invalid"
+            (click)="filtroSoggettiCoinvolti()">
+            <mat-icon>search</mat-icon>Filtra
+          </button>
+          <button type="button" mat-raised-button (click)="pulisci();">
+            <mat-icon>clear</mat-icon>Ripristina
+          </button>
+        </div>
+      </div>
+      <table class="aTable">
+        <thead>
+          <tr>
+            <th style="width:34%;">
+              Soggetto Giuridico
+            </th>
+            <th style="width:27%;">
+              Ruolo
+            </th>
+            <th style="width:34%;">
+              Per conto di
+            </th>
+            <th *ngIf="isUtenteRegioneoServizi || isAmp" style="width:5%;text-align: center;">
+              Dettaglio
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let soggetto of dettaglioContratto.soggettiCoinvolti;">
+            <td style="width:34%;">
+              <div [innerHTML]="soggetto.alias"></div>
+            </td>
+            <td style="width:27%;">
+              {{ soggetto.ruolo }}
+            </td>
+            <td style="width:34%;">
+              {{ soggetto.perContoDi }}
+            </td>
+            <td *ngIf="isUtenteRegioneoServizi || isAmp" style="width:5%;text-align: center;">
+              <a title="Dettaglio" href="javascript:void(0)" class="no-underline"
+                (click)="dettaglioSoggetto(soggetto.idSoggettoGiuridico)">
+                <mat-icon class="blueIcon">visibility</mat-icon>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-template>
+    <h3 class="titolo">Periodi di attività dei Soggetti Coinvolti</h3>
+    <div
+      *ngIf="dettaglioContratto?.soggettiCoinvoltiPeriodi==null || dettaglioContratto?.soggettiCoinvoltiPeriodi.length==0; else soggettiCoinvoltiPeriodiTable">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #soggettiCoinvoltiPeriodiTable>
+      <table class="aTable" style="font-size: small;">
+        <thead style="font-size: larger;">
+          <tr>
+            <th style="width:15%;">
+              Soggetto
+            </th>
+            <th style="width:15%; white-space:nowrap;">
+              Ruolo
+            </th>
+            <th style="width:8%">
+              Data inizio attività
+            </th>
+            <th style="width:8%">
+              Data fine attività
+            </th>
+            <th style="width:15%;">
+              Soggetto Affidante
+            </th>
+            <th style="width:15%;">
+              Soggetto Sostituito
+            </th>
+
+            <th *ngIf="isUtenteRegioneoServizi || isAmp" style="width:5%;text-align: center;">
+              Dettaglio
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let soggettoPeriodi of dettaglioContratto.soggettiCoinvoltiPeriodi;"
+            [ngClass]="{ 'colorGray': soggettoPeriodi.scaduto }">
+            <td style="width:15%">
+              <div [innerHTML]="soggettoPeriodi.alias"></div>
+            </td>
+            <td>
+              <div [innerHTML]="soggettoPeriodi.ruolo"></div>
+            </td>
+            <td style="width:8%">
+              <div [innerHTML]="soggettoPeriodi.dataInizio"></div>
+            </td>
+            <td style="width:8%">
+              <div [innerHTML]="soggettoPeriodi.dataFine"></div>
+            </td>
+            <td style="width:15%">
+              <div [innerHTML]="soggettoPeriodi.soggettoAffidante"></div>
+            </td>
+            <td style="width:15%">
+              <div [innerHTML]="soggettoPeriodi.soggettoSostituito"></div>
+            </td>
+            <td *ngIf="isUtenteRegioneoServizi || isAmp" style="width:5%;text-align: center;">
+              <a title="Dettaglio" href="javascript:void(0)" class="no-underline"
+                (click)="dettaglioSoggetto(soggettoPeriodi.idSoggettoGiuridico)">
+                <mat-icon class="blueIcon">visibility</mat-icon>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-template>
+    <div>
+      <h3 class="titolo"> Allegati</h3>
+      <div *ngIf="dettaglioContratto.allegati==null || dettaglioContratto.allegati.length==0; else allegatiTemplate">
+        <table style="width:100%">
+          <tbody>
+            <tr style="display:flex; align-items:top;">
+              <td style="width: 50%;">
+                <div>
+                  <label>Nessun documento caricato</label>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #allegatiTemplate>
+        <table style="width:100%" *ngIf="dettaglioContratto.allegati.length > 0">
+          <tbody>
+            <tr *ngFor="let allegato of dettaglioContratto.allegati">
+              <td>
+                <div>
+                  <label>Tipo Documento:</label>
+                  <strong>{{allegato.descrizioneTipoDocumento}}</strong>
+                </div>
+              </td>
+              <td style="padding-top: 14px;">
+                <div class="paddingleft2" style="display:flex">
+                  <label style="margin-top:8px;">Note:</label>
+                  <textarea rows="4" cols="30" style="width: 317px; height: 49px;"
+                    readonly>{{allegato.noteFile}}</textarea>
+                </div>
+              </td>
+              <td style="padding-right: 72px;">
+                <div>
+                  <label>Caricato il:</label>
+                  <strong>{{allegato.dataCaricamento | date : 'dd/MM/yyyy'}}</strong>
+                </div>
+              </td>
+              <td>
+                <div>
+                  <!--Scarica documento -->
+                  <a class="col" title="Scarica/Visualizza" href="javascript:void(0)" class="no-underline"
+                    (click)="download(allegato.idAllegato)">
+                    <mat-icon class="blueIcon" style="padding-top: 26px;">
+                      <img src="assets/DLdoc_orange.png"
+                        style="width: 36px;width: 36px; border-bottom-style: solid;margin-bottom: 22px;border-bottom-width: 0px;height: 36px; margin-right: 0px;margin-left: -24px;">
+                    </mat-icon>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </div>
+  </div>
+
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>
+      <span *ngIf="azione==null">Torna alla ricerca</span>
+      <span *ngIf="azione!=null">Torna al soggetto</span>
+    </button>
+  </div>
+</div>

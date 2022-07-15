@@ -1,0 +1,92 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="codIdentificativo">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 5%;"> Codice nazionale
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 5%;white-space:nowrap;"> {{row.codIdentificativo}}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="codRegionale">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 6%;"> Codice regionale
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 6%;white-space:nowrap;"> {{row.codRegionale}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="numRepertorio">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 5%;"> Numero Repertorio
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 5%;white-space:nowrap;"> {{row.numRepertorio}}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="enteCommittenteENaturaGiuridica">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 17%;"> Ente Committente
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 17%;white-space:nowrap;"
+      [title]="(row.enteCommittente?.denomBreve + ' ' + ((row.naturaGiuridicaEnte?.descrizioneBreve!=null) ? row.naturaGiuridicaEnte?.descrizioneBreve : '')).length>31 ? (row.enteCommittente?.denomBreve + ' ' + ((row.naturaGiuridicaEnte?.descrizioneBreve!=null) ? row.naturaGiuridicaEnte?.descrizioneBreve : '')): ''">
+      {{troncaCaratteri(row.enteCommittente?.denomBreve)}}
+    </mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="soggEsecutoreENaturaGiuridica">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 17%;"> Esecutore Titolare
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 17%;white-space:nowrap;"
+      [title]="(row.soggEsecutore?.denomBreve + ' ' + ((row.naturaGiuridicaEsec?.descrizioneBreve!=null) ? row.naturaGiuridicaEsec?.descrizioneBreve : '')).length>31 ? (row.soggEsecutore?.denomBreve + ' ' + ((row.naturaGiuridicaEsec?.descrizioneBreve!=null) ? row.naturaGiuridicaEsec?.descrizioneBreve : '')): ''">
+      {{troncaCaratteri(row.soggEsecutore?.denomBreve)}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="descrizione">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 25%;"> Descrizione
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" [title]="row.descContratto?.length>37? row.descContratto: ''"
+      style="flex: 0 0 25%;white-space:nowrap;">
+      {{troncaDescr(row.descContratto)}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="dataScadenza">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 5%;"> Data Scadenza
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 5%;white-space:nowrap;"> {{row.dataScadenza | date: 'dd/MM/yyyy'}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="dataFineUltimaProroga">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 6%; ">Data Ultima Proroga
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 6%;white-space:nowrap;"> {{row.dataFineUltimaProroga | date:
+      'dd/MM/yyyy'}}
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="dataAggiornamento">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 6%;"> Data Ultima Modifica
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 6%;white-space:nowrap;"> {{row.dataAggiornamento | date:
+      'dd/MM/yyyy'}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="azioni">
+    <mat-header-cell *matHeaderCellDef> Azioni </mat-header-cell>
+    <mat-cell *matCellDef="let row">
+      <a title="Dettaglio" *ngIf="isConsultaAbilitato" href="javascript:void(0)" class="no-underline"
+        (click)="dettaglioContratto(row.id)">
+        <mat-icon class="blueIcon">visibility</mat-icon>
+      </a>
+      <a title="Modifica" *ngIf="isModificaAbilitata" href="javascript:void(0)" class="no-underline"
+        (click)="modificaContratto(row.id)">
+        <mat-icon class="blueIcon">edit</mat-icon>
+      </a>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row [ngClass]="{ 'colorGray': row.contrattoCessato}" *matRowDef="let row; columns: displayedColumns;">
+  </mat-row>
+
+</mat-table>
+
+<mat-paginator [pageSize]="defaultPageSize" [pageSizeOptions]="pageSizeOption"></mat-paginator>

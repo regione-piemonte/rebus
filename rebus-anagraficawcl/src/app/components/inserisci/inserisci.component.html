@@ -1,0 +1,692 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'INSERIMENTO_SOGGETTO'"></app-navbar>
+
+<mat-card>
+  <mat-card-content>
+
+    <div *ngIf="feedback" class="alert-danger box-error">
+      <p>{{feedback}}</p>
+      <br>
+    </div>
+
+    <form #soggettoForm="ngForm" (ngSubmit)="save()">
+      <div *ngIf="isLoading(); else page" id="loader-container" class="preloader-background" style="padding-top: 50%;">
+        <div id="loader"></div>
+      </div>
+
+      <ng-template #page>
+        <section>
+          <h3>Dati identificativi</h3>
+
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="tipoSoggGroup">
+              <input type="text" placeholder="Tipo soggetto giuridico" aria-label="Number" matInput
+                formControlName="tipoSogg" [matAutocomplete]="autoTipo" required (blur)="check('T')">
+              <mat-autocomplete autoActiveFirstOption #autoTipo="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'T')">
+                <mat-option *ngFor="let choice of filteredOptionsTipo | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="tipoSoggGroup.controls['tipoSogg']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="naturaGroup"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+              <input type="text" placeholder="Natura Giuridica" aria-label="Number" matInput formControlName="nat"
+                [matAutocomplete]="autoNat" required (blur)="check('N')">
+              <mat-autocomplete autoActiveFirstOption #autoNat="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'N')">
+                <mat-option *ngFor="let choice of filteredOptionsNatura | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="naturaGroup.controls['nat']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <div class="col"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo!=null && tipoSoggettoGiuridicoSelected?.idRuolo==1">
+            </div>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col" [formGroup]="tipoEnteGroup"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo!=null && tipoSoggettoGiuridicoSelected?.idRuolo==1">
+              <input type="text" placeholder="Tipo Ente" aria-label="Number" matInput formControlName="tipoEnte"
+                [matAutocomplete]="autoTipoE" required (blur)="check('TE')">
+              <mat-autocomplete autoActiveFirstOption #autoTipoE="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="click($event,'TE')">
+                <mat-option *ngFor="let choice of filteredOptionsTipoEnte | async" [value]="choice">
+                  {{choice.descrizione}}
+                </mat-option>
+              </mat-autocomplete>
+              <mat-error *ngIf="tipoEnteGroup.controls['tipoEnte']?.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Denominazione breve (alias)" [(ngModel)]="soggetto.denomBreve"
+                name="denomBreve" #denomBreve="ngModel" maxlength="100" required>
+              <mat-hint align="end">{{soggetto.denomBreve?.length || 0}} / 100</mat-hint>
+              <mat-error *ngIf="(denomBreve.dirty || denomBreve.touched) && denomBreve.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+              <input matInput placeholder="Denominazione Infocamere" [(ngModel)]="soggetto.denomAAEP" name="denomAAEP"
+                #denomAAEP="ngModel" maxlength="100" required>
+              <mat-hint align="end">{{soggetto.denomAAEP?.length || 0}} / 100</mat-hint>
+              <mat-error *ngIf="(denomAAEP.dirty || denomAAEP.touched) && denomAAEP.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Denominazione Osservatorio" [(ngModel)]="soggetto.denomOsservatorioNaz"
+                name="denomOsservatorioNaz" #denomOsservatorioNaz="ngModel" maxlength="100" required>
+              <mat-hint align="end">{{soggetto.denomOsservatorioNaz?.length || 0}} / 100</mat-hint>
+              <mat-error
+                *ngIf="(denomOsservatorioNaz.dirty || denomOsservatorioNaz.touched) && denomOsservatorioNaz.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+              <input matInput placeholder="Codice Nazionale" [(ngModel)]="soggetto.codOsservatorioNaz"
+                name="codOsservatorioNaz" #codOsservatorioNaz="ngModel" maxlength="6" pattern="[A-Z]{2}[0-9]{4}"
+                required>
+              <mat-hint align="end">{{soggetto.codOsservatorioNaz?.length || 0}} / 6</mat-hint>
+              <mat-error
+                *ngIf="(codOsservatorioNaz.dirty || codOsservatorioNaz.touched) && codOsservatorioNaz.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error
+                *ngIf="(codOsservatorioNaz.dirty || codOsservatorioNaz.touched) && codOsservatorioNaz.errors?.pattern">
+                Formato errato
+              </mat-error>
+              <mat-error *ngIf="codOsservatorioNaz.errors?.duplicato">
+                Codice nazionale duplicato
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col" *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==1">
+              <input matInput placeholder="Codice Nazionale" [(ngModel)]="soggetto.codOsservatorioNaz"
+                name="codOsservatorioNaz" #codOsservatorioNaz="ngModel" maxlength="6"
+                pattern="[A-Z]{2}[0-9]{4}|^[0-9]{1,4}$" required>
+              <mat-hint align="end">{{soggetto.codOsservatorioNaz?.length || 0}} / 6</mat-hint>
+              <mat-error
+                *ngIf="(codOsservatorioNaz.dirty || codOsservatorioNaz.touched) && codOsservatorioNaz.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error
+                *ngIf="(codOsservatorioNaz.dirty || codOsservatorioNaz.touched) && codOsservatorioNaz.errors?.pattern">
+                Formato errato
+              </mat-error>
+              <mat-error *ngIf="codOsservatorioNaz.errors?.duplicato">
+                Codice nazionale duplicato
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+              <input matInput placeholder="Codice CSR-BIP" [(ngModel)]="soggetto.codCsrBip" name="codCsrBip"
+                #codCsrBip="ngModel" maxlength="4" integer>
+              <mat-hint align="end">{{soggetto.codCsrBip?.toString().length || 0}} / 4</mat-hint>
+              <mat-error *ngIf="codCsrBip.errors?.integer">
+                Formato errato
+              </mat-error>
+              <mat-error *ngIf="codCsrBip.errors?.duplicato">
+                Codice CSR-BIP duplicato
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row"
+            *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+            <div class="col"
+              style="display: flex; flex: 0 1 auto; align-items: center; font-size: 17px; padding-right: 20px;">
+              <label>Rappresentante Legale: </label>
+            </div>
+            <mat-form-field class="col">
+              <input matInput placeholder="Nome" [(ngModel)]="soggetto.nomeRappresentanteLegale"
+                name="nomeRappresentanteLegale" #nomeRappresentanteLegale="ngModel" maxlength="50" required>
+              <mat-hint align="end">{{soggetto.nomeRappresentanteLegale?.length || 0}} / 50</mat-hint>
+              <mat-error
+                *ngIf="(nomeRappresentanteLegale.dirty || nomeRappresentanteLegale.touched) && nomeRappresentanteLegale.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Cognome" [(ngModel)]="soggetto.cognomeRappresentanteLegale"
+                name="cognomeRappresentanteLegale" #cognomeRappresentanteLegale="ngModel" maxlength="50" required>
+              <mat-hint align="end">{{soggetto.cognomeRappresentanteLegale?.length || 0}} / 50</mat-hint>
+              <mat-error
+                *ngIf="(cognomeRappresentanteLegale.dirty || cognomeRappresentanteLegale.touched) && cognomeRappresentanteLegale.errors?.required">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row"
+            *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+            <mat-form-field class="col">
+              <input matInput placeholder="Partita IVA" [(ngModel)]="soggetto.partitaIva" name="partitaIva"
+                #partitaIva="ngModel" minlength="11" maxlength="11" required>
+              <mat-hint align="end">{{soggetto.partitaIva?.length || 0}} / 11</mat-hint>
+              <mat-error *ngIf="(partitaIva.dirty || partitaIva.touched) && partitaIva.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="partitaIva.errors?.minlength">
+                La lunghezza consentita è di 11 caratteri
+              </mat-error>
+              <mat-error *ngIf="partitaIva.errors?.duplicato">
+                Partita IVA duplicata
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Codice Fiscale" [(ngModel)]="soggetto.codiceFiscale" name="codiceFiscale"
+                #codiceFiscale="ngModel" maxlength="16" required pattern="^([a-zA-Z0-9]{16}|[a-zA-Z0-9]{11})$">
+              <mat-hint align="end">{{soggetto.codiceFiscale?.length || 0}} / 16</mat-hint>
+              <mat-error *ngIf="(codiceFiscale.dirty || codiceFiscale.touched) && codiceFiscale.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="codiceFiscale.errors?.pattern">
+                La lunghezza consentita è di 11 o di 16 caratteri
+              </mat-error>
+              <mat-error *ngIf="codiceFiscale.errors?.duplicato">
+                Codice Fiscale duplicato
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row"
+            *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+            <mat-form-field class="col">
+              <input matInput [matDatepicker]="pickerDataInizio" placeholder="Data Inizio Attività" [(ngModel)]="dataIn"
+                name="dataInizio" #dataInizio="ngModel" required (blur)="checkData(dataIn, 'dataInizio')">
+              <mat-datepicker-toggle matSuffix [for]="pickerDataInizio"></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataInizio></mat-datepicker>
+              <mat-error *ngIf="(dataInizio.dirty || dataInizio.touched) && dataInizio.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="(dataInizio.dirty || dataInizio.touched)">
+                Data non valida
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput [matDatepicker]="pickerDataCessazione" placeholder="Data Cessazione Attività"
+                [min]="dataIn" [(ngModel)]="dataCes" name="dataCessazione" #dataCessazione="ngModel"
+                (blur)="checkData(dataCes, 'dataCessazione')">
+              <mat-datepicker-toggle matSuffix [for]="pickerDataCessazione"></mat-datepicker-toggle>
+              <mat-datepicker #pickerDataCessazione></mat-datepicker>
+              <mat-error *ngIf="(dataCessazione.dirty || dataCessazione.touched)">
+                Data non valida
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="row"
+            *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+            <div class="col">
+            </div>
+            <div class="col" style="display:flex; align-items: center;">
+              <label for="uploadFile" style="font-size: 17px;padding-right: 10px;"> Logo: </label>
+              <input id="uploadFile" type="file" *ngIf="!isLogoUploaded" (change)="handleFileInput($event.target.files)"
+                name="uploadFile" #fileInput accept=".png,.jpg,.jpeg">
+              <!--Visualizza documento -->
+              <a title="Visualizza" *ngIf="isLogoUploaded" href="javascript:void(0)" class="no-underline"
+                (click)="viewLogo()" style="display: flex; align-items: center;">
+                <mat-icon style="color: rgb(214,87,42) ;">visibility</mat-icon>
+              </a>
+              <!--Scarica documento -->
+              <a title="Scarica" href="javascript:void(0)" class="no-underline" (click)="downloadDoc()"
+                *ngIf="isLogoUploaded">
+                <mat-icon>
+                  <img src="assets/DLdoc_orange.png" style="width: 24px; ">
+                </mat-icon>
+              </a>
+
+              <!--Cancella documento -->
+              <a title="Elimina" href="javascript:void(0)" class="no-underline" (click)="eliminaDoc()"
+                *ngIf="isLogoUploaded">
+                <mat-icon style="color: rgb(214,87,42) ;">
+                  delete
+                </mat-icon>
+              </a>
+            </div>
+          </div>
+
+          <div class="row" *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==1">
+            <mat-form-field class="col">
+              <input matInput placeholder="Partita IVA" [(ngModel)]="soggetto.partitaIva" name="partitaIva"
+                #partitaIva="ngModel" minlength="11" maxlength="11" required>
+              <mat-hint align="end">{{soggetto.partitaIva?.length || 0}} / 11</mat-hint>
+              <mat-error *ngIf="(partitaIva.dirty || partitaIva.touched) && partitaIva.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="partitaIva.errors?.minlength">
+                La lunghezza consentita è di 11 caratteri
+              </mat-error>
+              <mat-error *ngIf="partitaIva.errors?.duplicato">
+                Partita IVA duplicata
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Codice Fiscale" [(ngModel)]="soggetto.codiceFiscale" name="codiceFiscale"
+                #codiceFiscale="ngModel" maxlength="16" required pattern="^([a-zA-Z0-9]{16}|[a-zA-Z0-9]{11})$">
+              <mat-hint align="end">{{soggetto.codiceFiscale?.length || 0}} / 16</mat-hint>
+              <mat-error *ngIf="(codiceFiscale.dirty || codiceFiscale.touched) && codiceFiscale.errors?.required">
+                Campo richiesto
+              </mat-error>
+              <mat-error *ngIf="codiceFiscale.errors?.pattern">
+                La lunghezza consentita è di 11 o di 16 caratteri
+              </mat-error>
+              <mat-error *ngIf="codiceFiscale.errors?.duplicato">
+                Codice Fiscale duplicato
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Note" [(ngModel)]="soggetto.note" name="note" #note="ngModel"
+                maxlength="2000">
+              <mat-hint align="end">{{soggetto.note?.length || 0}} / 2000</mat-hint>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <div class="col"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo!=null && tipoSoggettoGiuridicoSelected?.idRuolo==1">
+              <mat-checkbox [(ngModel)]="soggetto.aziendaAttiva" labelPosition="before" name="aziendaAttiva"
+                style="color: rgb(150,150,150);" disabled>
+                Soggetto attivo TPL
+              </mat-checkbox>
+            </div>
+            <div class="col"
+              *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo!=null && tipoSoggettoGiuridicoSelected?.idRuolo==1">
+              <label for="uploadFile" style="font-size: 17px;padding-right: 10px;"> Logo: </label>
+              <input id="uploadFile" type="file" (change)="handleFileInput($event.target.files)" name="uploadFile"
+                #fileInput accept=".png,.jpg,.jpeg">
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3>Sede Legale e Contatti</h3>
+
+          <div class="row">
+            <div class="col"
+              style="display: flex; flex: 0 1 auto; align-items: center; font-size: 17px; padding-right: 20px;">
+              <label>Ubicazione: </label>
+            </div>
+            <mat-form-field class="col" style="max-width: 100px">
+              <input matInput placeholder="Toponimo" [(ngModel)]="ubicazioneSede.top" name="top" #top="ngModel"
+                maxlength="15">
+              <mat-hint align="end">{{ubicazioneSede.top?.length || 0}} / 15</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Indirizzo" [(ngModel)]="ubicazioneSede.indirizzo" name="indirizzoSede"
+                #indirizzoSede="ngModel" maxlength="50">
+              <mat-hint align="end">{{ubicazioneSede.indirizzo?.length || 0}} / 50</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col" style="max-width: 100px">
+              <input matInput placeholder="Civico" [(ngModel)]="ubicazioneSede.civico" name="civicoSede"
+                #civicoSede="ngModel" maxlength="10">
+              <mat-hint align="end">{{ubicazioneSede.civico?.length || 0}} / 10</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="provinciaSedeGroup">
+              <input type="text" placeholder="Provincia" aria-label="Number" matInput formControlName="provSede"
+                [matAutocomplete]="autoProvinciaSede" (blur)="check('PS')">
+              <mat-autocomplete autoActiveFirstOption #autoProvinciaSede="matAutocomplete" [displayWith]="displayFnc"
+                (optionSelected)="click($event,'PS')">
+                <mat-option *ngFor="let choice of filteredOptionsProvinciaSede | async" [value]="choice">
+                  {{choice.denominazione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="comuneSedeGroup">
+              <input type="text" placeholder="Comune" aria-label="Number" matInput formControlName="comSede"
+                [matAutocomplete]="autoComuneSede" (blur)="check('CS')">
+              <mat-autocomplete autoActiveFirstOption #autoComuneSede="matAutocomplete" [displayWith]="displayFnc"
+                (optionSelected)="click($event,'CS')">
+                <mat-option *ngFor="let choice of filteredOptionsComuneSede | async" [value]="choice">
+                  {{choice.denominazione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="col" style="max-width: 100px">
+              <input matInput placeholder="CAP" [(ngModel)]="ubicazioneSede.cap" name="capSede" #capSede="ngModel"
+                maxlength="5">
+              <mat-hint align="end">{{ubicazioneSede.cap?.length || 0}} / 5</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Telefono" [(ngModel)]="soggetto.telefonoSede" name="telefonoSede"
+                #telefonoSede="ngModel" maxlength="20">
+              <mat-hint align="end">{{soggetto.telefonoSede?.length || 0}} / 20</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Fax" [(ngModel)]="soggetto.fax" name="fax" #fax="ngModel" maxlength="20">
+              <mat-hint align="end">{{soggetto.fax?.length || 0}} / 20</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Email" [(ngModel)]="soggetto.email" name="email" #email="ngModel"
+                maxlength="50">
+              <mat-hint align="end">{{soggetto.email?.length || 0}} / 50</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="PEC" [(ngModel)]="soggetto.pec" name="pec" #pec="ngModel" maxlength="50">
+              <mat-hint align="end">{{soggetto.pec?.length || 0}} / 50</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <mat-form-field class="col">
+              <input matInput placeholder="Indirizzo web" [(ngModel)]="soggetto.indirizzoWeb" name="indirizzoWeb"
+                #indirizzoWeb="ngModel" maxlength="100">
+              <mat-hint align="end">{{soggetto.indirizzoWeb?.length || 0}} / 100</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Numero verde" [(ngModel)]="soggetto.numeroVerde" name="numeroVerde"
+                #numeroVerde="ngModel" maxlength="15">
+              <mat-hint align="end">{{soggetto.numeroVerde?.length || 0}} / 15</mat-hint>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+          <div
+            style="position: relative; display: flex; background: rgb(241, 170, 87); padding: 10px 10px; color: #fff; font-weight: 500; align-items: center;">
+            <h3 style="float: left; padding: 0px; margin: 0px">
+              <span *ngIf="soggetto.depositi.length==1 || soggetto.depositi.length==0">Deposito</span>
+              <span *ngIf="soggetto.depositi.length>1">Depositi</span>
+            </h3>
+          </div>
+
+          <div class="row">
+            <div *ngIf="isNotSelectedDepositoPrevalente != null && isNotSelectedDepositoPrevalente "
+              class="alert-danger box-error">
+              <p>Attenzione! Aggiungere almeno un deposito principale.</p>
+              <br>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col" style="flex-grow: 1; align-self: center;">
+              <mat-checkbox [(ngModel)]="dep.depositoPrevalenteFlg" labelPosition="before" name="depositoPrevalenteFlg"
+                (change)="depositoPrevalenteOnChange()">
+                Deposito principale
+              </mat-checkbox>
+            </div>
+            <mat-form-field class="col" style="flex-grow: 4;">
+              <input matInput placeholder="Denominazione" [(ngModel)]="dep.denominazione" name="denomDep"
+                #denomDep="ngModel" maxlength="100" [required]="isDenomDepRequired()"
+                (change)="denominazioneDepChange()">
+              <mat-hint align="end">{{dep.denominazione?.length || 0}} / 100</mat-hint>
+              <mat-error *ngIf="(denomDep.dirty || denomDep.touched) && denomDep.hasError">
+                Campo richiesto
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col" style="flex-grow: 2;">
+              <input matInput placeholder="Telefono" [(ngModel)]="dep.telefono" name="telefonoDep" maxlength="20">
+              <mat-hint align="end">{{dep.telefono?.length || 0}} / 20</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="row">
+            <div class="col"
+              style="display: flex; flex: 0 1 auto; align-items: center; font-size: 17px; padding-right: 20px;">
+              <label>Ubicazione: </label>
+            </div>
+            <mat-form-field class="col" style="max-width: 100px">
+              <input matInput placeholder="Toponimo" [(ngModel)]="dep.ubicazione.top" name="topDep" maxlength="15">
+              <mat-hint align="end">{{dep.ubicazione.top?.length || 0}} / 15</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col">
+              <input matInput placeholder="Indirizzo" [(ngModel)]="dep.ubicazione.indirizzo" name="indirizzoDep"
+                maxlength="50">
+              <mat-hint align="end">{{dep.ubicazione.indirizzo?.length || 0}} / 50</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col" style="max-width: 100px">
+              <input matInput placeholder="Civico" [(ngModel)]="dep.ubicazione.civico" name="civicoDep" maxlength="10">
+              <mat-hint align="end">{{dep.ubicazione.civico?.length || 0}} / 10</mat-hint>
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="provinciaDepGroup">
+              <input type="text" placeholder="Provincia" aria-label="Number" matInput formControlName="provDep"
+                [matAutocomplete]="autoProvinciaDep" (blur)="check('PD')">
+              <mat-autocomplete autoActiveFirstOption #autoProvinciaDep="matAutocomplete" [displayWith]="displayFnc"
+                (optionSelected)="click($event,'PD')">
+                <mat-option *ngFor="let choice of filteredOptionsProvinciaDep | async" [value]="choice">
+                  {{choice.denominazione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="col" [formGroup]="comuneDepGroup">
+              <input type="text" placeholder="Comune" aria-label="Number" matInput formControlName="comDeposito"
+                [matAutocomplete]="autoComuneDeposito" (blur)="check('CD')">
+              <mat-autocomplete autoActiveFirstOption #autoComuneDeposito="matAutocomplete" [displayWith]="displayFnc"
+                (optionSelected)="click($event,'CD')">
+                <mat-option *ngFor="let choice of filteredOptionsComuneDep | async" [value]="choice">
+                  {{choice.denominazione}}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="col" style="max-width: 100px">
+              <input matInput placeholder="CAP" [(ngModel)]="dep.ubicazione.cap" name="capDep" maxlength="5">
+              <mat-hint align="end">{{dep.ubicazione.cap?.length || 0}} / 5</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="row" style="display:flex;justify-content:flex-end;align-items:center;">
+            <button id="add1" type="button" style="display: inline-flex; align-items: center; font-size: 15px"
+              (click)="addDeposito()" [disabled]="isAddDepDisabled()">
+              <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                style="padding-left: 10px">Aggiungi nuovo</span>
+            </button>
+          </div>
+          <mat-divider *ngIf="soggetto.depositi.length>0" [inset]="true"
+            style="border-color: rgb(241, 170, 87); border-width: 2px; margin-top: 20px"></mat-divider>
+          <div *ngFor="let deposito of soggetto.depositi; let i = index">
+            <div class="row">
+              <div class="col" style="flex-grow: 1; align-self: center;">
+                <mat-checkbox [(ngModel)]="deposito.depositoPrevalenteFlg" labelPosition="before"
+                  name="depositoPrevalenteFlg{{i}}" (change)="listaDepositoPrevalenteOnChange(i)">
+                  Deposito principale
+                </mat-checkbox>
+              </div>
+              <mat-form-field class="col" style="flex-grow: 4;">
+                <input matInput placeholder="Denominazione" [(ngModel)]="deposito.denominazione"
+                  name="denomDeposito_{{i}}" maxlength="100" required>
+                <mat-hint align="end">{{deposito.denominazione?.length || 0}} / 100</mat-hint>
+                <mat-error *ngIf="hasDenomDepError(i)">
+                  Campo richiesto
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="col" style="flex-grow: 2;">
+                <input matInput placeholder="Telefono" [(ngModel)]="deposito.telefono" name="telefonoDeposito_{{i}}"
+                  maxlength="20">
+                <mat-hint align="end">{{deposito.telefono?.length || 0}} / 20</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="row">
+              <div class="col"
+                style="display: flex; flex: 0 1 auto; align-items: center; font-size: 17px; padding-right: 20px;">
+                <label>Ubicazione: </label>
+              </div>
+              <mat-form-field class="col" style="max-width: 100px">
+                <input matInput placeholder="Toponimo" [(ngModel)]="deposito.ubicazione.top" name="topDeposito_{{i}}"
+                  maxlength="15" disabled>
+                <mat-hint align="end">{{deposito.ubicazione.top?.length || 0}} / 15</mat-hint>
+              </mat-form-field>
+              <mat-form-field class="col">
+                <input matInput placeholder="Indirizzo" [(ngModel)]="deposito.ubicazione.indirizzo"
+                  name="indirizzoDeposito_{{i}}" maxlength="50" disabled>
+                <mat-hint align="end">{{deposito.ubicazione.indirizzo?.length || 0}} / 50</mat-hint>
+              </mat-form-field>
+              <mat-form-field class="col" style="max-width: 100px">
+                <input matInput placeholder="Civico" [(ngModel)]="deposito.ubicazione.civico"
+                  name="civicoDeposito_{{i}}" maxlength="10" disabled>
+                <mat-hint align="end">{{deposito.ubicazione.civico?.length || 0}} / 10</mat-hint>
+              </mat-form-field>
+              <mat-form-field class="col" [formGroup]="provinceDepGroup[i]">
+                <input type="text" placeholder="Provincia" aria-label="Number" matInput formControlName="provDeposito"
+                  [matAutocomplete]="autoProvinciaDep" (blur)="checkDep(i,'P')">
+                <mat-autocomplete autoActiveFirstOption #autoProvinciaDep="matAutocomplete" [displayWith]="displayFnc"
+                  (optionSelected)="clickDep($event,i,'P')">
+                  <mat-option *ngFor="let choice of filteredOptionsProvinceDep[i] | async" [value]="choice">
+                    {{choice.denominazione}}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+              <mat-form-field class="col" [formGroup]="comuniDepGroup[i]">
+                <input type="text" placeholder="Comune" aria-label="Number" matInput formControlName="comDep"
+                  [matAutocomplete]="autoComuneDep" (blur)="checkDep(i,'C')">
+                <mat-autocomplete autoActiveFirstOption #autoComuneDep="matAutocomplete" [displayWith]="displayFnc"
+                  (optionSelected)="clickDep($event,i,'C')">
+                  <mat-option *ngFor="let choice of filteredOptionsComuniDep[i] | async" [value]="choice">
+                    {{choice.denominazione}}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+              <mat-form-field class="col" style="max-width: 100px">
+                <input matInput placeholder="CAP" [(ngModel)]="deposito.ubicazione.cap" name="capDeposito_{{i}}"
+                  maxlength="5" disabled>
+                <mat-hint align="end">{{deposito.ubicazione.cap?.length || 0}} / 5</mat-hint>
+              </mat-form-field>
+            </div>
+            <div class="row" style="padding-bottom: 10px; display: flex; justify-content: flex-end;">
+              <button id="del1" type="button" (click)="removeDeposito(i)"
+                style="font-size: 15px; display:flex;justify-content:center;align-items:center;">
+                <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                  style="padding-left: 10px">Elimina</span>
+              </button>
+            </div>
+            <mat-divider *ngIf="soggetto.depositi.length>1 && i!=soggetto.depositi.length-1" [inset]="true"
+              style="border-color: rgb(241, 170, 87); border-width: 2px"></mat-divider>
+          </div>
+        </section>
+
+        <section *ngIf="tipoSoggettoGiuridicoSelected?.idRuolo==null || tipoSoggettoGiuridicoSelected?.idRuolo==2">
+          <div
+            style="position: relative; display: flex; background: rgb(241, 170, 87); padding: 10px 10px; color: #fff; font-weight: 500; align-items: center;">
+            <h3 style="float: left; padding: 0px; margin: 0px">
+              <span>Dati Bancari</span>
+            </h3>
+          </div>
+          <div class="row">
+            <div *ngIf="erroreIban()" class="alert-danger box-error">
+              <p>Attenzione! Indicare l'IBAN per contributi Dotazione Organica</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col" style="flex-grow: 1; align-self: center; padding-right: 30px;">
+              <mat-checkbox [(ngModel)]="dato.doatpl" labelPosition="before" name="doatplFlg" (change)="doatplCheck()"
+                [disabled]="isRegione || isAmp">
+                Per contributi Dotazione Organica
+              </mat-checkbox>
+            </div>
+
+            <mat-form-field class="col" style="flex-grow: 2">
+              <input matInput placeholder="IBAN" [(ngModel)]="dato.iban" name="iban" #iban="ngModel" maxlength="27"
+                [required]="isIbanRequired()" [disabled]="isRegione || isAmp" (change)="IBANChange()"
+                (blur)="erroreLength(dato.iban?.length)">
+              <mat-hint align="end">{{dato.iban?.length || 0}} / 27</mat-hint>
+              <mat-error *ngIf="((iban.dirty || iban.touched) && iban.hasError) && !iban.errors?.lunghezza">
+                Campo richiesto
+              </mat-error>
+              <mat-error
+                *ngIf="iban.errors?.lunghezza || (dato.iban?.length>0 && dato.iban?.length<27) && erroreLength(dato.iban?.length)">
+                Attenzione! Verificare il numero di caratteri inseriti
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="col" style="flex-grow: 4">
+              <input matInput placeholder="Note" [(ngModel)]="dato.note" name="noteDatiBancari" maxlength="2000"
+                [disabled]="isRegione || isAmp">
+              <mat-hint align="end">{{dato.note?.length || 0}} / 2000</mat-hint>
+            </mat-form-field>
+          </div>
+
+
+          <div class="row" style="display:flex;justify-content:flex-end;align-items:center;">
+            <button id="add2" type="button" style="display: inline-flex; align-items: center; font-size: 15px"
+              (click)="addDatiBancari()"
+              [disabled]="isAddDatiBancariDisabled() || (iban.errors?.lunghezza || dato.iban?.length<27)">
+              <mat-icon style="color: rgb(55, 196, 0)">add_circle_outline</mat-icon> <span
+                style="padding-left: 10px">Aggiungi nuovo</span>
+            </button>
+          </div>
+
+          <mat-divider *ngIf="soggetto.datiBancari.length>0" [inset]="true"
+            style="border-color: rgb(241, 170, 87); border-width: 2px; margin-top: 20px"></mat-divider>
+
+          <div *ngFor="let datoS of soggetto.datiBancari; let i = index">
+            <div class="row">
+              <div class="col" style="flex-grow: 1; align-self: center; padding-right: 30px;">
+                <mat-checkbox [(ngModel)]="datoS.doatpl" labelPosition="before" name="doatplFlg_{{i}}"
+                  (change)="listaDoatplCheck(i)">
+                  Per contributi Dotazione Organica
+                </mat-checkbox>
+              </div>
+              <mat-form-field class="col" style="flex-grow: 2">
+                <input matInput placeholder="IBAN" [(ngModel)]="datoS.iban" name="iban_{{i}}" maxlength="27" required>
+                <mat-hint align="end">{{datoS.iban?.length || 0}} / 27</mat-hint>
+                <mat-error *ngIf="hasIbanError(i)">
+                  Campo richiesto
+                </mat-error>
+
+                <mat-error *ngIf="datoS.iban?.length>0 && datoS.iban?.length<27">
+                  Attenzione! Verificare il numero di caratteri inseriti
+                </mat-error>
+              </mat-form-field>
+              <mat-form-field class="col" style="flex-grow: 4">
+                <input matInput placeholder="Note" [(ngModel)]="datoS.note" name="noteDatiBancari_{{i}}"
+                  maxlength="2000">
+                <mat-hint align="end">{{datoS.note?.length || 0}} / 2000</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="row" style="padding-bottom: 10px; display: flex; justify-content: flex-end;">
+              <button id="del2" type="button" (click)="removeDatiBancari(i)"
+                style="font-size: 15px; display:flex;justify-content:center;align-items:center;">
+                <mat-icon style="color: red">remove_circle_outline</mat-icon><span
+                  style="padding-left: 10px;">Elimina</span>
+              </button>
+            </div>
+            <mat-divider *ngIf="soggetto.datiBancari.length>1  && i!=soggetto.datiBancari.length-1" [inset]="true"
+              style="border-color: rgb(241, 170, 87); border-width: 2px"></mat-divider>
+          </div>
+        </section>
+
+        <section>
+          <div style="margin-top:1em">
+            <i>I campi contrassegnati da * sono obbligatori</i>
+          </div>
+
+          <div *ngIf="isValidCampiRequired() || isCampiInvalid() " class="alert-danger box-error">
+            Prima di procedere è necessario compilare tutti i campi obbligatori!
+            <br>
+          </div>
+          <br>
+          <br>
+
+          <button type="submit" [disabled]="isValidCampiRequired() || isCampiInvalid() || erroreIban()"
+            mat-raised-button [ngStyle]="{'color': getStyle(),'background-color': getBackground()}">
+            <mat-icon>save</mat-icon>Salva
+          </button>
+          <a mat-raised-button (click)="reset()">
+            <mat-icon>clear</mat-icon> Pulisci
+          </a>
+        </section>
+      </ng-template>
+    </form>
+  </mat-card-content>
+</mat-card>

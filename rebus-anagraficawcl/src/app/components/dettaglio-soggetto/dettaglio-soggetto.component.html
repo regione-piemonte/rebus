@@ -1,0 +1,393 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_SOGGETTO'"></app-navbar>
+
+
+<div>
+  <div *ngIf="!loadComplete || isLoading()" id="loader-container" class="preloader-background">
+    <div id="loader"></div>
+  </div>
+
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>
+      <span *ngIf="azione==null">Torna alla ricerca</span>
+      <span *ngIf="azione!=null">Torna al contratto</span>
+    </button>
+  </div>
+
+  <div *ngIf="loadComplete && !isLoading()" style="margin-top: 1em;margin-bottom:1em; margin-left:10%; margin-right:10%"
+    id="containerCenter">
+    <h3 class="titolo">Dati identificativi</h3>
+    <table style="width:100%">
+      <tbody>
+        <tr>
+          <td colspan="6">
+            <div>
+              <label>Tipo soggetto giuridico: </label>
+              <b>{{tipoSoggettoGiuridico?.descrizione}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico==1" colspan="6">
+            <div>
+              <label>Tipo ente: </label>
+              <b>{{tipoEnte?.descrizione}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div>
+              <label>Denominazione breve (alias): </label>
+              <b>{{dettaglioSoggetto?.denomBreve}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Denominazione Osservatorio: </label>
+              <b>{{dettaglioSoggetto?.denomOsservatorioNaz}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico==2" colspan="6">
+            <div>
+              <label>Denominazione Infocamere: </label>
+              <b>{{dettaglioSoggetto?.denomAAEP}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <div>
+              <label>Codice regionale: </label>
+              <b>{{dettaglioSoggetto?.codRegionale}}</b>
+            </div>
+          </td>
+          <td colspan="2">
+            <div>
+              <label>Codice nazionale: </label>
+              <b>{{dettaglioSoggetto?.codOsservatorioNaz}}</b>
+            </div>
+          </td>
+          <td *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico!=1" colspan="2">
+            <div>
+              <label>Codice CSR-BIP: </label>
+              <b>{{dettaglioSoggetto?.codCsrBip}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico==2">
+          <td colspan="3">
+            <div>
+              <label>Natura giuridica: </label>
+              <b>{{naturaGiuridica?.descrizione}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Rappresentante legale: </label>
+              <b>{{dettaglioSoggetto?.nomeRappresentanteLegale}} {{dettaglioSoggetto?.cognomeRappresentanteLegale}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico==2">
+          <td colspan="3">
+            <div>
+              <label>Partita IVA: </label>
+              <b>{{dettaglioSoggetto?.partitaIva}}</b>
+            </div>
+          </td>
+          <td colspan="3">
+            <div>
+              <label>Codice Fiscale: </label>
+              <b>{{dettaglioSoggetto?.codiceFiscale}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico==2">
+          <td style="width: 50%" colspan="3">
+            <div>
+              <label>Data inizio attività: </label>
+              <b>{{dettaglioSoggetto?.dataInizio | date: 'dd/MM/yyyy'}}</b>
+            </div>
+          </td>
+          <td style="width: 50%" colspan="3">
+            <div>
+              <label>Data cessazione (Infocamere): </label>
+              <b>{{dettaglioSoggetto?.dataCessazione | date: 'dd/MM/yyyy'}}</b>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div style="display:flex;align-items:center;">
+              <label>Soggetto attivo TPL: </label>
+              <mat-checkbox [ngModel]="dettaglioSoggetto.aziendaAttiva" labelPosition="before" name="aziendaAttiva"
+                disabled style="display:flex;align-items:center;"></mat-checkbox>
+            </div>
+          </td>
+          <td colspan="3">
+            <div style="display:flex;align-items:center;">
+              <label style="padding-right: 10px;">Logo: </label>
+              <a title="Visualizza" *ngIf="dettaglioSoggetto.isLogoUploaded" href="javascript:void(0)"
+                class="no-underline" (click)="viewLogo()" style="display: flex; align-items: center;">
+                <mat-icon class="blueIcon">visibility</mat-icon>
+              </a>
+              <a title="Scarica" href="javascript:void(0)" class="no-underline" (click)="downloadDoc()"
+                *ngIf="dettaglioSoggetto.isLogoUploaded" style="display: flex; align-items: center;">
+                <mat-icon class="blueIcon">
+                  <img src="assets/DLdoc_orange.png" style="width: 24px; ">
+                </mat-icon>
+              </a>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div>
+              <label>Note: </label>
+              <b>{{dettaglioSoggetto?.note}}</b>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3 class="titolo">Contratti</h3>
+    <div
+      *ngIf="dettaglioSoggetto?.contrattiSoggetti==null || dettaglioSoggetto?.contrattiSoggetti.length==0; else contrattiSoggettiTable">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #contrattiSoggettiTable>
+      <table class="aTable">
+        <thead>
+          <tr>
+            <th style="width:20%">
+              Contratto<br>(Cod. Naz. - Denominazione)
+            </th>
+            <th style="width:13%">
+              Ente Committente
+            </th>
+            <th style="width:7%">
+              Inizio validità contratto
+            </th>
+            <th style="width:7%">
+              Fine validità contratto
+            </th>
+            <th style="width:8%">
+              Ruolo nel contratto
+            </th>
+            <th style="width:13%">
+              Capofila
+            </th>
+            <th style="width:13%">
+              Soggetto affidante
+            </th>
+            <th style="width:7%">
+              Inizio attività nel contratto
+            </th>
+            <th style="width:7%">
+              Fine attività nel contratto
+            </th>
+            <th style="width:5%;text-align: center;">
+              Dettaglio
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let contratto of dettaglioSoggetto.contrattiSoggetti;"
+            [ngClass]="{ 'colorGray': contratto.scaduto }">
+            <td style="width:20%">
+              <div title="{{contratto.contratto}}" [innerHTML]="troncaCaratteri(contratto.contratto)"></div>
+            </td>
+            <td style="width:13%">
+              <div [innerHTML]="contratto.enteCommittente"></div>
+            </td>
+            <td style="width:7%">
+              <div [innerHTML]="contratto.dataInizioValidita | date: 'dd/MM/yyyy'"></div>
+            </td>
+            <td style="width:7%">
+              <div [innerHTML]="contratto.dataFineValidita | date: 'dd/MM/yyyy'"></div>
+            </td>
+            <td style="width:8%">
+              <div [innerHTML]="contratto.ruolo "></div>
+            </td>
+            <td style="width:13%">
+              <div [innerHTML]="contratto.capofila "></div>
+            </td>
+            <td style="width:13%">
+              <div [innerHTML]="contratto.soggettoAffidante "></div>
+            </td>
+            <td style="width:7%">
+              <div [innerHTML]="contratto.dataInizioaAttivita"></div>
+            </td>
+            <td style="width:7%">
+              <div [innerHTML]="contratto.dataFineAttivita"></div>
+            </td>
+            <td style="text-align: center; width:5%">
+              <a title="Dettaglio" href="javascript:void(0)" class="no-underline"
+                (click)="dettaglioContratto(contratto.idContratto)">
+                <mat-icon class="blueIcon">visibility</mat-icon>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-template>
+    <h3 class="titolo">Sede Legale e Contatti</h3>
+    <div *ngIf="!hasSede(); else sede">
+      <label>Nessun dato presente</label>
+    </div>
+    <ng-template #sede>
+      <table style="width:100%">
+        <tbody>
+          <tr>
+            <td colspan="2">
+              <div>
+                <label>Indirizzo: </label>
+                <b>{{indirizzoSedeCompleto}}</b>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="width: 50%">
+              <div>
+                <label>Telefono: </label>
+                <b>{{dettaglioSoggetto?.telefonoSede}}</b>
+              </div>
+            </td>
+            <td style="width: 50%">
+              <div>
+                <label>Fax: </label>
+                <b>{{dettaglioSoggetto?.fax}}</b>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="width: 50%">
+              <div>
+                <label>Email: </label>
+                <b>{{dettaglioSoggetto?.email}}</b>
+              </div>
+            </td>
+            <td style="width: 50%">
+              <div>
+                <label>PEC: </label>
+                <b>{{dettaglioSoggetto?.pec}}</b>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="width: 50%">
+              <div>
+                <label>Indirizzo web: </label>
+                <b>{{dettaglioSoggetto?.indirizzoWeb}}</b>
+              </div>
+            </td>
+            <td style="width: 50%">
+              <div>
+                <label>Numero verde: </label>
+                <b>{{dettaglioSoggetto?.numeroVerde}}</b>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+    </ng-template>
+    <div *ngIf="dettaglioSoggetto?.idRuoloTipoSoggettoGiuridico==2">
+      <h3 class="titolo" *ngIf="dettaglioSoggetto?.depositi.length>1; else dep">Depositi</h3>
+      <ng-template #dep>
+        <h3 class="titolo">Depositi</h3>
+      </ng-template>
+      <div *ngIf="!hasDepositi(); else depositi">
+        <label>Nessun dato presente</label>
+      </div>
+      <ng-template #depositi>
+        <div *ngFor="let deposito of dettaglioSoggetto?.depositi; let i=index;">
+          <table style="width:100%">
+            <tbody>
+              <tr>
+                <td style="width: 30%">
+                  <div style="display:flex;align-items:center;" *ngIf="deposito.depositoPrevalenteFlg">
+                    <label>Deposito principale: </label>
+                    <mat-checkbox [ngModel]="deposito.depositoPrevalenteFlg" labelPosition="before"
+                      name="depositoPrevalente_{{i}}" disabled style="display:flex;align-items:center;"></mat-checkbox>
+                  </div>
+                </td>
+                <td style="width: 50%">
+                  <div>
+                    <label>Denominazione: </label>
+                    <b>{{deposito.denominazione}}</b>
+                  </div>
+                </td>
+                <td style="width: 30%">
+                  <div>
+                    <label>Telefono: </label>
+                    <b>{{deposito.telefono}}</b>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="width: 20%"></td>
+                <td colspan="3">
+                  <div>
+                    <label>Indirizzo: </label>
+                    <b>{{indirizziDepCompleti[i]}}</b>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <mat-divider *ngIf="dettaglioSoggetto.depositi.length>1 && i!=dettaglioSoggetto.depositi.length-1"
+            [inset]="true" style="border-color: rgb(241, 170, 87); border-width: 2px; margin: 0px"></mat-divider>
+        </div>
+        <br>
+      </ng-template>
+      <h3 class="titolo">Dati Bancari</h3>
+      <div *ngIf="!hasDatiBancari(); else datiBancari">
+        <label>Nessun dato presente</label>
+      </div>
+      <ng-template #datiBancari>
+        <div *ngFor="let dato of dettaglioSoggetto?.datiBancari; let i=index;">
+          <table style="width:100%">
+            <tbody>
+              <tr>
+                <td style="width: 30%">
+                  <div style="display:flex;align-items:center;" *ngIf="dato.doatpl">
+                    <label>Per contributi Dotazione Organica:</label>
+                    <mat-checkbox [ngModel]="dato.doatpl" labelPosition="before" name="doatpl_{{i}}" disabled
+                      style="display:flex;align-items:center;"></mat-checkbox>
+                  </div>
+                </td>
+                <td style="width: 40%">
+                  <label>IBAN: </label>
+                  <b>{{dato.iban}}</b>
+                </td>
+                <td style="width: 60%">
+                  <label>Note: </label>
+                  <b>{{dato.note}}</b>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <mat-divider *ngIf="dettaglioSoggetto.datiBancari.length>1 && i!=dettaglioSoggetto.datiBancari.length-1"
+            [inset]="true" style="border-color: rgb(241, 170, 87); border-width: 2px; margin: 0px"></mat-divider>
+        </div>
+        <br>
+      </ng-template>
+    </div>
+  </div>
+  <div style="margin-top: 1em;margin-bottom:1em;">
+    <button mat-button (click)="goBack()" color="primary">
+      <mat-icon>undo</mat-icon>
+      <span *ngIf="azione==null">Torna alla ricerca</span>
+      <span *ngIf="azione!=null">Torna al contratto</span>
+    </button>
+  </div>
+</div>

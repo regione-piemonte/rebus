@@ -1,0 +1,55 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="tipologia">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 10%;"> Tipologia </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;"> {{row.tipologia.descrizione}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="codOsservatorioNaz">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 10%;"> Cod. Nazionale </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;"> {{row.codOsservatorioNaz}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="codRegionale">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 10%;"> Cod. Regionale </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;"> {{row.codRegionale}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="partitaIva">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 10%;"> Partita IVA </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 10%;white-space:nowrap;"> {{row.partitaIva}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="denominazioneENaturaGiuridica">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 40%;"> Denominazione</mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 40%;white-space:nowrap;"> {{troncaCaratteri(row.denominazione)}}</mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="dataAggiornamento">
+    <mat-header-cell *matHeaderCellDef mat-sort-header style="text-align: start;flex: 0 0 12%;"> Data Ultima Modifica </mat-header-cell>
+    <mat-cell *matCellDef="let row" style="flex: 0 0 12%;white-space:nowrap;"> {{row.dataAggiornamento | date: "dd/MM/yyyy HH:mm:ss"}}</mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="azioni">
+    <mat-header-cell *matHeaderCellDef> Azioni </mat-header-cell>
+    <mat-cell *matCellDef="let row">
+      <a title="Dettaglio" *ngIf="isConsultaAbilitato" href="javascript:void(0)" class="no-underline" (click)="dettaglioSoggetto(row.id)">
+        <mat-icon class="blueIcon">visibility</mat-icon>
+      </a>
+      <a title="Modifica" *ngIf="isModificaAbilitata && !row.aziendaCessata" href="javascript:void(0)" class="no-underline" (click)="modificaSoggetto(row.id)">
+        <mat-icon class="blueIcon">edit</mat-icon>
+      </a>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+ <mat-row [ngClass]="{ 'colorGray': row.aziendaNonAttiva ,  'colorDarkGray': row.aziendaCessata}" *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+</mat-table>
+
+<mat-paginator [pageSize]="defaultPageSize" [pageSizeOptions]="pageSizeOption"></mat-paginator>

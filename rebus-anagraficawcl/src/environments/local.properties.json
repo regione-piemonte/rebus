@@ -1,0 +1,9 @@
+{
+    "beServer": "http://localhost:8080/anagrafichetplweb",
+    "devBackendServer": "http://localhost:8080",
+    "shibbolethSSOLogoutURL": "https://tst-xxx.aaa.bbb.it/tst_anagrafichetpl_443sliv1wrup/Shibboleth.sso/Logout",
+    "otherParam": "development_param_value",
+    "publicPath": "http://localhost:4200/anagrafichetplweb",
+    "timeout": 50,
+    "srcEnviroment": "https://"
+}

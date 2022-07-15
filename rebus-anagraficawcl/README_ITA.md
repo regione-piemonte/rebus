@@ -11,7 +11,9 @@ Il progetto è stato generato con [Angular CLI](https://github.com/angular/angul
 # Configurazioni iniziali
 
 Per configurare il prorpio ambiente di sviluppo eseguire `npm start`.
+
 La URL di default dell'ambiente di sviluppo è `http://localhost:4200/`.
+
 In tale ambiente, la "web application" effettuerà il reload automatico per qualsiasi modifica dei sorgenti.
 
 Tutte le configurazioni devono essere impostate nel file `buildfiles/<env>.properties.json` :
@@ -33,8 +35,11 @@ Queste sono le impostazioni da configurare:
 
 # Getting Started
 Una volta prelevata e portata in locale dal repository la componente ("git clone"), procedere con la modifica dei file di configurazione in base al proprio ambiente di deploy.
-Primi di effettuare il build occorre eseguire il comando "npm install".
+
+Prima di effettuare il build occorre eseguire il comando "npm install".
+
 Per il build usare il comando `npm build`.
+
 Gli "artefatti" risultanti si troveranno in `dist/`.
 
 Per la versione di esercizio usare il flag `--prod`.
@@ -47,6 +52,7 @@ Per semplificare il "lifecycle" della applicazione sono disponibili alcuni "goal
 
 # Prerequisiti di sistema
 Questa componente necessita di ANAGRAFICASRV per funzionare.
+
 Inoltre prevede la configurazione di un servizio di autenticazione (Shibboleth).
 
 # Installazione
@@ -56,8 +62,10 @@ La componente Angular viene solitamente inclusa nello stesso pacchetto di instal
 # Esecuzione dei test 
 
 Questa compoente è predisposta per "unit test" e test "end-to-end", ma non configurati. Nel caso sarebbe possibile:
-- Eseguire `ng test` per effettuare gli "unit test" tramite [Karma](https://karma-runner.github.io).\
-- Eseguire `ng e2e` per effettuare i test "end-to-end" tramite [Protractor](http://www.protractortest.org/).\
+
+- Eseguire `ng test` per effettuare gli "unit test" tramite [Karma](https://karma-runner.github.io).
+
+- Eseguire `ng e2e` per effettuare i test "end-to-end" tramite [Protractor](http://www.protractortest.org/).
 
 Questa componente è stata oggetto di test di vulnerabilità prima del rilascio.
 

@@ -1,0 +1,76 @@
+<!--*************************************************
+Copyright Regione Piemonte - 2022
+SPDX-License-Identifier: EUPL-1.2-or-later
+***************************************************/-->
+<app-navbar [labelSelected]="'RICERCA_SOGGETTO'"></app-navbar>
+
+<div *ngIf="downloadInCorso || ricercaInCorso || !tipoSoggGiuridLoaded" id="loader-container"
+  class="preloader-background">
+  <div id="loader"></div>
+</div>
+
+<div class="container">
+  <div *ngIf="feedback" class="alert-danger box-error">
+    <p>{{feedback}}</p>
+    <br>
+  </div>
+  <form #searchForm="ngForm" (submit)="aggiorna()">
+
+    <div class="filterRicerca" style="padding-top: 15px;">
+      <mat-form-field class="margin">
+        <mat-label>Tipologia</mat-label>
+        <mat-select [(ngModel)]="filtro.idTipoSoggGiurid" name="tipoSoggGiurid" disableOptionCentering
+          panelClass="myPanelClass">
+          <mat-option *ngFor="let tipo of tipiSoggGiurid" [value]="tipo.id">
+            {{tipo.descrizione}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="margin">
+        <input matInput placeholder="Codice Soggetto" value="" name="codOssNaz" [(ngModel)]="filtro.codOssNaz">
+      </mat-form-field>
+      <mat-form-field class="margin" style="min-width: 250px;">
+        <input matInput placeholder="Denominazione" value="" name="denominazione" [(ngModel)]="filtro.descrizione">
+      </mat-form-field>
+      <mat-form-field class="margin" style="min-width: 200px">
+        <input matInput placeholder="Partita IVA / Codice Fiscale" value="" name="codFiscale"
+          [(ngModel)]="filtro.codFiscale">
+      </mat-form-field>
+      <div style="display: flex; flex-direction: column;">
+        <mat-checkbox class="margin" [(ngModel)]="checkedIncludiAttive" name="includiAttive"
+          (change)="changeIncludiAttiveFilter($event)">Soggetti attivi TPL</mat-checkbox>
+        <mat-checkbox class="margin" [(ngModel)]="checkedIncludiNonAttive" name="includiNonAttive"
+          (change)="changeIncludiNonAttiveFilter($event)">Soggetti inattivi TPL</mat-checkbox>
+        <mat-checkbox class="margin" [(ngModel)]="checkedIncludiCessate" name="includiCessate"
+          (change)="changeIncludiCessateFilter($event)">Soggetti cessati</mat-checkbox>
+
+
+      </div>
+
+    </div>
+
+    <mat-grid-list cols="12" rowHeight="50px">
+      <mat-grid-tile [colspan]="3">
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button type="submit" mat-raised-button style="background-color: rgb(214,87,42); color: white;">
+          <mat-icon>search</mat-icon>Cerca
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button type="button" mat-raised-button (click)="pulisci();">
+          <mat-icon>clear</mat-icon>Pulisci
+        </button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="2">
+        <button type="button" mat-raised-button *ngIf="enableExcel" (click)="scaricaExcel('Scarica_Excel_Ricerca');">
+          <img src="assets/excel.png"> Scarica Excel Ricerca</button>
+      </mat-grid-tile>
+      <mat-grid-tile [colspan]="3">
+      </mat-grid-tile>
+    </mat-grid-list>
+  </form>
+</div>
+<div style="margin-top: 1em;margin-bottom:1em;min-height: 20em;">
+  <app-elenco-soggetto (isLoadingEvent)="isLoading($event)"></app-elenco-soggetto>
+</div>
