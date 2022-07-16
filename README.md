@@ -86,10 +86,11 @@ Per il versionamento del software si usa la tecnica Semantic Versioning (http://
 
 
 # Copyrights
-© Copyright Regione Piemonte – 2022\
+© Copyright Regione Piemonte – 2022
+
 
 # License
 
 SPDX-License-Identifier: EUPL-1.2-or-later .\
 Questo software è distribuito con licenza EUPL-1.2 .\
-Consultare il file LICENSE.txt per i dettagli sulla licenza.
+Consultare il file [EUPL v1_2 IT-LICENSE.txt](https://github.com/regione-piemonte/rebus/blob/main/EUPL%20v1_2%20IT-LICENSE.txt) per i dettagli sulla licenza.

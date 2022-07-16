@@ -1,5 +1,6 @@
 # This is the list of REBUS authors for copyright purposes.
 
+Roberta Blandino
 Sergio Casale
 Piergiorgio Chiriotti
 Antonio Ciccarelli

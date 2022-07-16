@@ -1,10 +1,19 @@
-# List of Contributors of product in 
-Lucia Coscia
-Elisa Fiorio
+# List of Contributors of product in
+
+## Regione Piemonte
+Cristina Molino
 Domenica Paparatto
 Gianluigi Berrone
+
+## AMP
 Stefania Borgna
+Gianni Miceli
 Stefano Pepino
+
+## CSI Piemonte
+Lucia Coscia
+Elisa Fiorio
+Marco Panepinto
 
 
 
