@@ -55,7 +55,8 @@ A ciascuna componente del prodotto elencata sopra corisponde una sotto-directory
 In ciascuna di queste cartelle di componente si trovano ulteriori informazioni specifiche, incluso il BOM della componente di prodotto.
 
 Nella directory [csi-lib]( https://github.com/regione-piemonte/REBUS/tree/main/csi-lib ) si trovano le librerie sviluppate da CSI-Piemonte con licenza OSS, come indicato nei BOM delle singole componenti, ed usate trasversalmente nel prodotto.
-	
+
+Uno schema dellle componenti di prodotto è disponibile nel file [REBUS_schemi_arc_oss_v1.0.0.pdf](https://github.com/regione-piemonte/rebus/blob/main/REBUS_schemi_arc_oss_v1.0.0.pdf) .
 
 # Prerequisiti di sistema
 
