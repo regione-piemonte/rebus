@@ -111,6 +111,7 @@ localisation:
   availableLanguages:
     - it
   localisationReady: true
+logo: REBUS.png
 maintenance:
   contacts:
     - affiliation: CSI Piemonte
